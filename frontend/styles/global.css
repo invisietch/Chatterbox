@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gray-900 text-gray-100;
+  /* Dark mode default */
+}
+
+.dark body {
+  @apply bg-gray-100 text-gray-900;
+  /* Light mode */
+}
+
+.slop {
+  @apply bg-slopHighlight font-bold text-gray-700;
+}
+
+.character {
+  @apply font-bold text-characterHighlight;
+}
+
+.persona {
+  @apply font-bold text-personaHighlight;
+}
+
+.speech {
+  @apply font-bold text-speechHighlight
+}
+
+.actions {
+  @apply italic text-actionsHighlight
+}
+
+.thoughts {
+  @apply italic text-thoughtsHighlight
+}
