@@ -26,6 +26,8 @@ Features so far:
 
 *Local setup is still a bit of a process, Chatterbox is alpha software and I haven't added a nice one-stage startup yet. You need to be comfortable with the command line to run this.*
 
+If you need any help, ask on [our Discord server](https://discord.gg/gXQzQcnedb).
+
 ### Database
 
 You will need a Postgresql database running.
