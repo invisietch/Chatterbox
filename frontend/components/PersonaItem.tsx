@@ -5,7 +5,7 @@ import ExpandableTextarea from "./ExpandableTextarea";
 import apiClient from "../lib/api";
 import { toast } from "react-toastify";
 
-const PersonaItem = ({ persona, onSave }: { persona: any, onSave: () => void }) => {
+const PersonaItem = ({ persona, fetchPersonas }: { persona: any, fetchPersonas: () => void }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [name, setName] = useState("");
@@ -24,11 +24,10 @@ const PersonaItem = ({ persona, onSave }: { persona: any, onSave: () => void }) 
 
       toast.success('Persona updated successfully.');
     } catch (error) {
-      console.error('Error saving persona:', error);
       toast.error('Failed to save persona.');
     }
 
-    onSave();
+    fetchPersonas();
     setIsEditing(false);
   }
 
@@ -38,7 +37,7 @@ const PersonaItem = ({ persona, onSave }: { persona: any, onSave: () => void }) 
 
       toast.success('Persona deleted successfully.');
       setIsDeleting(false);
-      onSave();
+      fetchPersonas();
     } catch (error) {
       toast.error('Failed to delete persona.');
     }

@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import Accordion from "./Accordion";
-import FormattedText from "./FormattedText";
 import CharacterItem from "./CharacterItem";
 
 interface Character {

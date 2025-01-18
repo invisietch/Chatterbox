@@ -1,26 +1,21 @@
 import { useState } from "react"
-import apiClient from "../lib/api";
 import ExpandableTextarea from "./ExpandableTextarea";
 import { toast } from "react-toastify";
 
-const AddPersonaForm = ({ onSave, onCancel }: { onSave: () => void, onCancel: () => void }) => {
+const AddPersonaForm = ({ onSave, onCancel }: { onSave: (name: string, content: string) => void, onCancel: () => void }) => {
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
 
-  const handleSubmit = async () => {
-    try {
-      await apiClient.post("/personas", { name, content });
-
-      toast.success('Persona saved successfully.');
-      onSave();
-    } catch (error) {
-      toast.error('Failed to save persona.');
-      console.error('Error saving persona:', error);
+  const handleSubmit = () => {
+    if (name && content) {
+      onSave(name, content);
+    } else {
+      toast.error("Please fill in all required fields.");
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-4 space-y-4 mb-4">
+    <form className="mt-4 space-y-4 mb-4">
       <div className="border-b border-gray-600 pb-4 relative">
         <h3>Name</h3>
       </div>
@@ -42,7 +37,8 @@ const AddPersonaForm = ({ onSave, onCancel }: { onSave: () => void, onCancel: ()
           Cancel
         </button>
         <button
-          type="submit"
+          type="button"
+          onClick={handleSubmit}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
           Save

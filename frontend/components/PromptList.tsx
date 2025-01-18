@@ -7,14 +7,22 @@ interface Prompt {
   content: string;
 }
 
-const PromptList = ({ prompts, error, onSave, onCancel }: { prompts: Prompt[], error: string, onSave: () => void, onCancel: () => void }) => {
+const PromptList = ({
+  prompts,
+  error,
+  fetchPrompts,
+}: {
+  prompts: Prompt[],
+  error: string,
+  fetchPrompts: () => void,
+}) => {
   return (
     <>
       {error && <p className="text-red-500">{error}</p>}
       {!error && prompts.length === 0 && <p className="text-gray-500">No prompts found.</p>}
       <div className="space-y-4">
         {prompts.map((prompt) => (
-          <PromptItem prompt={prompt} onSave={onSave} />
+          <PromptItem prompt={prompt} fetchPrompts={fetchPrompts} />
         ))}
       </div>
     </>

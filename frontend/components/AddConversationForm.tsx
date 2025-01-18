@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import TagPill from './TagPill';
 import apiClient from '../lib/api';
 import ExpandableTextarea from './ExpandableTextarea';
+import { toast } from 'react-toastify';
 
 const AddConversationForm = ({
   onSave,
@@ -136,7 +137,7 @@ const AddConversationForm = ({
     if (newConversation.name.trim() && newConversation.description.trim()) {
       onSave(newConversation);
     } else {
-      alert('Please fill out all fields.');
+      toast.error('Please fill out all fields.');
     }
   };
 

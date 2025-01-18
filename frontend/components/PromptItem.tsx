@@ -5,7 +5,7 @@ import ExpandableTextarea from "./ExpandableTextarea";
 import apiClient from "../lib/api";
 import { toast } from "react-toastify";
 
-const PromptItem = ({ prompt, onSave }: { prompt: any, onSave: () => void }) => {
+const PromptItem = ({ prompt, fetchPrompts }: { prompt: any, fetchPrompts: () => void }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [name, setName] = useState("");
@@ -24,11 +24,10 @@ const PromptItem = ({ prompt, onSave }: { prompt: any, onSave: () => void }) => 
 
       toast.success('Prompt updated successfully.');
     } catch (error) {
-      console.error('Error saving prompt:', error);
       toast.error('Failed to save prompt.');
     }
 
-    onSave();
+    fetchPrompts();
     setIsEditing(false);
   }
 
@@ -38,7 +37,7 @@ const PromptItem = ({ prompt, onSave }: { prompt: any, onSave: () => void }) => 
 
       toast.success('Prompt deleted successfully.');
       setIsDeleting(false);
-      onSave();
+      fetchPrompts();
     } catch (error) {
       toast.error('Failed to delete prompt.');
     }

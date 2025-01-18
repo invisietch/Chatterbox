@@ -73,7 +73,6 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
       setIsCropperOpen(true); // Open cropper modal
     } catch (e) {
       setError("Failed to parse character card. Ensure the file is a valid CCv2 or CCv3 image.");
-      console.error("Error parsing EXIF data:", e);
     }
   };
 
@@ -98,7 +97,6 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
         first_message: character.first_mes || "",
         example_messages: character.mes_example || "",
         post_history_instructions: character.post_history_instructions || "",
-        assets: character.assets || {},
       });
 
       if (response.status !== 200) {

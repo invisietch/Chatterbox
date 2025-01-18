@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import apiClient from '../lib/api';
 import CharacterList from '../components/CharacterList';
 import AddCharacterForm from '../components/AddCharacterForm';
+import { toast } from 'react-toastify';
 
 export default function CharactersPage() {
   const [isAddingCharacter, setIsAddingCharacter] = useState(false);
@@ -15,9 +16,39 @@ export default function CharactersPage() {
     setIsAddingCharacter(false);
   }
 
-  const handleManualSave = () => {
-    setIsManuallyAddingCharacter(false);
-  }
+  const handleManualSaveCharacter = async (
+    name: string,
+    description: string,
+    scenario: string | null,
+    personality: string | null,
+    firstMessage: string,
+    exampleMessages: string | null,
+    postHistoryInstructions: string | null
+  ) => {
+    try {
+      const response = await apiClient.post("/characters", {
+        name,
+        description,
+        scenario,
+        personality,
+        first_message: firstMessage,
+        example_messages: exampleMessages,
+        post_history_instructions: postHistoryInstructions,
+      });
+
+      if (response.status === 200) {
+        toast.success('Successfully saved character.');
+
+        await fetchCharacters();
+
+        setIsManuallyAddingCharacter(false);
+      } else {
+        toast.error('Failed to save character.');
+      }
+    } catch (error) {
+      toast.error('Failed to save character.');
+    }
+  };
 
   const handleManualCancel = () => {
     setIsManuallyAddingCharacter(false);
@@ -40,7 +71,7 @@ export default function CharactersPage() {
 
   useEffect(() => {
     fetchCharacters();
-  }, [isAddingCharacter]);
+  }, [isAddingCharacter, isManuallyAddingCharacter]);
 
   return (
     <Layout>
@@ -64,7 +95,7 @@ export default function CharactersPage() {
             </button>
           </div>
         </div>
-        {isManuallyAddingCharacter && <AddCharacterForm onCancel={handleManualCancel} onSave={handleManualSave} />}
+        {isManuallyAddingCharacter && <AddCharacterForm onCancel={handleManualCancel} onSave={handleManualSaveCharacter} />}
         {isAddingCharacter && <CharacterCardParser onSave={handleOnSave} />}
         <CharacterList error={error} characters={characters} fetchCharacters={fetchCharacters} />
       </div>

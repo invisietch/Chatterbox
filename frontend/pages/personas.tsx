@@ -3,11 +3,16 @@ import Layout from '../components/Layout';
 import PersonaList from '../components/PersonaList';
 import apiClient from '../lib/api';
 import AddPersonaForm from '../components/AddPersonaForm';
+import { toast } from 'react-toastify';
 
 export default function PersonasPage() {
   const [isAddingPersona, setIsAddingPersona] = useState(false);
   const [personas, setPersonas] = useState([]);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchPersonas();
+  }, []);
 
   const fetchPersonas = async () => {
     try {
@@ -28,14 +33,21 @@ export default function PersonasPage() {
     setIsAddingPersona(false);
   }
 
-  const handleOnSave = () => {
-    fetchPersonas();
-    setIsAddingPersona(false);
-  }
+  const handleSavePersona = async (name: string, content: string) => {
+    try {
+      const response = await apiClient.post("/personas", { name, content });
 
-  useEffect(() => {
-    fetchPersonas();
-  }, [isAddingPersona]);
+      if (response.status === 200) {
+        toast.success('Successfully saved persona.');
+
+        await fetchPersonas();
+
+        setIsAddingPersona(false);
+      }
+    } catch (error) {
+      toast.error('Failed to save persona.');
+    }
+  }
 
   return (
     <Layout>
@@ -49,8 +61,8 @@ export default function PersonasPage() {
             + Add New Persona
           </button>
         </div>
-        {isAddingPersona && <AddPersonaForm onSave={handleOnSave} onCancel={handleOnCancel} />}
-        <PersonaList personas={personas} error={error} onSave={handleOnSave} onCancel={handleOnCancel} />
+        {isAddingPersona && <AddPersonaForm onSave={handleSavePersona} onCancel={handleOnCancel} />}
+        <PersonaList personas={personas} error={error} fetchPersonas={fetchPersonas} />
       </div>
     </Layout>
   );

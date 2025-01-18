@@ -3,11 +3,16 @@ import Layout from '../components/Layout';
 import apiClient from '../lib/api';
 import PromptList from '../components/PromptList';
 import AddPromptForm from '../components/AddPromptForm';
+import { toast } from 'react-toastify';
 
-export default function PersonasPage() {
+export default function PromptsPage() {
   const [isAddingPrompt, setIsAddingPrompt] = useState(false);
   const [prompts, setPrompts] = useState([]);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchPrompts();
+  }, []);
 
   const fetchPrompts = async () => {
     try {
@@ -24,9 +29,20 @@ export default function PersonasPage() {
     }
   };
 
-  const handleOnSave = () => {
-    fetchPrompts();
-    setIsAddingPrompt(false);
+  const handleSavePrompt = async (name: string, content: string) => {
+    try {
+      const response = await apiClient.post("/prompts", { name, content });
+
+      if (response.status === 200) {
+        toast.success('Successfully saved prompt.');
+
+        await fetchPrompts();
+
+        setIsAddingPrompt(false);
+      }
+    } catch (error) {
+      toast.error('Failed to save prompt.');
+    }
   }
 
   const handleOnCancel = () => {
@@ -49,8 +65,8 @@ export default function PersonasPage() {
             + Add New Prompt
           </button>
         </div>
-        {isAddingPrompt && <AddPromptForm onSave={handleOnSave} onCancel={handleOnCancel} />}
-        <PromptList prompts={prompts} error={error} onSave={handleOnSave} onCancel={handleOnCancel} />
+        {isAddingPrompt && <AddPromptForm onSave={handleSavePrompt} onCancel={handleOnCancel} />}
+        <PromptList prompts={prompts} error={error} fetchPrompts={fetchPrompts} />
       </div>
     </Layout>
   );
