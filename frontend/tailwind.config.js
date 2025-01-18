@@ -13,6 +13,7 @@ module.exports = {
         speechHighlight: '#98FB98',
         thoughtsHighlight: '#A6A6BA',
         actionsHighlight: '#FFDAB9',
+        warningHighlight: '#D16C00',
       },
     },
   },

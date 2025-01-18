@@ -105,9 +105,10 @@ const MessageItem = ({
 
   // Determine which avatar to display
   const avatarData = message.author === 'user' ? persona : message.author === 'assistant' ? character : null;
+  const wrapperClass = warning ? "border-b border-gray-600 pb-4 mb-4 relative flex bg-warningHighlight" : "border-b border-gray-600 pb-4 mb-4 relative flex"
 
   return (
-    <div className="border-b border-gray-600 pb-4 mb-4 relative flex">
+    <div className={wrapperClass}>
       {/* Avatar Section */}
       <div className="flex-shrink-0 mr-4">
         {avatarData && (
@@ -119,11 +120,11 @@ const MessageItem = ({
           />
         )}
         {!avatarData && (
-          <Avatar seed='system' size={120} />
+          <Avatar seed={message.author} size={120} />
         )}
         <div className="mt-2 text-center text-gray-400 text-sm">
-          {message.author == 'user' && <div className="font-bold text-personaHighlight">{persona.name}</div>}
-          {message.author == 'assistant' && <div className="font-bold text-characterHighlight">{character.name}</div>}
+          {persona && message.author == 'user' && <div className="font-bold text-personaHighlight">{persona.name}</div>}
+          {character && message.author == 'assistant' && <div className="font-bold text-characterHighlight">{character.name}</div>}
           <div>
             {warning && '⚠️ '}
             {slopCount > 0 && '🤢 '}
@@ -178,10 +179,12 @@ const MessageItem = ({
             </div>
           </div>
         ) : (
-          <div
-            className="text-gray-300 mt-2 w-11/12"
-            dangerouslySetInnerHTML={{ __html: messageText }}
-          />
+          <>
+            <div
+              className="text-gray-300 mt-2 w-11/12"
+              dangerouslySetInnerHTML={{ __html: messageText }}
+            />
+          </>
         )}
       </div>
 

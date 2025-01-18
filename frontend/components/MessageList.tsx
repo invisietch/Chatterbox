@@ -56,7 +56,7 @@ const MessageList = ({
       const newWarnings = checkForWarnings(sortedMessages);
       setWarnings(newWarnings);
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      toast.error('Error fetching messages.');
     } finally {
       setIsLoading(false);
     }
@@ -100,19 +100,31 @@ const MessageList = ({
     fetchMessages();
   }, [conversationId]);
 
-  // Save a new message
   const handleSaveMessage = async (newMessage: any) => {
     try {
-      await apiClient.post(`/conversations/${conversationId}/messages`, newMessage);
+      const response = await apiClient.post(`/conversations/${conversationId}/messages`, newMessage);
+      if (response.status === 200) {
+        const savedMessage = response.data; // Assuming the API returns the saved message with its ID and other properties
+        const prevMessages = messages;
 
-      toast.success('Message saved successfully.');
-      setIsAddingMessage(false); // Hide the form after saving
-      fetchMessages(); // Re-fetch messages to update the list
+        // Update the messages state
+        setMessages([...prevMessages, savedMessage]);
+        setMostRecentMessage(savedMessage);
+
+        const newWarnings = checkForWarnings([...prevMessages, savedMessage]);
+        setWarnings(newWarnings);
+
+        toast.success('Message saved successfully.');
+        setIsAddingMessage(false); // Hide the form after saving
+        onMessagesChange(true); // Notify parent component of change
+      } else {
+        toast.error('Failed to save message.');
+      }
     } catch (error) {
       toast.error('Failed to save message.');
-      console.error('Error saving message:', error);
     }
   };
+
 
   const createFirstMessage = async () => {
     const newMessage = {
