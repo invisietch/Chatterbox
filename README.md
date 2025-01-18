@@ -24,17 +24,29 @@ Features so far:
 
 ## Local Setup
 
-*Local setup is still a bit of a process, Chatterbox is alpha software and I haven't added a nice one-stage startup yet. You need to be comfortable with the command line to run this.*
-
 If you need any help, ask on [our Discord server](https://discord.gg/gXQzQcnedb).
 
-### Database
+### Docker-Compose (Recommended)
+
+You will need Docker and Compose installed, the easiest way to get both is to install [Docker Desktop](https://docs.docker.com/desktop/).
+
+Then just run:
+
+```bash
+docker-compose up --build
+```
+
+And when it's done the application will be available on [http://localhost:3000](http://localhost:3000).
+
+### Manual Setup
+
+#### Database
 
 You will need a Postgresql database running.
 
-#### Install Postgresql
+##### Install Postgresql
 
-##### Mac OS X
+###### Mac OS X
 
 I'll assume you're using homebrew:
 
@@ -45,7 +57,7 @@ brew install postgresql
 pg_ctl -D /usr/local/var/postgres start
 ```
 
-##### Ubuntu Linux
+###### Ubuntu Linux
 
 Postgres can be installed from aptitude:
 
@@ -58,7 +70,7 @@ systemctl enable postgresql
 systemctl start postgresql
 ```
 
-#### Setting up the database
+##### Setting up the database
 
 Now create a database, then connect to it:
 
@@ -80,9 +92,9 @@ grant all privileges on database chatterbox to chatterbox;
 
 Now your database is good to go.
 
-### Backend
+#### Backend
 
-#### Connecting to the Database
+##### Connecting to the Database
 
 Make sure your database string is correct in the env (you may want to add this to `~/.bashrc` or whatever shell you use):
 
@@ -97,7 +109,7 @@ Make sure your database string is correct in `alembic.ini` too:
 sqlalchemy.url = postgresql://chatterbox:test@localhost/chatterbox
 ```
 
-#### Starting the Server
+##### Starting the Server
 
 Then it should be as simple as this:
 
@@ -112,7 +124,7 @@ alembic upgrade head
 uvicorn app.main:app --host 0.0.0.0 --port 3001
 ```
 
-### Frontend
+#### Frontend
 
 This part's simple:
 

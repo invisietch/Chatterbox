@@ -1,0 +1,37 @@
+services:
+  chatterboxapi:
+    build: ./api
+    ports:
+      - 3001:3001
+    environment:
+      - DATABASE_HOSTNAME=${DATABASE_HOST}
+      - DATABASE_PORT=${DATABASE_PORT}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_USERNAME=${DATABASE_USERNAME}
+    command: bash -c "export DATABASE_URL=${DATABASE_URL} && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload"
+    depends_on:
+      - chatterboxdb
+
+  chatterboxdb:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USERNAME}
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-db:/var/lib/postgresql/data
+
+  chatterboxfe:
+    build: ./frontend
+    ports:
+      - 3000:3000
+    environment:
+      - API_URL=${API_URL}
+    depends_on:
+      - chatterboxapi
+
+volumes:
+  postgres-db:
