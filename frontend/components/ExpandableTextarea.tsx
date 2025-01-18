@@ -1,12 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { RefObject, useEffect, useRef, useState } from "react";
 
 interface ExpandableTextareaProps {
   value: string;
   label: string;
   onChange: (value: string) => void;
+  ref?: RefObject<HTMLTextAreaElement>;
 }
 
-const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, onChange }) => {
+const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, onChange, ref }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -55,6 +56,7 @@ const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, o
       <div className="flex flex-col items-center p-4">
         {/* Main Textarea */}
         <textarea
+          ref={ref}
           value={value}
           onChange={handleChange}
           className="w-full p-2 border rounded bg-gray-800 text-gray-200 mb-2"

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ExpandableTextarea from "./ExpandableTextarea";
 
 const AddMessageForm = ({
@@ -15,6 +15,13 @@ const AddMessageForm = ({
   const [author, setAuthor] = useState('system');
   const [content, setContent] = useState('');
   const [rejected, setRejected] = useState('');
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.focus(); // Automatically focus the content field
+    }
+  }, []);
 
   // Determine the default author based on the most recent message
   useEffect(() => {
@@ -58,7 +65,7 @@ const AddMessageForm = ({
         </div>
       </div>
 
-      <ExpandableTextarea label='Message Content' onChange={setContent} value={content} />
+      <ExpandableTextarea label='Message Content' ref={contentRef} onChange={setContent} value={content} />
       {author === 'assistant' && <ExpandableTextarea label='Rejected Content (optional)' onChange={setRejected} value={rejected} />}
 
       <div className="flex justify-end gap-2 mt-2">
