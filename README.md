@@ -38,7 +38,7 @@ docker-compose up --build
 
 And when it's done the application will be available on [http://localhost:3000](http://localhost:3000).
 
-### Manual Setup
+### Manual Setup (For development)
 
 #### Database
 
@@ -136,5 +136,3 @@ npm install
 # Start the frontend
 npm run start
 ```
-
-I'll improve the process (probably with docker-compose) when the software is more stable.
