@@ -12,6 +12,8 @@ services:
     command: bash -c "export DATABASE_URL=${DATABASE_URL} && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload"
     depends_on:
       - chatterboxdb
+    volumes:
+      - uploaded-images:/usr/src/app/uploaded_images
 
   chatterboxdb:
     image: postgres
@@ -35,3 +37,4 @@ services:
 
 volumes:
   postgres-db:
+  uploaded-images:

@@ -5,6 +5,7 @@ import ExpandableTextarea from './ExpandableTextarea';
 import { highlightPlaceholders, highlightText } from '../lib/textUtils';
 import Avatar from './Avatar';
 import { highlightSlop } from '../lib/slop';
+import ReactDOM from 'react-dom';
 
 const MessageItem = ({
   message,
@@ -183,13 +184,15 @@ const MessageItem = ({
               </button>
             )}
 
-            <button
-              onClick={() => setIsDeleting(true)}
-              className="text-red-400 hover:text-red-500"
-              aria-label="Delete message"
-            >
-              🗑️
-            </button>
+            {!isEditing && (
+              <button
+                onClick={() => setIsDeleting(true)}
+                className="text-red-400 hover:text-red-500"
+                aria-label="Delete message"
+              >
+                🗑️
+              </button>
+            )}
           </div>
         </div>
 
@@ -224,29 +227,32 @@ const MessageItem = ({
         )}
       </div>
 
-      {isDeleting && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
-          <div className="bg-gray-800 p-6 rounded-lg max-w-sm w-full">
-            <h3 className="text-lg font-bold text-white mb-4">
-              Are you sure you want to delete this message?
-            </h3>
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setIsDeleting(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                Delete
-              </button>
+      {isDeleting &&
+        ReactDOM.createPortal(
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50 z-50">
+            <div className="bg-gray-800 p-6 rounded-lg max-w-sm w-full">
+              <h3 className="text-lg font-bold text-white mb-4">
+                Are you sure you want to delete this message?
+              </h3>
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setIsDeleting(false)}
+                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body // Portal to the <body> element
+        )}
+
     </div>
   );
 };
