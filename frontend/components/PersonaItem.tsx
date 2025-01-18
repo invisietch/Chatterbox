@@ -4,6 +4,7 @@ import FormattedText from "./FormattedText";
 import ExpandableTextarea from "./ExpandableTextarea";
 import apiClient from "../lib/api";
 import { toast } from "react-toastify";
+import ReactDOM from "react-dom";
 
 const PersonaItem = ({ persona, fetchPersonas }: { persona: any, fetchPersonas: () => void }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -95,8 +96,8 @@ const PersonaItem = ({ persona, fetchPersonas }: { persona: any, fetchPersonas: 
           </div>
         </div>
       </div>
-      {
-        isDeleting && (
+      {isDeleting &&
+        ReactDOM.createPortal(
           <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
             <div className="bg-gray-800 p-6 rounded-lg max-w-sm w-full">
               <h3 className="text-lg font-bold text-white mb-4">
@@ -117,7 +118,8 @@ const PersonaItem = ({ persona, fetchPersonas }: { persona: any, fetchPersonas: 
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )
       }
     </Accordion >
