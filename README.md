@@ -6,7 +6,9 @@
 
 ## Introduction
 
-Chatterbox is a tool for managing datasets for training LLMs. It's a user-friendly tool for creating human (and later synthetic) datasets for training. Particularly, Chatterbox is designed for managing instruct/RP style datasets.
+Chatterbox is a tool for managing datasets for training LLMs. It's a user-friendly tool for creating human (and later synthetic) datasets for training. 
+
+Particularly, Chatterbox is designed for managing multi-turn instruct/RP style datasets.
 
 Features so far:
 
