@@ -61,6 +61,7 @@ class Message(Base):
     conversation_id = Column(Integer, ForeignKey('conversation.id'), nullable=False)
     author = Column(String, nullable=False)
     content = Column(Text, nullable=False)
+    rejected = Column(Text, nullable=True)
     order = Column(Integer, nullable=False)
 
     conversation = relationship("Conversation", back_populates="messages")

@@ -73,7 +73,13 @@ def add_conversation(
 
 # Add a message to a conversation
 @router.post("/conversations/{conversation_id}/messages")
-def add_message(conversation_id: int, author: Annotated[str, Body()], content: Annotated[str, Body()], db: Session = Depends(get_db)):
+def add_message(
+    conversation_id: int, 
+    author: Annotated[str, Body()], 
+    content: Annotated[str, Body()], 
+    rejected: Annotated[str, Body()] = None, 
+    db: Session = Depends(get_db)
+):
     conversation = db.query(Conversation).filter_by(id=conversation_id).first()
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -81,7 +87,10 @@ def add_message(conversation_id: int, author: Annotated[str, Body()], content: A
     highest_order = db.query(Message.order).filter_by(conversation_id=conversation_id).order_by(Message.order.desc()).first()
     order = (highest_order[0] + 1) if highest_order else 1
 
-    message = Message(conversation_id=conversation_id, author=author, content=content, order=order)
+    if author == 'assistant':
+        message = Message(conversation_id=conversation_id, author=author, content=content, order=order, rejected=rejected)
+    else:
+        message = Message(conversation_id=conversation_id, author=author, content=content, order=order)
     db.add(message)
     db.commit()
     db.refresh(message)
@@ -156,13 +165,20 @@ def delete_prompt(conversation_id: int, db: Session = Depends(get_db)):
 
 # Edit a message
 @router.put("/messages/{message_id}")
-def edit_message(message_id: int, content: Annotated[str, Body(embed=True)] = None, db: Session = Depends(get_db)):
+def edit_message(
+    message_id: int, 
+    content: Annotated[str, Body(embed=True)] = None, 
+    rejected: Annotated[str, Body(embed=True)] = None, 
+    db: Session = Depends(get_db)
+):
     message = db.query(Message).filter_by(id=message_id).first()
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
     
     if content:
         message.content = content
+    if rejected and message.author == 'assistant':
+        message.rejected = rejected
 
     db.commit()
     return {"message": "Message updated"}
@@ -268,7 +284,16 @@ def get_message_token_count(message_id: int, model_identifier: str, db: Session 
 
     # Count tokens using the utility function
     token_count = count_tokens(formatted_message, model_identifier, False)
-    return {"token_count": token_count}
+
+    rejected_count = 0
+
+    if message.rejected:
+        formatted_rejected = [
+          {"role": "user" if message.author.lower() == "user" else "assistant" if message.author.lower() == "assistant" else "system", "content": message.rejected}
+        ]
+        rejected_count = count_tokens(formatted_rejected, model_identifier, False)
+
+    return {"token_count": token_count, "rejected_token_count": rejected_count}
 
 @router.delete("/messages/{message_id}")
 def delete_message(message_id: int, db: Session = Depends(get_db)):

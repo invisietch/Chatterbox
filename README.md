@@ -14,6 +14,7 @@ Features so far:
 - Token counting for every conversation (you choose the model)
 - Tagging for every conversation
 - Add/edit/delete messages (with highlighted markup)
+- Add/edit rejected alternative for assistant messages
 - Warnings for detected slop in messages
 - Warning if messages are wrongly ordered
 - Import CCv2 character cards
@@ -21,6 +22,14 @@ Features so far:
 - Add/edit/delete exchangeable system prompts
 - Add/edit/delete exchangeable user personas
 - Export datasets as sharegpt
+
+To do:
+
+- Connection to popular AI backends - OpenRouter & Kobold first
+- Generate responses (with option to generate 2 and choose 1 for ORPO)
+- Import SillyTavern convos with auto-link to character/persona if imported
+- ORPO/DPO multi-turn export
+- More... (put suggestions in GitHub issues)
 
 ## Local Setup
 

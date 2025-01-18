@@ -14,6 +14,7 @@ const AddMessageForm = ({
 }) => {
   const [author, setAuthor] = useState('system');
   const [content, setContent] = useState('');
+  const [rejected, setRejected] = useState('');
 
   // Determine the default author based on the most recent message
   useEffect(() => {
@@ -32,6 +33,7 @@ const AddMessageForm = ({
         conversationId,
         author,
         content,
+        rejected: author === 'assistant' && rejected ? rejected : null,
       });
       setContent(''); // Clear content after saving
     }
@@ -57,6 +59,7 @@ const AddMessageForm = ({
       </div>
 
       <ExpandableTextarea label='Message Content' onChange={setContent} value={content} />
+      {author === 'assistant' && <ExpandableTextarea label='Rejected Content (optional)' onChange={setRejected} value={rejected} />}
 
       <div className="flex justify-end gap-2 mt-2">
         <button
