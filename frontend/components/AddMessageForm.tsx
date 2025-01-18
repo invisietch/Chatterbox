@@ -23,6 +23,13 @@ const AddMessageForm = ({
     }
   }, []);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   // Determine the default author based on the most recent message
   useEffect(() => {
     if (mostRecentMessage) {
@@ -32,8 +39,8 @@ const AddMessageForm = ({
     }
   }, [mostRecentMessage]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    e && e.preventDefault();
 
     if (content.trim()) {
       onSave({
@@ -65,8 +72,21 @@ const AddMessageForm = ({
         </div>
       </div>
 
-      <ExpandableTextarea label='Message Content' ref={contentRef} onChange={setContent} value={content} />
-      {author === 'assistant' && <ExpandableTextarea label='Rejected Content (optional)' onChange={setRejected} value={rejected} />}
+      <ExpandableTextarea
+        label='Message Content'
+        ref={contentRef}
+        onChange={setContent}
+        value={content}
+        onKeyDown={handleKeyDown}
+      />
+      {author === 'assistant' &&
+        <ExpandableTextarea
+          label='Rejected Content (optional)'
+          onChange={setRejected}
+          value={rejected}
+          onKeyDown={handleKeyDown}
+        />
+      }
 
       <div className="flex justify-end gap-2 mt-2">
         <button

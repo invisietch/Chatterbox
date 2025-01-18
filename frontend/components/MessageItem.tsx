@@ -13,6 +13,8 @@ const MessageItem = ({
   warning,
   character,
   persona,
+  isEditing,
+  setIsEditing,
 }: {
   message: any;
   modelIdentifier: string;
@@ -20,8 +22,9 @@ const MessageItem = ({
   warning: boolean;
   character: any | null;
   persona: any | null;
+  isEditing: boolean;
+  setIsEditing: (t: boolean) => void;
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(message.content);
   const [rejected, setRejected] = useState(message.rejected);
   const [tokenCount, setTokenCount] = useState<number | null>(null);

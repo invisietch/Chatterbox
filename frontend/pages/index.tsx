@@ -11,6 +11,7 @@ const Conversations = () => {
   const [conversations, setConversations] = useState<any[]>([]);
   const [isAdding, setIsAdding] = useState(false); // Control visibility of the form
   const [loading, setLoading] = useState(true);
+  const [expandedConversationId, setExpandedConversationId] = useState(null);
 
   const selectedModel = useSelector((state: RootState) => state.model.selectedModel);
 
@@ -53,7 +54,6 @@ const Conversations = () => {
       await fetchConversations();
       setIsAdding(false);
     } catch (error) {
-      console.error('Error saving conversation:', error);
       toast.error('Failed to save conversation.');
     }
   };
@@ -85,7 +85,14 @@ const Conversations = () => {
 
         {/* Conversations List */}
         {conversations.map((conversation) => (
-          <ConversationItem key={conversation.id} conversation={conversation} fetchConversations={fetchConversations} modelIdentifier={selectedModel} />
+          <ConversationItem
+            key={conversation.id}
+            conversation={conversation}
+            fetchConversations={fetchConversations}
+            modelIdentifier={selectedModel}
+            expandedConversation={expandedConversationId === conversation.id}
+            setExpandedConversation={(t: boolean) => setExpandedConversationId(t ? conversation.id : null)}
+          />
         ))}
       </div>
     </Layout>

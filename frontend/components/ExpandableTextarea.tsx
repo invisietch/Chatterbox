@@ -4,10 +4,11 @@ interface ExpandableTextareaProps {
   value: string;
   label: string;
   onChange: (value: string) => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
   ref?: RefObject<HTMLTextAreaElement>;
 }
 
-const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, onChange, ref }) => {
+const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, onChange, ref, onKeyDown }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -61,6 +62,7 @@ const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, o
           onChange={handleChange}
           className="w-full p-2 border rounded bg-gray-800 text-gray-200 mb-2"
           rows={5}
+          onKeyDown={onKeyDown}
           placeholder="Enter your text here..."
         />
 
@@ -73,6 +75,7 @@ const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, o
               <textarea
                 value={value}
                 onChange={handleChange}
+                onKeyDown={onKeyDown}
                 className="w-full p-2 border rounded bg-gray-800 text-gray-200 mt-2 h-96"
               />
 

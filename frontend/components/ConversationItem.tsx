@@ -6,7 +6,19 @@ import FormattedText from './FormattedText';
 import { toast } from 'react-toastify';
 import ExpandableTextarea from './ExpandableTextarea';
 
-const ConversationItem = ({ conversation, fetchConversations, modelIdentifier }: any) => {
+const ConversationItem = ({
+  conversation,
+  fetchConversations,
+  modelIdentifier,
+  expandedConversation,
+  setExpandedConversation
+}: {
+  conversation: any,
+  fetchConversations: () => void,
+  modelIdentifier: string,
+  expandedConversation: boolean,
+  setExpandedConversation: (t: boolean) => void,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [name, setName] = useState(conversation.name);
@@ -462,6 +474,8 @@ const ConversationItem = ({ conversation, fetchConversations, modelIdentifier }:
               character={character}
               persona={persona}
               prompt={prompt}
+              expanded={expandedConversation}
+              setExpanded={setExpandedConversation}
             />
           </div>
         </div>

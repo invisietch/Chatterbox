@@ -13,6 +13,8 @@ const MessageList = ({
   character,
   persona,
   prompt,
+  expanded,
+  setExpanded,
 }: {
   conversationId: number;
   modelIdentifier: string,
@@ -20,14 +22,44 @@ const MessageList = ({
   character: any,
   persona: any,
   prompt: any,
-}
-) => {
+  expanded: boolean,
+  setExpanded: (t: boolean) => void,
+}) => {
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingMessage, setIsAddingMessage] = useState(false);
   const [mostRecentMessage, setMostRecentMessage] = useState<any | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]); // State to store warnings
   const [warningIds, setWarningIds] = useState<number[]>([]);
+  const [editingId, setEditingId] = useState(null);
+
+  const handleKeyPress = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      if (messages.length === 0 && (character || prompt)) {
+        createSystemMessage();
+      } else if (
+        messages.length === 1 &&
+        messages[0].author === "system" &&
+        character
+      ) {
+        createFirstMessage();
+      } else {
+        setIsAddingMessage(true);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!isAddingMessage && !editingId && expanded) {
+      window.addEventListener("keydown", handleKeyPress);
+    } else {
+      window.removeEventListener("keydown", handleKeyPress);
+    }
+
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [isAddingMessage, editingId, messages, expanded]);
 
   // Fetch messages for the conversation
   const fetchMessages = async () => {
@@ -163,7 +195,7 @@ const MessageList = ({
   const accordionTitle = `${warnings.length > 0 ? "⚠️ " : ""} Messages (${messages.length})`;
 
   return (
-    <Accordion title={accordionTitle}>
+    <Accordion title={accordionTitle} isOpen={expanded} onToggle={setExpanded}>
       {warnings.length > 0 && (
         <div className="bg-orange-500 text-white p-4 mb-4 rounded">
           <h4 className="font-bold">Warning: This dataset has the following issues:</h4>
@@ -182,6 +214,8 @@ const MessageList = ({
         messages.map((message) => (
           <MessageItem
             key={message.id}
+            isEditing={message.id === editingId}
+            setIsEditing={(t: boolean) => t ? setEditingId(message.id) : setEditingId(null)}
             message={message}
             modelIdentifier={modelIdentifier}
             fetchMessages={fetchMessages}
