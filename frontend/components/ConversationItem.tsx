@@ -310,13 +310,13 @@ const ConversationItem = ({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full p-2 border rounded bg-gray-800 text-gray-200 mb-2"
+              className="w-full p-2 border rounded bg-dark text-gray-200 mb-2"
             />
           </div>
           <ExpandableTextarea value={description} onChange={setDescription} label='Description' />
 
           <div className="mb-2">
-            <div className="border-b border-gray-600 pb-1 relative">
+            <div className="pb-1 relative">
               <h3>Tags</h3>
             </div>
             <div className="flex flex-col items-center p-4">
@@ -326,15 +326,15 @@ const ConversationItem = ({
                 value={tagInput}
                 onChange={handleTagInput}
                 onKeyDown={handleTagKeyDown}
-                className="w-full p-2 border rounded bg-gray-800 text-gray-200"
+                className="w-full p-2 border rounded bg-dark text-gray-200"
               />
             </div>
             {tagSuggestions.length > 0 && (
-              <div className="bg-gray-700 border border-gray-600 rounded mt-2">
+              <div className="bg-dark border border-gray-600 rounded mt-2">
                 {tagSuggestions.map((tag) => (
                   <div
                     key={tag}
-                    className="p-2 hover:bg-gray-600 cursor-pointer"
+                    className="p-2 hover:bg-dark1 cursor-pointer"
                     onClick={() => handleAddSuggestedTag(tag)}
                   >
                     {tag}
@@ -352,7 +352,7 @@ const ConversationItem = ({
             ))}
           </div>
           <div className="mb-2">
-            <div className="border-b border-gray-600 pb-1 relative">
+            <div className="pb-1 relative">
               <h3>Character (Optional)</h3>
             </div>
             <div className="flex flex-col items-center p-4">
@@ -361,7 +361,7 @@ const ConversationItem = ({
                 onChange={(e) =>
                   setCharacterId(e.target.value ? parseInt(e.target.value) : null)
                 }
-                className="w-full p-2 border rounded bg-gray-800 text-gray-200 overflow-y-auto"
+                className="w-full p-2 border rounded bg-dark text-gray-200 overflow-y-auto"
               >
                 <option value="">No character</option>
                 {characters.map((character) => (
@@ -373,7 +373,7 @@ const ConversationItem = ({
             </div>
           </div>
           <div className="mb-2">
-            <div className="border-b border-gray-600 pb-1 relative">
+            <div className="pb-1 relative">
               <h3>Prompt (Optional)</h3>
             </div>
             <div className="flex flex-col items-center p-4">
@@ -382,7 +382,7 @@ const ConversationItem = ({
                 onChange={(e) =>
                   setPromptId(e.target.value ? parseInt(e.target.value) : null)
                 }
-                className="w-full p-2 border rounded bg-gray-800 text-gray-200 overflow-y-auto"
+                className="w-full p-2 border rounded bg-dark text-gray-200 overflow-y-auto"
               >
                 <option value="">No prompt</option>
                 {prompts.map((prompt) => (
@@ -394,7 +394,7 @@ const ConversationItem = ({
             </div>
           </div>
           <div className="mb-2">
-            <div className="border-b border-gray-600 pb-1 relative">
+            <div className="pb-1 relative">
               <h3>Persona (Optional)</h3>
             </div>
             <div className="flex flex-col items-center p-4">
@@ -403,7 +403,7 @@ const ConversationItem = ({
                 onChange={(e) =>
                   setPersonaId(e.target.value ? parseInt(e.target.value) : null)
                 }
-                className="w-full p-2 border rounded bg-gray-800 text-gray-200 overflow-y-auto"
+                className="w-full p-2 border rounded bg-dark text-gray-200 overflow-y-auto"
               >
                 <option value="">No persona</option>
                 {personas.map((persona) => (
@@ -417,13 +417,13 @@ const ConversationItem = ({
           <div className="flex justify-end gap-2 mt-2">
             <button
               onClick={handleCancel}
-              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              className="px-4 py-2 bg-dark1 text-white rounded hover:bg-dark2"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className={`px-4 py-2 ${unsavedChanges ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-500 text-gray-300 cursor-not-allowed'
+              className={`px-4 py-2 ${unsavedChanges ? 'bg-fadedGreen hover:bg-brightGreen text-white' : 'bg-dark border border-fadedGreen text-gray-300 cursor-not-allowed'
                 } rounded`}
               disabled={!unsavedChanges}
             >
@@ -432,7 +432,7 @@ const ConversationItem = ({
           </div>
         </div>
       ) : (
-        <div className="border-b border-gray-600 pb-4 mb-4 relative">
+        <div className="pb-4 mb-4 relative">
           <div className="flex justify-between items-center">
             <div className="flex justify-between items-center">
               <div>

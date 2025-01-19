@@ -84,7 +84,7 @@ const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, o
                 <div className="flex justify-end mt-4">
                   <button
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg shadow hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                    className="px-4 py-2 bg-fadedGreen text-gray-200 rounded-lg shadow hover:bg-brightGreen focus:outline-none focus:ring-2 focus:ring-gray-300"
                   >
                     Save
                   </button>
