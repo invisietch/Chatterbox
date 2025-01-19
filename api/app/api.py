@@ -1,3 +1,6 @@
+import asyncio
+import os
+import threading
 from app.image_utils import get_image_path, save_image, validate_image
 from app.count_tokens import count_tokens
 from fastapi import Body, APIRouter, HTTPException, Depends, UploadFile, File, Query
@@ -9,7 +12,13 @@ from app.models import Character, Conversation, Message, Persona, Prompt, Tag, C
 from fastapi.responses import StreamingResponse, FileResponse
 from io import StringIO
 import json
+from redis import asyncio as aioredis
 
+REDIS_HOST = os.getenv("REDIS_HOSTNAME", "chatterboxredis")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
+
+redis = aioredis.from_url(REDIS_URL, decode_responses=True)
 router = APIRouter()
 
 class CharacterCreate(BaseModel):
@@ -30,13 +39,27 @@ class CharacterUpdate(BaseModel):
     example_messages: Optional[str] = None
     post_history_instructions: Optional[str] = None
 
-# Dependency for database session
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+async def invalidate_caches(message_id=None, conversation_id=None):
+    async def invalidate():
+        if message_id:
+            pattern = f"message:{message_id}:*"
+            keys = await redis.keys(pattern)
+            for key in keys:
+                await redis.delete(key)
+        if conversation_id:
+            pattern = f"conversation:{conversation_id}:*"
+            keys = await redis.keys(pattern)
+            for key in keys:
+                await redis.delete(key)
+
+    threading.Thread(target=lambda: asyncio.run(invalidate())).start()
 
 # Add a conversation
 @router.post("/conversations")
@@ -57,12 +80,12 @@ def add_conversation(
         conversation.character_id = character_id
     if persona_id:
         persona = db.query(Persona).filter_by(id=persona_id).first()
-        if not character:
+        if not persona:
             raise HTTPException(status_code=404, detail="Persona not found")
         conversation.persona_id = persona_id
     if prompt_id:
-        persona = db.query(Prompt).filter_by(id=prompt_id).first()
-        if not character:
+        prompt = db.query(Prompt).filter_by(id=prompt_id).first()
+        if not prompt:
             raise HTTPException(status_code=404, detail="Prompt not found")
         conversation.prompt_id = prompt_id
 
@@ -73,7 +96,7 @@ def add_conversation(
 
 # Add a message to a conversation
 @router.post("/conversations/{conversation_id}/messages")
-def add_message(
+async def add_message(
     conversation_id: int, 
     author: Annotated[str, Body()], 
     content: Annotated[str, Body()], 
@@ -94,6 +117,9 @@ def add_message(
     db.add(message)
     db.commit()
     db.refresh(message)
+
+    invalidate_caches(conversation_id=conversation_id)
+
     return message
 
 # Add a tag to a conversation
@@ -165,22 +191,25 @@ def delete_prompt(conversation_id: int, db: Session = Depends(get_db)):
 
 # Edit a message
 @router.put("/messages/{message_id}")
-def edit_message(
-    message_id: int, 
-    content: Annotated[str, Body(embed=True)] = None, 
-    rejected: Annotated[str, Body(embed=True)] = None, 
-    db: Session = Depends(get_db)
+async def edit_message(
+    message_id: int,
+    content: Annotated[str, Body(embed=True)] = None,
+    rejected: Annotated[str, Body(embed=True)] = None,
+    db: Session = Depends(get_db),
 ):
     message = db.query(Message).filter_by(id=message_id).first()
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
-    
+
     if content:
         message.content = content
-    if rejected and message.author == 'assistant':
+    if rejected and message.author == "assistant":
         message.rejected = rejected
 
     db.commit()
+
+    invalidate_caches(message_id=message_id, conversation_id=message.conversation_id)
+
     return {"message": "Message updated"}
 
 # Edit a conversation
@@ -209,12 +238,12 @@ def edit_conversation(
         conversation.character_id = character_id
     if persona_id:
         persona = db.query(Persona).filter_by(id=persona_id).first()
-        if not character:
+        if not persona:
             raise HTTPException(status_code=404, detail="Persona not found")
         conversation.persona_id = persona_id
     if prompt_id:
-        persona = db.query(Prompt).filter_by(id=prompt_id).first()
-        if not character:
+        prompt = db.query(Prompt).filter_by(id=prompt_id).first()
+        if not prompt:
             raise HTTPException(status_code=404, detail="Prompt not found")
         conversation.prompt_id = prompt_id
 
@@ -275,60 +304,79 @@ def get_message_count(conversation_id: int, db: Session = Depends(get_db)):
     count = db.query(Message).filter_by(conversation_id=conversation_id).count()
     return {"message_count": count}
 
+# Token count for a conversation
 @router.get("/conversations/{conversation_id}/token_count")
-def get_token_count(conversation_id: int, model_identifier: str, db: Session = Depends(get_db)):
-    # Query messages for the conversation
+async def get_token_count(conversation_id: int, model_identifier: str, db: Session = Depends(get_db)):
+    cache_key = f"conversation:{conversation_id}:{model_identifier}"
+    cached_value = await redis.get(cache_key)
+    if cached_value:
+        return {"token_count": int(cached_value)}
+
     messages = db.query(Message).filter_by(conversation_id=conversation_id).order_by(Message.order).all()
     if not messages:
+        await redis.set(cache_key, 0, ex=3600)
         return {"token_count": 0}
 
-    # Convert messages to the required format
     formatted_messages = [
-        {"role": "user" if msg.author.lower() == "user" else "assistant" if msg.author.lower() == "assistant" else "system", "content": msg.content}
+        {
+            "role": "user" if msg.author.lower() == "user" else "assistant" if msg.author.lower() == "assistant" else "system",
+            "content": msg.content,
+        }
         for msg in messages
     ]
 
-    # Count tokens using the utility function
     token_count = count_tokens(formatted_messages, model_identifier)
+    await redis.set(cache_key, token_count, ex=3600)
     return {"token_count": token_count}
 
-
-# Get a count of tokens in a message using tiktoken
+# Token count for a single message
 @router.get("/messages/{message_id}/token_count")
-def get_message_token_count(message_id: int, model_identifier: str, db: Session = Depends(get_db)):
-    # Query the message
+async def get_message_token_count(message_id: int, model_identifier: str, db: Session = Depends(get_db)):
+    cache_key = f"message:{message_id}:{model_identifier}"
+    cached_value = await redis.get(cache_key)
+    if cached_value:
+        return json.loads(cached_value)
+
     message = db.query(Message).filter_by(id=message_id).first()
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
 
-    # Format the message as a list
     formatted_message = [
-        {"role": "user" if message.author.lower() == "user" else "assistant" if message.author.lower() == "assistant" else "system", "content": message.content}
+        {
+            "role": "user" if message.author.lower() == "user" else "assistant" if message.author.lower() == "assistant" else "system",
+            "content": message.content,
+        }
     ]
 
-    # Count tokens using the utility function
     token_count = count_tokens(formatted_message, model_identifier, False)
 
     rejected_count = 0
-
     if message.rejected:
         formatted_rejected = [
-          {"role": "user" if message.author.lower() == "user" else "assistant" if message.author.lower() == "assistant" else "system", "content": message.rejected}
+            {
+                "role": "user" if message.author.lower() == "user" else "assistant" if message.author.lower() == "assistant" else "system",
+                "content": message.rejected,
+            }
         ]
         rejected_count = count_tokens(formatted_rejected, model_identifier, False)
 
-    return {"token_count": token_count, "rejected_token_count": rejected_count}
+    result = {"token_count": token_count, "rejected_token_count": rejected_count}
+    await redis.set(cache_key, json.dumps(result), ex=3600)
+    return result
 
+# Delete a message
 @router.delete("/messages/{message_id}")
-def delete_message(message_id: int, db: Session = Depends(get_db)):
+async def delete_message(message_id: int, db: Session = Depends(get_db)):
     message = db.query(Message).filter_by(id=message_id).first()
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
 
     db.delete(message)
     db.commit()
-    return {"message": "Message deleted"}
 
+    invalidate_caches(message_id=message_id, conversation_id=message.conversation_id)
+
+    return {"message": "Message deleted"}
 
 @router.get("/tags")
 def search_tags(
@@ -635,19 +683,17 @@ def delete_prompt(prompt_id: int, db: Session = Depends(get_db)):
 
 # Delete a conversation
 @router.delete("/conversations/{conversation_id}")
-def delete_conversation(conversation_id: int, db: Session = Depends(get_db)):
-    # Fetch the conversation
+async def delete_conversation(conversation_id: int, db: Session = Depends(get_db)):
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    # Delete all messages related to the conversation
     db.query(Message).filter(Message.conversation_id == conversation_id).delete()
-
-    # Delete all ConversationTag entries related to the conversation
     db.query(ConversationTag).filter(ConversationTag.conversation_id == conversation_id).delete()
 
-    # Delete the conversation itself
     db.delete(conversation)
     db.commit()
+
+    invalidate_caches(conversation_id=conversation_id)
+
     return {"message": "Conversation and its related data deleted successfully"}
