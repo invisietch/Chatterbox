@@ -147,3 +147,11 @@ npm install
 # Start the frontend
 npm run start
 ```
+
+## Troubleshooting
+
+### failed to bind port 0.0.0.0:5432/tcp
+
+If you get a message like this when starting the docker container, it's likely that you already have postgresql running locally. If you do, you should stop your local copy of postgresql.
+
+You could also change the port, but it's more complex than it should be.
