@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import apiClient from '../lib/api';
+import { DownloadIcon } from '@heroicons/react/outline';
 
 export default function ImportExport() {
   const [loading, setLoading] = useState(false);
@@ -61,7 +62,7 @@ export default function ImportExport() {
             onClick={() => exportAsJsonl(true)}
             disabled={loading}
           >
-            {loading ? 'Exporting...' : 'Export ShareGPT'}
+            <DownloadIcon className="h-6 w-6" />
           </button>
         </div>
       </div>

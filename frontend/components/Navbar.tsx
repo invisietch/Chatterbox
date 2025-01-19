@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import ModelSearch from './ModelSearch';
+import SettingsBox from './SettingsBox';
 
 const Navbar = () => {
   const router = useRouter();
@@ -33,8 +33,8 @@ const Navbar = () => {
         </div>
 
         {/* Right side: Model Search */}
-        <div className="w-64">
-          <ModelSearch />
+        <div>
+          <SettingsBox />
         </div>
       </div>
     </nav>

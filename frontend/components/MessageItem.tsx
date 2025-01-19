@@ -182,7 +182,7 @@ const MessageItem = ({
                 <div
                   className={`relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in`}
                 >
-                  <div className="relative inline-block w-12 h-6">
+                  <div className="relative inline-block w-12 h-5 mt-1">
                     <input
                       type="checkbox"
                       checked={showRejected}
@@ -194,7 +194,7 @@ const MessageItem = ({
                         }`}
                     ></span>
                     <span
-                      className={`toggle-indicator absolute top-0 left-0 w-6 h-6 rounded-full bg-white border-4 transform transition-transform duration-300 ${showRejected ? 'translate-x-6' : 'translate-x-0'
+                      className={`toggle-indicator absolute top-0 left-0 w-5 h-5 rounded-full bg-white border-4 transform transition-transform duration-300 ${showRejected ? 'translate-x-8' : 'translate-x-0'
                         }`}
                     ></span>
                   </div>

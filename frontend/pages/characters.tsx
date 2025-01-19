@@ -5,6 +5,7 @@ import apiClient from '../lib/api';
 import CharacterList from '../components/CharacterList';
 import AddCharacterForm from '../components/AddCharacterForm';
 import { toast } from 'react-toastify';
+import { PhotographIcon, PlusIcon } from '@heroicons/react/outline';
 
 export default function CharactersPage() {
   const [isAddingCharacter, setIsAddingCharacter] = useState(false);
@@ -85,13 +86,13 @@ export default function CharactersPage() {
               className="bg-fadedYellow text-white px-4 py-2 rounded hover:bg-brightYellow"
               onClick={() => setIsAddingCharacter(true)}
             >
-              📷 Import from PNG
+              <PhotographIcon className="h-6 w-6" />
             </button>
             <button
               className="bg-fadedGreen text-white px-4 py-2 rounded hover:bg-brightGreen ml-2"
               onClick={() => setIsManuallyAddingCharacter(true)}
             >
-              + Add New Character
+              <PlusIcon className="h-6 w-6" />
             </button>
           </div>
         </div>

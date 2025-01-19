@@ -5,6 +5,7 @@ import Accordion from './Accordion';
 import AddMessageForm from './AddMessageForm';
 import apiClient from '../lib/api';
 import { toast } from 'react-toastify';
+import { PlusIcon } from '@heroicons/react/outline';
 
 const MessageList = ({
   conversationId,
@@ -257,7 +258,7 @@ const MessageList = ({
             onClick={() => setIsAddingMessage(true)}
             className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
           >
-            + Add New Message
+            <PlusIcon className="h-6 w-6" />
           </button>
         </div>
       )}

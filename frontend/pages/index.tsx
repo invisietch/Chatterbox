@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../context/store';
 import { toast } from 'react-toastify';
 import FilterBox from '../components/FilterBox';
+import { PlusIcon } from '@heroicons/react/outline';
 
 const Conversations = () => {
   const [conversations, setConversations] = useState<any[]>([]);
@@ -90,7 +91,7 @@ const Conversations = () => {
               className="bg-fadedGreen text-white px-4 py-2 ml-2 rounded hover:bg-brightGreen"
               onClick={() => setIsAdding(true)}
             >
-              + Add New Conversation
+              <PlusIcon className="h-6 w-6" />
             </button>
           </div>
         </div>

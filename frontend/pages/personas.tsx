@@ -4,6 +4,7 @@ import PersonaList from '../components/PersonaList';
 import apiClient from '../lib/api';
 import AddPersonaForm from '../components/AddPersonaForm';
 import { toast } from 'react-toastify';
+import { PlusIcon } from '@heroicons/react/outline';
 
 export default function PersonasPage() {
   const [isAddingPersona, setIsAddingPersona] = useState(false);
@@ -58,7 +59,7 @@ export default function PersonasPage() {
             className="bg-fadedGreen text-white px-4 py-2 rounded hover:bg-brightGreen"
             onClick={() => setIsAddingPersona(true)}
           >
-            + Add New Persona
+            <PlusIcon className="h-6 w-6" />
           </button>
         </div>
         {isAddingPersona && <AddPersonaForm onSave={handleSavePersona} onCancel={handleOnCancel} />}

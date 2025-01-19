@@ -4,6 +4,7 @@ import apiClient from '../lib/api';
 import PromptList from '../components/PromptList';
 import AddPromptForm from '../components/AddPromptForm';
 import { toast } from 'react-toastify';
+import { PlusIcon } from '@heroicons/react/outline';
 
 export default function PromptsPage() {
   const [isAddingPrompt, setIsAddingPrompt] = useState(false);
@@ -62,7 +63,7 @@ export default function PromptsPage() {
             className="bg-fadedGreen text-white px-4 py-2 rounded hover:bg-brightGreen"
             onClick={() => setIsAddingPrompt(true)}
           >
-            + Add New Prompt
+            <PlusIcon className="h-6 w-6" />
           </button>
         </div>
         {isAddingPrompt && <AddPromptForm onSave={handleSavePrompt} onCancel={handleOnCancel} />}

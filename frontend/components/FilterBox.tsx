@@ -1,5 +1,5 @@
 import Select, { MultiValue } from 'react-select';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FilterIcon } from '@heroicons/react/outline'; // Import the filter icon
 import apiClient from '../lib/api';
 import TagPill from './TagPill';
@@ -17,6 +17,26 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
   const [personas, setPersonas] = useState([]);
   const [prompts, setPrompts] = useState([]);
   const [showFilters, setShowFilters] = useState(false); // Toggle visibility of filters
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside of it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowFilters(false);
+      }
+    };
+
+    if (showFilters) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showFilters]);
 
   useEffect(() => {
     const fetchDropdownData = async () => {
@@ -98,10 +118,13 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
 
       {/* Filter dropdown */}
       {showFilters && (
-        <div className="absolute top-full left-0 mt-2 p-4 bg-dark border border-dark1 rounded shadow-lg z-50 w-80">
+        <div
+          className="absolute top-full left-auto right-0 mt-2 p-4 bg-dark border border-dark1 rounded shadow-lg z-50 w-80"
+          ref={dropdownRef}
+        >
           {/* Tag Filter */}
           <div className="mb-4">
-            <h3 className="font-bold mb-2">Tags</h3>
+            <h3 className="font-bold mb-2">Tags (AND)</h3>
             <input
               type="text"
               placeholder="Type to search tags..."
@@ -131,7 +154,7 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
 
           {/* Character Filter */}
           <div className="mb-4">
-            <h3 className="font-bold mb-2">Characters</h3>
+            <h3 className="font-bold mb-2">Characters (OR)</h3>
             <Select
               isMulti
               closeMenuOnSelect={false}
@@ -145,19 +168,19 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
               styles={{
                 control: (base) => ({
                   ...base,
-                  backgroundColor: '#2d3748',
+                  backgroundColor: '#1D2021',
                   borderColor: '#4a5568',
                   color: '#e2e8f0',
                 }),
                 menu: (base) => ({
                   ...base,
-                  backgroundColor: '#2d3748',
+                  backgroundColor: '#1D2021',
                   color: '#e2e8f0',
                   zIndex: 9999, // Ensure it appears above everything else
                 }),
                 option: (base, { isFocused }) => ({
                   ...base,
-                  backgroundColor: isFocused ? '#4a5568' : '#2d3748',
+                  backgroundColor: isFocused ? '#3C3836' : '#1D2021',
                   color: '#e2e8f0',
                 }),
               }}
@@ -166,7 +189,7 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
 
           {/* Persona Filter */}
           <div className="mb-4">
-            <h3 className="font-bold mb-2">Personas</h3>
+            <h3 className="font-bold mb-2">Personas (OR)</h3>
             <Select
               isMulti
               closeMenuOnSelect={false}
@@ -180,19 +203,19 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
               styles={{
                 control: (base) => ({
                   ...base,
-                  backgroundColor: '#2d3748',
+                  backgroundColor: '#1D2021',
                   borderColor: '#4a5568',
                   color: '#e2e8f0',
                 }),
                 menu: (base) => ({
                   ...base,
-                  backgroundColor: '#2d3748',
+                  backgroundColor: '#1D2021',
                   color: '#e2e8f0',
                   zIndex: 9999,
                 }),
                 option: (base, { isFocused }) => ({
                   ...base,
-                  backgroundColor: isFocused ? '#4a5568' : '#2d3748',
+                  backgroundColor: isFocused ? '#3C3836' : '#1D2021',
                   color: '#e2e8f0',
                 }),
               }}
@@ -201,7 +224,7 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
 
           {/* Prompt Filter */}
           <div className="mb-4">
-            <h3 className="font-bold mb-2">Prompts</h3>
+            <h3 className="font-bold mb-2">Prompts (OR)</h3>
             <Select
               isMulti
               closeMenuOnSelect={false}
@@ -215,19 +238,19 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
               styles={{
                 control: (base) => ({
                   ...base,
-                  backgroundColor: '#2d3748',
+                  backgroundColor: '#1D2021',
                   borderColor: '#4a5568',
                   color: '#e2e8f0',
                 }),
                 menu: (base) => ({
                   ...base,
-                  backgroundColor: '#2d3748',
+                  backgroundColor: '#1D2021',
                   color: '#e2e8f0',
                   zIndex: 9999,
                 }),
                 option: (base, { isFocused }) => ({
                   ...base,
-                  backgroundColor: isFocused ? '#4a5568' : '#2d3748',
+                  backgroundColor: isFocused ? '#3C3836' : '#1D2021',
                   color: '#e2e8f0',
                 }),
               }}
