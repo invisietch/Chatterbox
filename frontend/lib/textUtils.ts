@@ -29,10 +29,9 @@ export const highlightPlaceholders = (
 };
 
 export const highlightText = (text: string): string => {
-  // Define regexes to match quotes, apostrophes, and asterisks without newlines
-  const quoteRegex = /(["“”])([^\n"“”]+?)\1/g; // Matches text between " or directional quotes
-  const apostropheRegex = /(['])([^\n']+?)\1/g; // Matches text between ' or directional quotes
-  const asteriskRegex = /(\*)([^\n*]+?)\1/g; // Matches text between *
+  const quoteRegex = /(?:^|[\s.,!?])(["“”])((?:[^\n"“”]+|'[^\s']+)+?)\1(?=[\s.,!?]|$)/g;
+  const apostropheRegex = /(?:^|[\s.,!?])['‘]((?:[^\n'‘’]*?(?:\b['‘’]\b|[^\n'‘’])+?))['’](?=[\s.,!?]|$)/g;
+  const asteriskRegex = /(?:^|[\s.,!?])(\*)([^\n*]+?)\1(?=[\s.,!?]|$)/g;
 
   const highlightSpan = (type: string, match: string): string =>
     `<span class="${type}">${match}</span>`;
