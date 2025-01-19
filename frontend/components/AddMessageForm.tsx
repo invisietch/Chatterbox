@@ -4,10 +4,14 @@ import ExpandableTextarea from "./ExpandableTextarea";
 const AddMessageForm = ({
   conversationId,
   mostRecentMessage,
+  character,
+  persona,
   onSave,
   onCancel,
 }: {
   conversationId: number;
+  character: any;
+  persona: any;
   mostRecentMessage: any | null;
   onSave: (message: any) => void;
   onCancel: () => void;
@@ -30,6 +34,20 @@ const AddMessageForm = ({
     }
   };
 
+  const replaceCharAndUser = (c: string): string => {
+    let newC = c;
+
+    if (newC && character && character.name) {
+      newC = newC.replaceAll(character.name, '{{char}}');
+    }
+
+    if (newC && persona && persona.name) {
+      newC = newC.replaceAll(persona.name, '{{user}}');
+    }
+
+    return newC;
+  }
+
   // Determine the default author based on the most recent message
   useEffect(() => {
     if (mostRecentMessage) {
@@ -46,8 +64,8 @@ const AddMessageForm = ({
       onSave({
         conversationId,
         author,
-        content,
-        rejected: author === 'assistant' && rejected ? rejected : null,
+        content: replaceCharAndUser(content),
+        rejected: author === 'assistant' && rejected ? replaceCharAndUser(rejected) : null,
       });
       setContent(''); // Clear content after saving
     }

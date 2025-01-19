@@ -86,9 +86,31 @@ const MessageItem = ({
     setContent(message.content);
   };
 
+  const replaceCharAndUser = async (c: string): Promise<string> => {
+    let newC = c;
+
+    if (newC && character && character.name) {
+      newC = newC.replaceAll(character.name, '{{char}}');
+    }
+
+    if (newC && persona && persona.name) {
+      newC = newC.replaceAll(persona.name, '{{user}}');
+    }
+
+    return newC
+  }
+
   const handleSave = async () => {
     try {
-      await apiClient.put(`/messages/${message.id}`, { content, rejected: rejected || null });
+      const newContent = await replaceCharAndUser(content);
+      const newRejected = await replaceCharAndUser(rejected);
+
+      await apiClient.put(
+        `/messages/${message.id}`,
+        {
+          content: newContent,
+          rejected: newRejected || null
+        });
 
       const response = await apiClient.get(`/messages/${message.id}/token_count`, {
         params: { model_identifier: modelIdentifier },
@@ -123,7 +145,7 @@ const MessageItem = ({
 
   return (
     <div className={wrapperClass}>
-      <div className="flex-shrink-0 mr-4">
+      <div className="flex-shrink-0 mr-4 p-4">
         {avatarData ? (
           <Avatar
             id={avatarData.id}
@@ -154,7 +176,7 @@ const MessageItem = ({
       <div className="flex-grow">
         <div className="flex justify-between items-center">
           <div className="flex space-x-2 absolute top-2 right-2">
-            {messageRejected && (
+            {messageRejected && !isEditing && (
               <label className="flex items-center space-x-2">
                 <div
                   className={`relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in`}
@@ -199,14 +221,14 @@ const MessageItem = ({
         {!isEditing ? (
           <>
             <div
-              className="text-gray-300 mt-2 w-11/12"
+              className="text-gray-300 mt-2 w-10/12"
               dangerouslySetInnerHTML={{
                 __html: showRejected ? messageRejected : messageText,
               }}
             />
           </>
         ) : (
-          <div>
+          <div className="w-11/12">
             <ExpandableTextarea label="Content" onChange={setContent} value={content} />
             {message.author === 'assistant' && <ExpandableTextarea label="Rejected" onChange={setRejected} value={rejected} />}
             <div className="mt-2 flex justify-end space-x-2">

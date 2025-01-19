@@ -266,6 +266,8 @@ const MessageList = ({
       {isAddingMessage && (
         <AddMessageForm
           conversationId={conversationId}
+          character={character}
+          persona={persona}
           mostRecentMessage={mostRecentMessage}
           onSave={handleSaveMessage}
           onCancel={() => setIsAddingMessage(false)}
