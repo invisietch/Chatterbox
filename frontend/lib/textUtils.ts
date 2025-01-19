@@ -4,26 +4,21 @@ export const highlightPlaceholders = (
   personaName: string | null,
   highlights: boolean = true
 ): string => {
-  console.log(characterName);
-  console.log(personaName);
   let highlightedText = inputText;
 
   if (characterName) {
     if (highlights) {
-      highlightedText = highlightedText.replaceAll('{{char}}', '<span class="character">{{char}}</span>');
+      highlightedText = highlightedText.replaceAll(characterName, `<span class="character">${characterName}</span>`);
     }
-    highlightedText = highlightedText.replaceAll('{{char}}', characterName);
   }
 
   if (personaName) {
     if (highlights) {
-      highlightedText = highlightedText.replaceAll('{{user}}', '<span class="persona">{{user}}</span>');
+      highlightedText = highlightedText.replaceAll(personaName, `<span class="persona">${personaName}</span>`);
     }
-    highlightedText = highlightedText.replaceAll('{{user}}', personaName);
   }
 
   highlightedText = highlightedText.replaceAll('\n', '<br />');
-  console.log(highlightedText);
 
   return highlightedText;
 };

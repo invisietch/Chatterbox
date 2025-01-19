@@ -1,4 +1,5 @@
 import React, { RefObject, useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 
 interface ExpandableTextareaProps {
   value: string;
@@ -67,29 +68,32 @@ const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, o
         />
 
         {/* Modal */}
-        {isModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-gray-800 text-gray-200 p-6 rounded-lg shadow-lg w-11/12 max-w-3xl" ref={modalRef}>
-              <h2 className="text-lg font-semibold mb-4">Editing {label}</h2>
+        {isModalOpen &&
+          ReactDOM.createPortal(
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+              <div className="bg-gray-800 text-gray-200 p-6 rounded-lg shadow-lg w-11/12 max-w-3xl" ref={modalRef}>
+                <h2 className="text-lg font-semibold mb-4">Editing {label}</h2>
 
-              <textarea
-                value={value}
-                onChange={handleChange}
-                onKeyDown={onKeyDown}
-                className="w-full p-2 border rounded bg-gray-800 text-gray-200 mt-2 h-96"
-              />
+                <textarea
+                  value={value}
+                  onChange={handleChange}
+                  onKeyDown={onKeyDown}
+                  className="w-full p-2 border rounded bg-gray-800 text-gray-200 mt-2 h-96"
+                />
 
-              <div className="flex justify-end mt-4">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg shadow hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                >
-                  Save
-                </button>
+                <div className="flex justify-end mt-4">
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg shadow hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                  >
+                    Save
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            </div>,
+            document.body
+          )
+        }
       </div>
     </>
   );

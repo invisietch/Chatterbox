@@ -57,7 +57,7 @@ const MessageItem = ({
   useEffect(() => {
     const { highlightedText, count } = highlightSlop(
       highlightPlaceholders(
-        highlightText(message.content),
+        highlightText(message.full_content),
         character?.name || '',
         persona?.name || ''
       )
@@ -69,7 +69,7 @@ const MessageItem = ({
     if (message.rejected) {
       const { highlightedText: highlightedRejected, count: rejectedCount } = highlightSlop(
         highlightPlaceholders(
-          highlightText(message.rejected),
+          highlightText(message.full_rejected),
           character?.name || '',
           persona?.name || ''
         )

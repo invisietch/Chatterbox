@@ -161,7 +161,7 @@ const MessageList = ({
   const createFirstMessage = async () => {
     const newMessage = {
       author: 'assistant',
-      content: character.first_message || ""
+      content: '{{first_message}}',
     };
 
     await handleSaveMessage(newMessage);
@@ -171,17 +171,17 @@ const MessageList = ({
     let content = '';
 
     if (prompt) {
-      content += `System Instructions: ${prompt.content}\n\n`;
+      content += 'System Instructions:\n{{system_prompt}}\n\n';
     }
 
     if (character) {
-      content += `About ${character.name}: ${character.description}\n`;
-      if (character.personality) content += `Personality: ${character.personality}\n`;
-      if (character.scenario) content += `Scenario: ${character.scenario}\n\n`;
+      content += `About ${character.name}:\n{{description}}\n\n`;
+      if (character.personality) content += 'Personality:\n{{personality}}\n\n';
+      if (character.scenario) content += 'Scenario:\n{{scenario}}\n\n';
     }
 
     if (persona) {
-      content += `About ${persona.name}: ${persona.content}\n`;
+      content += `About ${persona.name}:\n{{persona}}\n\n`;
     }
 
     const newMessage = {
@@ -265,6 +265,7 @@ const MessageList = ({
       {/* Message form */}
       {isAddingMessage && (
         <AddMessageForm
+          modelIdentifier={modelIdentifier}
           conversationId={conversationId}
           character={character}
           persona={persona}

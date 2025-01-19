@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import ExpandableTextarea from "./ExpandableTextarea";
+import apiClient from "../lib/api";
 
 const AddMessageForm = ({
   conversationId,
   mostRecentMessage,
+  modelIdentifier,
   character,
   persona,
   onSave,
@@ -11,21 +13,62 @@ const AddMessageForm = ({
 }: {
   conversationId: number;
   character: any;
+  modelIdentifier: string;
   persona: any;
   mostRecentMessage: any | null;
   onSave: (message: any) => void;
   onCancel: () => void;
 }) => {
-  const [author, setAuthor] = useState('system');
-  const [content, setContent] = useState('');
-  const [rejected, setRejected] = useState('');
+  const [author, setAuthor] = useState("system");
+  const [content, setContent] = useState("");
+  const [rejected, setRejected] = useState("");
+  const [contentTokenCount, setContentTokenCount] = useState(0);
+  const [rejectedTokenCount, setRejectedTokenCount] = useState(0);
   const contentRef = useRef<HTMLTextAreaElement>(null);
+  const lastCallTimestamp = useRef<number | null>(null);
 
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.focus(); // Automatically focus the content field
     }
   }, []);
+
+  const fetchTokenCount = async () => {
+    try {
+      const response = await apiClient.post(
+        `/proposed_messages/token_count?model_identifier=${modelIdentifier}`,
+        {
+          author,
+          content,
+          rejected: author === "assistant" ? rejected : null,
+          conversation_id: conversationId,
+        }
+      );
+
+      if (response.data) {
+        const { token_count, rejected_token_count } = response.data;
+        setContentTokenCount(token_count);
+        setRejectedTokenCount(rejected_token_count || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching token count:", error);
+    }
+  };
+
+  const throttledFetchTokenCount = () => {
+    const now = Date.now();
+    const lastCall = lastCallTimestamp.current;
+
+    if (!lastCall || now - lastCall >= 1000) {
+      lastCallTimestamp.current = now;
+      fetchTokenCount();
+    }
+  };
+
+  // Trigger token count throttling whenever content or rejected changes
+  useEffect(() => {
+    throttledFetchTokenCount();
+  }, [author, content, rejected]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -38,22 +81,25 @@ const AddMessageForm = ({
     let newC = c;
 
     if (newC && character && character.name) {
-      newC = newC.replaceAll(character.name, '{{char}}');
+      newC = newC.replaceAll(character.name, "{{char}}");
     }
 
     if (newC && persona && persona.name) {
-      newC = newC.replaceAll(persona.name, '{{user}}');
+      newC = newC.replaceAll(persona.name, "{{user}}");
     }
 
     return newC;
-  }
+  };
 
-  // Determine the default author based on the most recent message
   useEffect(() => {
     if (mostRecentMessage) {
-      setAuthor(mostRecentMessage.author === 'user' || mostRecentMessage.author === 'system' ? 'assistant' : 'user');
+      setAuthor(
+        mostRecentMessage.author === "user" || mostRecentMessage.author === "system"
+          ? "assistant"
+          : "user"
+      );
     } else {
-      setAuthor('system'); // Default to system if no messages
+      setAuthor("system");
     }
   }, [mostRecentMessage]);
 
@@ -65,9 +111,9 @@ const AddMessageForm = ({
         conversationId,
         author,
         content: replaceCharAndUser(content),
-        rejected: author === 'assistant' && rejected ? replaceCharAndUser(rejected) : null,
+        rejected: author === "assistant" && rejected ? replaceCharAndUser(rejected) : null,
       });
-      setContent(''); // Clear content after saving
+      setContent(""); // Clear content after saving
     }
   };
 
@@ -91,20 +137,20 @@ const AddMessageForm = ({
       </div>
 
       <ExpandableTextarea
-        label='Message Content'
+        label={`Message Content [${contentTokenCount} tokens]`}
         ref={contentRef}
         onChange={setContent}
         value={content}
         onKeyDown={handleKeyDown}
       />
-      {author === 'assistant' &&
+      {author === "assistant" && (
         <ExpandableTextarea
-          label='Rejected Content (optional)'
+          label={`Rejected Content (optional) [${rejectedTokenCount} tokens]`}
           onChange={setRejected}
           value={rejected}
           onKeyDown={handleKeyDown}
         />
-      }
+      )}
 
       <div className="flex justify-end gap-2 mt-2">
         <button

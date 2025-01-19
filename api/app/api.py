@@ -1,6 +1,4 @@
-import asyncio
 import os
-import threading
 from app.image_utils import get_image_path, save_image, validate_image
 from app.count_tokens import count_tokens
 from fastapi import Body, APIRouter, HTTPException, Depends, UploadFile, File, Query
@@ -39,6 +37,12 @@ class CharacterUpdate(BaseModel):
     example_messages: Optional[str] = None
     post_history_instructions: Optional[str] = None
 
+class ProposedMessage(BaseModel):
+    conversation_id: int
+    author: str
+    content: str
+    rejected: str | None = None
+
 def get_db():
     db = SessionLocal()
     try:
@@ -46,20 +50,58 @@ def get_db():
     finally:
         db.close()
 
-async def invalidate_caches(message_id=None, conversation_id=None):
-    async def invalidate():
-        if message_id:
-            pattern = f"message:{message_id}:*"
-            keys = await redis.keys(pattern)
-            for key in keys:
-                await redis.delete(key)
-        if conversation_id:
-            pattern = f"conversation:{conversation_id}:*"
-            keys = await redis.keys(pattern)
-            for key in keys:
-                await redis.delete(key)
+def replace_placeholders(content: str, conversation: Conversation):
+    if not content:
+        return None
 
-    threading.Thread(target=lambda: asyncio.run(invalidate())).start()
+    persona = conversation.persona if conversation.persona else None
+    character = conversation.character if conversation.character else None
+    prompt = conversation.prompt if conversation.prompt else None
+
+    if prompt:
+        content = content.replace("{{system_prompt}}", prompt.content)
+    else:
+        content = content.replace("{{system_prompt}}", "")
+    
+    if persona:
+        content = content.replace("{{persona}}", persona.content)
+    else:
+        content = content.replace("{{persona}}", "")
+    
+    if character:
+        content = content.replace("{{first_message}}", character.first_message)
+        content = content.replace("{{scenario}}", character.scenario or "")
+        content = content.replace("{{personality}}", character.personality or "")
+        content = content.replace("{{description}}", character.description)
+    else:
+        content = content.replace("{{first_message}}", "")
+        content = content.replace("{{scenario}}", "")
+        content = content.replace("{{personality}}", "")
+        content = content.replace("{{description}}", "")
+    
+    if persona:
+        content = content.replace("{{user}}", persona.name)
+    else:
+        content = content.replace("{{user}}", "user")
+    
+    if character:
+        content = content.replace("{{char}}", character.name)
+    else:
+        content = content.replace("{{char}}", "assistant")
+
+    return content
+
+async def invalidate_caches(message_id=None, conversation_id=None):
+    if message_id:
+        pattern = f"message:{message_id}:*"
+        keys = await redis.keys(pattern)
+        for key in keys:
+            await redis.delete(key)
+    if conversation_id:
+        pattern = f"conversation:{conversation_id}:*"
+        keys = await redis.keys(pattern)
+        for key in keys:
+            await redis.delete(key)
 
 # Add a conversation
 @router.post("/conversations")
@@ -114,11 +156,12 @@ async def add_message(
         message = Message(conversation_id=conversation_id, author=author, content=content, order=order, rejected=rejected)
     else:
         message = Message(conversation_id=conversation_id, author=author, content=content, order=order)
+
     db.add(message)
     db.commit()
     db.refresh(message)
 
-    invalidate_caches(conversation_id=conversation_id)
+    await invalidate_caches(conversation_id=conversation_id)
 
     return message
 
@@ -208,13 +251,13 @@ async def edit_message(
 
     db.commit()
 
-    invalidate_caches(message_id=message_id, conversation_id=message.conversation_id)
+    await invalidate_caches(message_id=message_id, conversation_id=message.conversation_id)
 
     return {"message": "Message updated"}
 
 # Edit a conversation
 @router.put("/conversations/{conversation_id}")
-def edit_conversation(
+async def edit_conversation(
     conversation_id: int, 
     name: Annotated[str, Body()] = None, 
     description: Annotated[str, Body()] = None, 
@@ -226,6 +269,14 @@ def edit_conversation(
     conversation = db.query(Conversation).filter_by(id=conversation_id).first()
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    # Changing these will change the placeholders
+    if (prompt_id != conversation.prompt_id or persona_id != conversation.persona_id or character_id != conversation.character_id):
+        await invalidate_caches(conversation_id=conversation.id)
+
+        messages = db.query(Message).filter(Message.conversation_id == conversation.id).order_by(Message.order).all()
+        for msg in messages:
+            await invalidate_caches(message_id=msg.id)
 
     if name:
         conversation.name = name
@@ -248,6 +299,7 @@ def edit_conversation(
         conversation.prompt_id = prompt_id
 
     db.commit()
+    
     return {"message": "Conversation updated"}
 
 @router.get("/conversations")
@@ -283,8 +335,25 @@ async def get_conversations(
 # Get a list of messages for a conversation
 @router.get("/conversations/{conversation_id}/messages")
 def get_messages(conversation_id: int, db: Session = Depends(get_db)):
+    conversation = db.query(Conversation).filter_by(id=conversation_id).first()
     messages = db.query(Message).filter_by(conversation_id=conversation_id).order_by(Message.order).all()
-    return messages
+
+    full_messages = []
+
+    for message in messages:
+        full_message = {
+            "id": message.id,
+            "author": message.author,
+            "order": message.order,
+            "content": message.content,
+            "rejected": message.rejected,
+            "full_content": replace_placeholders(message.content, conversation),
+            "full_rejected": replace_placeholders(message.rejected, conversation)
+        }
+
+        full_messages.append(full_message)
+
+    return full_messages
 
 # Get a list of tags for a conversation
 @router.get("/conversations/{conversation_id}/tags")
@@ -316,14 +385,18 @@ async def get_token_count(conversation_id: int, model_identifier: str, db: Sessi
     if not messages:
         await redis.set(cache_key, 0, ex=3600)
         return {"token_count": 0}
+    
+    conversation = db.query(Conversation).filter_by(id=conversation_id).first()
 
-    formatted_messages = [
-        {
+    formatted_messages = []
+
+    for msg in messages:
+        content = replace_placeholders(msg.content, conversation)
+        
+        formatted_messages.append({
             "role": "user" if msg.author.lower() == "user" else "assistant" if msg.author.lower() == "assistant" else "system",
-            "content": msg.content,
-        }
-        for msg in messages
-    ]
+            "content": content,
+        })
 
     token_count = count_tokens(formatted_messages, model_identifier)
     await redis.set(cache_key, token_count, ex=3600)
@@ -340,11 +413,14 @@ async def get_message_token_count(message_id: int, model_identifier: str, db: Se
     message = db.query(Message).filter_by(id=message_id).first()
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
+    
+    conversation = db.query(Conversation).filter_by(id=message.conversation_id).first()
+    content = replace_placeholders(message.content, conversation)
 
     formatted_message = [
         {
             "role": "user" if message.author.lower() == "user" else "assistant" if message.author.lower() == "assistant" else "system",
-            "content": message.content,
+            "content": content,
         }
     ]
 
@@ -352,10 +428,12 @@ async def get_message_token_count(message_id: int, model_identifier: str, db: Se
 
     rejected_count = 0
     if message.rejected:
+        rejected = replace_placeholders(message.rejected, conversation)
+
         formatted_rejected = [
             {
                 "role": "user" if message.author.lower() == "user" else "assistant" if message.author.lower() == "assistant" else "system",
-                "content": message.rejected,
+                "content": rejected,
             }
         ]
         rejected_count = count_tokens(formatted_rejected, model_identifier, False)
@@ -363,6 +441,40 @@ async def get_message_token_count(message_id: int, model_identifier: str, db: Se
     result = {"token_count": token_count, "rejected_token_count": rejected_count}
     await redis.set(cache_key, json.dumps(result), ex=3600)
     return result
+
+@router.post("/proposed_messages/token_count")
+async def count_proposed_message_tokens(
+    proposed_message: ProposedMessage, 
+    model_identifier: str,
+    db: Session = Depends(get_db)
+):
+    conversation = db.query(Conversation).filter_by(id=proposed_message.conversation_id).first()
+        
+    content = replace_placeholders(proposed_message.content, conversation)
+
+    formatted_message = [
+        {
+            "role": "user" if proposed_message.author.lower() == "user" else "assistant" if proposed_message.author.lower() == "assistant" else "system",
+            "content": content,
+        }
+    ]
+
+    token_count = count_tokens(formatted_message, model_identifier, False)
+    rejected_count = 0
+
+    if proposed_message.rejected:
+        rejected = replace_placeholders(proposed_message.rejected, conversation)
+
+        formatted_rejected = [
+            {
+                "role": "user" if proposed_message.author.lower() == "user" else "assistant" if proposed_message.author.lower() == "assistant" else "system",
+                "content": rejected,
+            }
+        ]
+
+        rejected_count = count_tokens(formatted_rejected, model_identifier, False)
+
+    return {"token_count": token_count, "rejected_token_count": rejected_count}
 
 # Delete a message
 @router.delete("/messages/{message_id}")
@@ -374,7 +486,7 @@ async def delete_message(message_id: int, db: Session = Depends(get_db)):
     db.delete(message)
     db.commit()
 
-    invalidate_caches(message_id=message_id, conversation_id=message.conversation_id)
+    await invalidate_caches(message_id=message_id, conversation_id=message.conversation_id)
 
     return {"message": "Message deleted"}
 
@@ -555,9 +667,6 @@ async def get_conversations_jsonl(request: dict = Body(...), db: Session = Depen
         tag_names = [tag.name for tag in tags]
         messages = db.query(Message).filter(Message.conversation_id == conversation.id).order_by(Message.order).all()
 
-        persona_name = conversation.persona.name if conversation.persona else None
-        character_name = conversation.character.name if conversation.character else None
-
         conversation_data = {
             "id": conversation.id,
             "name": conversation.name,
@@ -567,11 +676,7 @@ async def get_conversations_jsonl(request: dict = Body(...), db: Session = Depen
         }
 
         for message in messages:
-            content = message.content
-            if persona_name:
-                content = content.replace("{{user}}", persona_name)
-            if character_name:
-                content = content.replace("{{char}}", character_name)
+            content = replace_placeholders(message.content, conversation)
 
             conversation_data["conversation"].append({
                 "from": message.author,
@@ -597,7 +702,6 @@ async def upload_character_image(character_id: int, image: UploadFile = File(...
     character.image = filename
     db.commit()
     return character
-
 
 # GET /characters/{character_id}/image
 @router.get("/characters/{character_id}/image")
@@ -694,6 +798,6 @@ async def delete_conversation(conversation_id: int, db: Session = Depends(get_db
     db.delete(conversation)
     db.commit()
 
-    invalidate_caches(conversation_id=conversation_id)
+    await invalidate_caches(conversation_id=conversation_id)
 
     return {"message": "Conversation and its related data deleted successfully"}
