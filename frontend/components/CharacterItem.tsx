@@ -5,6 +5,7 @@ import ExpandableTextarea from "./ExpandableTextarea";
 import apiClient from "../lib/api";
 import { toast } from "react-toastify";
 import ReactDOM from "react-dom";
+import { PencilIcon, TrashIcon } from "@heroicons/react/outline";
 
 const CharacterItem = ({ character, onSave }: { character: any, onSave: () => void }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -104,19 +105,19 @@ const CharacterItem = ({ character, onSave }: { character: any, onSave: () => vo
     <Accordion key={character.id} title={name} id={character.id} name={character.name} type='character'>
       <div className="border-b border-gray-600 pb-4 mb-4 relative">
         <div className="flex justify-between items-center">
-          <div className="flex space-x-2 absolute top-2 right-2">
+          <div className="flex space-x-2 absolute top-1 right-1">
             <button
               onClick={() => setIsEditing(true)}
-              className="text-blue-500 hover:text-blue-600 mt-2"
+              className="text-grey-300 hover:text-yellow-300"
             >
-              ✏️
+              <PencilIcon className="h-5 w-5" />
             </button>
             <button
               onClick={() => setIsDeleting(true)}
-              className="text-red-400 hover:text-red-500"
+              className="text-grey-300 hover:text-red-300"
               aria-label="Delete message"
             >
-              🗑️
+              <TrashIcon className="h-5 w-5" />
             </button>
           </div>
           <div className="text-sm text-gray-300 w-11/12">

@@ -6,6 +6,7 @@ import FormattedText from './FormattedText';
 import { toast } from 'react-toastify';
 import ExpandableTextarea from './ExpandableTextarea';
 import ReactDOM from 'react-dom';
+import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
 
 const ConversationItem = ({
   conversation,
@@ -449,19 +450,19 @@ const ConversationItem = ({
                   ))}
                 </div>
               </div>
-              <div className="flex space-x-2 absolute top-2 right-2">
+              <div className="flex space-x-2 absolute top-1 right-1">
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="text-blue-500 hover:text-blue-600 mt-2"
+                  className="text-grey-300 hover:text-yellow-300"
                 >
-                  ✏️
+                  <PencilIcon className="h-5 w-5" />
                 </button>
                 <button
                   onClick={() => setIsDeleting(true)}
-                  className="text-red-400 hover:text-red-500"
+                  className="text-grey-300 hover:text-red-300"
                   aria-label="Delete message"
                 >
-                  🗑️
+                  <TrashIcon className="h-5 w-5" />
                 </button>
               </div>
             </div>

@@ -6,31 +6,52 @@ import ConversationItem from '../components/ConversationItem';
 import { useSelector } from 'react-redux';
 import { RootState } from '../context/store';
 import { toast } from 'react-toastify';
+import FilterBox from '../components/FilterBox';
 
 const Conversations = () => {
   const [conversations, setConversations] = useState<any[]>([]);
-  const [isAdding, setIsAdding] = useState(false); // Control visibility of the form
-  const [loading, setLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
   const [expandedConversationId, setExpandedConversationId] = useState(null);
+  const [filters, setFilters] = useState({ tags: [], characterIds: [], personaIds: [], promptIds: [] });
 
   const selectedModel = useSelector((state: RootState) => state.model.selectedModel);
 
   useEffect(() => {
-    fetchConversations();
-  }, []);
+    fetchConversations(filters);
+  }, [filters]);
 
-  const fetchConversations = async () => {
-    setLoading(true);
+  const fetchConversations = async (filters: any) => {
     try {
-      const response = await apiClient.get('/conversations');
-      const sortedConversations = response.data.sort((a: any, b: any) => b.id - a.id); // Newest first
-      setConversations(sortedConversations);
+      let url = '/conversations?';
+      if (filters.tags.length > 0) {
+        filters.tags.forEach((tag: string) => {
+          url += `tags=${encodeURIComponent(tag)}&`;
+        });
+      }
+      if (filters.characterIds.length > 0) {
+        filters.characterIds.forEach((id: number) => {
+          url += `character_ids=${encodeURIComponent(id)}&`;
+        });
+      }
+      if (filters.personaIds.length > 0) {
+        filters.personaIds.forEach((id: number) => {
+          url += `persona_ids=${encodeURIComponent(id)}&`;
+        });
+      }
+      if (filters.promptIds.length > 0) {
+        filters.promptIds.forEach((id: number) => {
+          url += `prompt_ids=${encodeURIComponent(id)}&`;
+        });
+      }
+
+      // Make the API call
+      const response = await apiClient.get(url);
+      setConversations(response.data);
     } catch (error) {
-      console.error('Error fetching conversations:', error);
-    } finally {
-      setLoading(false);
+      toast.error('Error fetching conversations.');
     }
   };
+
 
   const handleSaveConversation = async (newConversation: any) => {
     try {
@@ -51,28 +72,27 @@ const Conversations = () => {
 
       toast.success('Conversation saved successfully.');
       // Reload conversations and close the form
-      await fetchConversations();
+      await fetchConversations(filters);
       setIsAdding(false);
     } catch (error) {
       toast.error('Failed to save conversation.');
     }
   };
 
-  if (loading) {
-    return <Layout><div>Loading...</div></Layout>;
-  }
-
   return (
     <Layout>
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Conversations</h1>
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            onClick={() => setIsAdding(true)}
-          >
-            + Add New Conversation
-          </button>
+          <div className="flex">
+            <FilterBox onFilterChange={setFilters} />
+            <button
+              className="bg-blue-500 text-white px-4 py-2 ml-2 rounded hover:bg-blue-600"
+              onClick={() => setIsAdding(true)}
+            >
+              + Add New Conversation
+            </button>
+          </div>
         </div>
 
         {/* Add Conversation Form */}
@@ -84,11 +104,12 @@ const Conversations = () => {
         )}
 
         {/* Conversations List */}
+        {conversations.length === 0 && <p className="text-gray-500">No conversations found.</p>}
         {conversations.map((conversation) => (
           <ConversationItem
             key={conversation.id}
             conversation={conversation}
-            fetchConversations={fetchConversations}
+            fetchConversations={() => fetchConversations(filters)}
             modelIdentifier={selectedModel}
             expandedConversation={expandedConversationId === conversation.id}
             setExpandedConversation={(t: boolean) => setExpandedConversationId(t ? conversation.id : null)}

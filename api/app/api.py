@@ -221,11 +221,35 @@ def edit_conversation(
     db.commit()
     return {"message": "Conversation updated"}
 
-# Get a list of conversations
 @router.get("/conversations")
-def get_conversations(db: Session = Depends(get_db)):
-    conversations = db.query(Conversation).all()
+async def get_conversations(
+    db: Session = Depends(get_db),
+    tags: Optional[List[str]] = Query(default=None),  # List of tags to filter by
+    character_ids: Optional[List[int]] = Query(default=None),  # List of character IDs
+    persona_ids: Optional[List[int]] = Query(default=None),   # List of persona IDs
+    prompt_ids: Optional[List[int]] = Query(default=None),    # List of prompt IDs
+):
+    query = db.query(Conversation)
+
+    # Filter by tags
+    if tags:
+        query = query.join(Conversation.tags).filter(Tag.name.in_(tags))
+
+    # Filter by characters (OR search)
+    if character_ids:
+        query = query.filter(Conversation.character_id.in_(character_ids))
+
+    # Filter by personas (OR search)
+    if persona_ids:
+        query = query.filter(Conversation.persona_id.in_(persona_ids))
+
+    # Filter by prompts (OR search)
+    if prompt_ids:
+        query = query.filter(Conversation.prompt_id.in_(prompt_ids))
+
+    conversations = query.all()
     return conversations
+
 
 # Get a list of messages for a conversation
 @router.get("/conversations/{conversation_id}/messages")

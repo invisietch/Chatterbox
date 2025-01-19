@@ -6,6 +6,7 @@ import { highlightPlaceholders, highlightText } from '../lib/textUtils';
 import Avatar from './Avatar';
 import { highlightSlop } from '../lib/slop';
 import ReactDOM from 'react-dom';
+import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
 
 const MessageItem = ({
   message,
@@ -199,20 +200,20 @@ const MessageItem = ({
             {!isEditing && (
               <button
                 onClick={handleEdit}
-                className="text-blue-400 hover:text-blue-500"
+                className="text-grey-300 hover:text-yellow-300"
                 aria-label="Edit message"
               >
-                ✏️
+                <PencilIcon className='h-5 w-5' />
               </button>
             )}
 
             {!isEditing && (
               <button
                 onClick={() => setIsDeleting(true)}
-                className="text-red-400 hover:text-red-500"
+                className="text-grey-300 hover:text-red-300"
                 aria-label="Delete message"
               >
-                🗑️
+                <TrashIcon className='h-5 w-5' />
               </button>
             )}
           </div>
