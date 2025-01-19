@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import classNames from 'classnames';
 import ModelSearch from './ModelSearch';
 
 const Navbar = () => {
@@ -15,7 +14,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-gray-800 h-16 flex items-center px-6">
+    <nav className="bg-dark1 h-16 flex items-center px-6">
       <div className="container mx-auto flex justify-between items-center">
         {/* Left side: Site name and Links */}
         <div className="flex items-center space-x-8">

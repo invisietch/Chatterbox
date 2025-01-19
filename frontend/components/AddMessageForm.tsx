@@ -120,14 +120,14 @@ const AddMessageForm = ({
   return (
     <form onSubmit={handleSubmit} className="mt-4 space-y-4">
       <div>
-        <div className="border-b border-gray-600 pb-4 relative">
+        <div className="pb-1 relative">
           <h3>Author</h3>
         </div>
         <div className="flex flex-col items-center p-4">
           <select
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
-            className="p-2 border rounded bg-gray-800 text-gray-200 w-full mt-1"
+            className="p-2 border rounded bg-dark text-gray-200 w-full mt-1"
           >
             <option value="system">System</option>
             <option value="user">User</option>
@@ -156,13 +156,13 @@ const AddMessageForm = ({
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          className="px-4 py-2 bg-dark1 text-white rounded hover:bg-dark2"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
         >
           Save Message
         </button>

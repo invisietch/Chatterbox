@@ -82,13 +82,13 @@ export default function CharactersPage() {
           </h1>
           <div>
             <button
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              className="bg-fadedYellow text-white px-4 py-2 rounded hover:bg-brightYellow"
               onClick={() => setIsAddingCharacter(true)}
             >
               📷 Import from PNG
             </button>
             <button
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-2"
+              className="bg-fadedGreen text-white px-4 py-2 rounded hover:bg-brightGreen ml-2"
               onClick={() => setIsManuallyAddingCharacter(true)}
             >
               + Add New Character

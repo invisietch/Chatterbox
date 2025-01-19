@@ -140,13 +140,13 @@ const MessageItem = ({
   };
 
   const avatarData = message.author === 'user' ? persona : message.author === 'assistant' ? character : null;
-  const wrapperClass = `${warning ? "bg-warningHighlight" : ""} ${showRejected ? "bg-red-950" : "bg-green-950"
-    } border-b border-gray-600 pb-4 mb-4 relative flex`;
-  const typeLabelClass = showRejected ? 'text-red-100' : 'text-green-100';
+  const wrapperClass = `${warning ? "bg-warningHighlight" : ""} ${showRejected ? "border-fadedRed" : "border-fadedGreen"
+    } border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg`;
+  const typeLabelClass = showRejected ? 'text-brightRed' : 'text-brightGreen';
 
   return (
     <div className={wrapperClass}>
-      <div className="flex-shrink-0 mr-4 p-4">
+      <div className="flex-shrink-0 mr-4 p-4 ml-2">
         {avatarData ? (
           <Avatar
             id={avatarData.id}
@@ -182,17 +182,22 @@ const MessageItem = ({
                 <div
                   className={`relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in`}
                 >
-                  <input
-                    type="checkbox"
-                    checked={showRejected}
-                    onChange={() => setShowRejected(!showRejected)}
-                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                    style={{ transition: '0.3s all' }}
-                  />
-                  <span
-                    className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${showRejected ? 'bg-red-600' : 'bg-green-600'
-                      }`}
-                  ></span>
+                  <div className="relative inline-block w-12 h-6">
+                    <input
+                      type="checkbox"
+                      checked={showRejected}
+                      onChange={() => setShowRejected(!showRejected)}
+                      className="toggle-checkbox absolute opacity-0 w-0 h-0"
+                    />
+                    <span
+                      className={`toggle-label block w-full h-full rounded-full cursor-pointer transition-colors duration-300 ${showRejected ? 'bg-fadedRed' : 'bg-fadedGreen'
+                        }`}
+                    ></span>
+                    <span
+                      className={`toggle-indicator absolute top-0 left-0 w-6 h-6 rounded-full bg-white border-4 transform transition-transform duration-300 ${showRejected ? 'translate-x-6' : 'translate-x-0'
+                        }`}
+                    ></span>
+                  </div>
                 </div>
               </label>
             )}
@@ -235,13 +240,13 @@ const MessageItem = ({
             <div className="mt-2 flex justify-end space-x-2">
               <button
                 onClick={handleCancel}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                className="px-4 py-2 bg-dark1 text-white rounded hover:bg-dark2"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
               >
                 Save Message
               </button>
@@ -253,20 +258,20 @@ const MessageItem = ({
       {isDeleting &&
         ReactDOM.createPortal(
           <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50 z-50">
-            <div className="bg-gray-800 p-6 rounded-lg max-w-sm w-full">
+            <div className="bg-dark p-6 rounded-lg max-w-sm w-full">
               <h3 className="text-lg font-bold text-white mb-4">
                 Are you sure you want to delete this message?
               </h3>
               <div className="flex justify-end space-x-2">
                 <button
                   onClick={() => setIsDeleting(false)}
-                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                  className="px-4 py-2 bg-dark1 text-white rounded hover:bg-dark2"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  className="px-4 py-2 bg-fadedRed text-white rounded hover:bg-brightRed"
                 >
                   Delete
                 </button>

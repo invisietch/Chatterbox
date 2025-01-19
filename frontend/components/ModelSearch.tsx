@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedModel, initialState } from '../context/modelSlice';
 import { RootState } from '../context/store';
+import { PencilIcon } from '@heroicons/react/outline';
 
 const ModelSearch = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -64,7 +65,7 @@ const ModelSearch = () => {
         <input
           type="text"
           placeholder="Search for a model..."
-          className="p-2 border rounded w-full bg-gray-700 text-gray-200"
+          className="p-2 border rounded w-full bg-dark text-gray-200"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -77,21 +78,20 @@ const ModelSearch = () => {
           </span>
           <button
             onClick={changeModel}
-            className="text-blue-400 hover:text-blue-500"
-            aria-label="Edit model"
+            className="text-grey-300 hover:text-yellow-300"
           >
-            ✏️
+            <PencilIcon className="h-5 w-5" />
           </button>
         </div>
       )}
 
       {/* Search results */}
       {results.length > 0 && (
-        <div className="absolute bg-gray-800 text-gray-200 border border-gray-600 rounded mt-2 w-full z-10 max-h-40 overflow-y-auto">
+        <div className="absolute bg-dark text-gray-200 border border-gray-600 rounded mt-2 w-full z-10 max-h-40 overflow-y-auto">
           {results.map((result) => (
             <div
               key={result.id}
-              className="p-2 hover:bg-gray-700 cursor-pointer"
+              className="p-2 hover:bg-dark1 cursor-pointer"
               onClick={() => handleSelectModel(result.id)}
             >
               {result.id}

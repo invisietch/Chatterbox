@@ -302,7 +302,7 @@ const ConversationItem = ({
     <div className="pb-4 mb-4">
       {isEditing ? (
         <div>
-          <div className="border-b border-gray-600 pb-4 relative">
+          <div className="pb-1 relative">
             <h3>Name</h3>
           </div>
           <div className="flex flex-col items-center p-4">
@@ -316,7 +316,7 @@ const ConversationItem = ({
           <ExpandableTextarea value={description} onChange={setDescription} label='Description' />
 
           <div className="mb-2">
-            <div className="border-b border-gray-600 pb-4 relative">
+            <div className="border-b border-gray-600 pb-1 relative">
               <h3>Tags</h3>
             </div>
             <div className="flex flex-col items-center p-4">
@@ -352,7 +352,7 @@ const ConversationItem = ({
             ))}
           </div>
           <div className="mb-2">
-            <div className="border-b border-gray-600 pb-4 relative">
+            <div className="border-b border-gray-600 pb-1 relative">
               <h3>Character (Optional)</h3>
             </div>
             <div className="flex flex-col items-center p-4">
@@ -373,7 +373,7 @@ const ConversationItem = ({
             </div>
           </div>
           <div className="mb-2">
-            <div className="border-b border-gray-600 pb-4 relative">
+            <div className="border-b border-gray-600 pb-1 relative">
               <h3>Prompt (Optional)</h3>
             </div>
             <div className="flex flex-col items-center p-4">
@@ -394,7 +394,7 @@ const ConversationItem = ({
             </div>
           </div>
           <div className="mb-2">
-            <div className="border-b border-gray-600 pb-4 relative">
+            <div className="border-b border-gray-600 pb-1 relative">
               <h3>Persona (Optional)</h3>
             </div>
             <div className="flex flex-col items-center p-4">

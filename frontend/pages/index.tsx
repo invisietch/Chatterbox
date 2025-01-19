@@ -87,7 +87,7 @@ const Conversations = () => {
           <div className="flex">
             <FilterBox onFilterChange={setFilters} />
             <button
-              className="bg-blue-500 text-white px-4 py-2 ml-2 rounded hover:bg-blue-600"
+              className="bg-fadedGreen text-white px-4 py-2 ml-2 rounded hover:bg-brightGreen"
               onClick={() => setIsAdding(true)}
             >
               + Add New Conversation

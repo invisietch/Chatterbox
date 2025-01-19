@@ -8,7 +8,7 @@ interface TagPillProps {
 
 const TagPill: React.FC<TagPillProps> = ({ tag, onRemove, isLink = false }) => {
   return (
-    <div className="inline-flex items-center bg-gray-700 text-gray-200 text-sm px-2 py-1 rounded mr-2">
+    <div className="inline-flex items-center bg-dark1 text-gray-200 text-sm px-2 py-1 rounded mr-2">
       {isLink ? (
         <a href={`/tags/${tag}`} className="hover:underline">
           {tag}
@@ -18,7 +18,7 @@ const TagPill: React.FC<TagPillProps> = ({ tag, onRemove, isLink = false }) => {
       )}
       {onRemove && (
         <button
-          className="ml-2 text-red-500 hover:text-red-600"
+          className="ml-2 text-fadedRed hover:text-brightRed"
           onClick={() => onRemove(tag)}
           aria-label={`Remove ${tag}`}
         >

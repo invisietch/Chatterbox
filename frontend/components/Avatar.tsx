@@ -115,7 +115,7 @@ const Avatar: React.FC<AvatarProps> = ({ id, name, type, seed, size = 120 }) => 
       <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} className="relative z-50">
         <div className="fixed inset-0 bg-black bg-opacity-50" />
         <div className="fixed inset-0 flex items-center justify-center">
-          <div className="bg-gray-800 rounded-lg shadow-lg p-4 w-full max-w-md">
+          <div className="bg-dark rounded-lg shadow-lg p-4 w-full max-w-md">
             <Dialog.Title className="text-xl font-bold text-white mb-4">Crop Image</Dialog.Title>
 
             <div className="relative w-full h-64 bg-gray-900 rounded">

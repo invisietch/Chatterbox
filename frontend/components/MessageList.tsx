@@ -232,7 +232,7 @@ const MessageList = ({
         <div className="mt-4 text-center">
           <button
             onClick={() => createSystemMessage()}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-fadedYellow text-white rounded hover:bg-brightYellow"
           >
             + Create System Message
           </button>
@@ -243,7 +243,7 @@ const MessageList = ({
         <div className="mt-4 text-center">
           <button
             onClick={() => createFirstMessage()}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-fadedYellow text-white rounded hover:bg-brightYellow"
           >
             + Add Character First Message
           </button>
@@ -255,7 +255,7 @@ const MessageList = ({
         <div className="mt-4 text-center">
           <button
             onClick={() => setIsAddingMessage(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
           >
             + Add New Message
           </button>

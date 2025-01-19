@@ -91,14 +91,14 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
       {/* Button to toggle filter visibility */}
       <button
         onClick={() => setShowFilters(!showFilters)}
-        className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 flex items-center gap-2"
+        className="bg-dark1 text-white px-4 py-2 rounded hover:bg-dark2 flex items-center gap-2"
       >
         <FilterIcon className="h-6 w-6" /> {/* Add the filter icon */}
       </button>
 
       {/* Filter dropdown */}
       {showFilters && (
-        <div className="absolute top-full left-0 mt-2 p-4 bg-gray-900 border border-gray-600 rounded shadow-lg z-50 w-80">
+        <div className="absolute top-full left-0 mt-2 p-4 bg-dark border border-dark1 rounded shadow-lg z-50 w-80">
           {/* Tag Filter */}
           <div className="mb-4">
             <h3 className="font-bold mb-2">Tags</h3>
@@ -107,14 +107,14 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
               placeholder="Type to search tags..."
               value={tagInput}
               onChange={handleTagInput}
-              className="w-full p-2 border rounded bg-gray-800 text-gray-200"
+              className="w-full p-2 border rounded bg-dark text-gray-200"
             />
             {tagSuggestions.length > 0 && (
-              <div className="bg-gray-700 border border-gray-600 rounded mt-2">
+              <div className="bg-dark border border-gray-600 rounded mt-2">
                 {tagSuggestions.map((tag) => (
                   <div
                     key={tag}
-                    className="p-2 cursor-pointer hover:bg-gray-600"
+                    className="p-2 cursor-pointer hover:bg-dark"
                     onClick={() => handleAddTag(tag)}
                   >
                     {tag}

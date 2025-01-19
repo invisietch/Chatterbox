@@ -144,14 +144,14 @@ const AddConversationForm = ({
   return (
     <div className="p-4 mb-4 rounded">
       <h2 className="text-lg font-bold mb-2">Add New Conversation</h2>
-      <div className="border-b border-gray-600 pb-4 relative">
+      <div className="border-gray-600 pb-1 relative">
         <h3>Name</h3>
       </div>
       <div className="flex flex-col items-center p-4">
         <input
           value={newConversation.name}
           onChange={(e) => setNewConversation({ ...newConversation, name: e.target.value })}
-          className="w-full p-2 border rounded bg-gray-800 text-gray-200 mb-2"
+          className="w-full p-2 border rounded bg-dark text-gray-200 mb-2"
         />
       </div>
       <ExpandableTextarea value={newConversation.description} onChange={(e) =>
@@ -160,7 +160,7 @@ const AddConversationForm = ({
           description: e,
         })} label='Description' />
       <div className="mb-2">
-        <div className="border-b border-gray-600 pb-4 relative">
+        <div className="border-gray-600 pb-1 relative">
           <h3>Tags</h3>
         </div>
         <div className="flex flex-col items-center p-4">
@@ -170,7 +170,7 @@ const AddConversationForm = ({
             value={tagInput}
             onChange={handleTagInput}
             onKeyDown={handleTagKeyDown}
-            className="w-full p-2 border rounded bg-gray-800 text-gray-200"
+            className="w-full p-2 border rounded bg-dark text-gray-200"
           />
         </div>
         {tagSuggestions.length > 0 && (
@@ -193,7 +193,7 @@ const AddConversationForm = ({
         ))}
       </div>
       <div className="mb-2">
-        <div className="border-b border-gray-600 pb-4 relative">
+        <div className="border-gray-600 pb-1 relative">
           <h3>Character (Optional)</h3>
         </div>
         <div className="flex flex-col items-center p-4">
@@ -205,7 +205,7 @@ const AddConversationForm = ({
                 characterId: e.target.value ? parseInt(e.target.value) : null,
               })
             }
-            className="w-full p-2 border rounded bg-gray-800 text-gray-200 overflow-y-auto"
+            className="w-full p-2 border rounded bg-dark text-gray-200 overflow-y-auto"
           >
             <option value="">No character</option>
             {characters.map((character) => (
@@ -217,7 +217,7 @@ const AddConversationForm = ({
         </div>
       </div>
       <div className="mb-2">
-        <div className="border-b border-gray-600 pb-4 relative">
+        <div className="border-gray-600 pb-1 relative">
           <h3>Prompt (Optional)</h3>
         </div>
         <div className="flex flex-col items-center p-4">
@@ -229,7 +229,7 @@ const AddConversationForm = ({
                 promptId: e.target.value ? parseInt(e.target.value) : null,
               })
             }
-            className="w-full p-2 border rounded bg-gray-800 text-gray-200 overflow-y-auto"
+            className="w-full p-2 border rounded bg-dark text-gray-200 overflow-y-auto"
           >
             <option value="">No prompt</option>
             {prompts.map((prompt) => (
@@ -241,7 +241,7 @@ const AddConversationForm = ({
         </div>
       </div>
       <div className="mb-2">
-        <div className="border-b border-gray-600 pb-4 relative">
+        <div className="border-gray-600 pb-1 relative">
           <h3>Persona (Optional)</h3>
         </div>
         <div className="flex flex-col items-center p-4">
@@ -253,7 +253,7 @@ const AddConversationForm = ({
                 personaId: e.target.value ? parseInt(e.target.value) : null,
               })
             }
-            className="w-full p-2 border rounded bg-gray-800 text-gray-200 overflow-y-auto"
+            className="w-full p-2 border rounded bg-dark text-gray-200 overflow-y-auto"
           >
             <option value="">No persona</option>
             {personas.map((persona) => (
@@ -266,13 +266,13 @@ const AddConversationForm = ({
       </div>
       <div className="flex justify-end space-x-2 mt-4">
         <button
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          className="px-4 py-2 bg-dark1 text-white rounded hover:bg-dark2"
           onClick={onCancel}
         >
           Cancel
         </button>
         <button
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
           onClick={handleSave}
         >
           Save

@@ -149,11 +149,11 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
         type="file"
         accept="image/*"
         onChange={handleFileChange}
-        className="mb-4 block w-full text-sm bg-gray-700 text-gray-100 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+        className="mb-4 block w-full text-sm bg-dark text-gray-100 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
       />
       {error && <p className="text-red-500">{error}</p>}
       {character && (
-        <div className="mt-4 p-4 border rounded bg-gray-700">
+        <div className="mt-4 p-4 border rounded bg-dark">
           <h2 className="text-xl font-semibold">Character Details</h2>
           <div>
             <h3 className="text-lg font-semibold">Name:</h3>
@@ -213,16 +213,16 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
           )}
           <div className="mt-4 flex space-x-4">
             <button
-              onClick={handleSave}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Save
-            </button>
-            <button
               onClick={handleCancel}
-              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              className="px-4 py-2 bg-dark1 text-white rounded hover:bg-dark2"
             >
               Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
+            >
+              Save
             </button>
           </div>
         </div>
@@ -247,13 +247,13 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
             <div className="mt-4 flex justify-between">
               <button
                 onClick={() => setIsCropperOpen(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                className="px-4 py-2 bg-dark1 text-white rounded hover:bg-dark2"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveCroppedImage}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
               >
                 Save
               </button>

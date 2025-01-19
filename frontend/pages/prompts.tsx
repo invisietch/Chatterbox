@@ -59,7 +59,7 @@ export default function PromptsPage() {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Prompts</h1>
           <button
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="bg-fadedGreen text-white px-4 py-2 rounded hover:bg-brightGreen"
             onClick={() => setIsAddingPrompt(true)}
           >
             + Add New Prompt
