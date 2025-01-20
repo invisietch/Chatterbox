@@ -24,11 +24,12 @@ Features so far:
 - Add/edit/delete exchangeable system prompts
 - Add/edit/delete exchangeable user personas
 - Export datasets as sharegpt
+- Connection to koboldcpp & generation of user & assistant responses
 
 To do:
 
-- Connection to popular AI backends - OpenRouter & Kobold first
-- Generate responses (with option to generate 2 and choose 1 for ORPO)
+- Connection to orther AI backends
+- Message variants with chosen/rejected
 - Import SillyTavern convos with auto-link to character/persona if imported
 - ORPO/DPO multi-turn export
 - More... (put suggestions in GitHub issues)
