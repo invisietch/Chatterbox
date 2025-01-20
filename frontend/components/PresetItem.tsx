@@ -29,23 +29,29 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
     setLlmUrl(preset.llm_url);
   }, [preset]);
 
-  const handleSave = async () => {
+  const handleSave = async (
+    updatedName: string,
+    updatedSamplers: Record<string, any>,
+    updatedSamplerOrder: number[],
+    updatedModelName: string,
+    updatedLlmUrl: string
+  ) => {
     try {
       const response = await apiClient.put(`/presets/${preset.id}`, {
-        name,
-        samplers,
-        sampler_order: samplerOrder,
-        model_name: modelName,
-        llm_url: llmUrl,
+        name: updatedName,
+        samplers: updatedSamplers,
+        sampler_order: updatedSamplerOrder,
+        model_name: updatedModelName,
+        llm_url: updatedLlmUrl,
       });
 
       if (selectedPresetId == response.data.preset.toString()) {
         dispatch(
           setPreset({
-            selectedModel: modelName,
-            samplers,
-            samplerOrder,
-            llmUrl,
+            selectedModel: updatedModelName,
+            samplers: updatedSamplers,
+            samplerOrder: updatedSamplerOrder,
+            llmUrl: updatedLlmUrl,
             selectedPresetId: response.data.preset,
           })
         );
@@ -88,12 +94,7 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
   return isEditing ? (
     <AddPresetForm
       onSave={(updatedName, updatedSamplers, updatedOrder, updatedModel, updatedLlmUrl) => {
-        setName(updatedName);
-        setSamplers(updatedSamplers);
-        setSamplerOrder(updatedOrder);
-        setModelName(updatedModel);
-        setLlmUrl(updatedLlmUrl);
-        handleSave();
+        handleSave(updatedName, updatedSamplers, updatedOrder, updatedModel, updatedLlmUrl);
       }}
       onCancel={handleCancel}
       initialValues={{

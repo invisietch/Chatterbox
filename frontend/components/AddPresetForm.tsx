@@ -28,9 +28,11 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
     temperature: 1,
     top_p: 1,
     top_k: 0,
-    min_p: 1.08,
+    min_p: 0.08,
     repetition_penalty: 1.04,
     repetition_penalty_range: 1536,
+    typical_p: 1,
+    tfs: 1,
   });
   const [model, setModel] = useState("");
   const [llmUrl, setLlmUrl] = useState("");
@@ -85,8 +87,13 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
 
   useEffect(() => {
     if (initialValues) {
+      const newSamplers = {
+        ...samplers,
+        ...initialValues.samplers,
+      };
+
       setPresetName(initialValues.name);
-      setSamplers(initialValues.samplers);
+      setSamplers(newSamplers);
       setSamplerOrder(initialValues.samplerOrder.map(samplerId => {
         const sampler = samplerOrderLookup[samplerId];
 
@@ -138,7 +145,7 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
               <label className="text-gray-200 text-sm font-medium">{key}</label>
               <input
                 type="range"
-                min={key === "max_tokens" ? 0 : key === "top_k" ? 0 : key === "top_p" ? 0 : key === "temperature" ? 0 : 1}
+                min={key === "max_tokens" || key === "top_k" || key === "top_p" || key === "min_p" || key === "temperature" || key === "typical_p" || key === "tfs" ? 0 : 1}
                 max={
                   key === "max_tokens"
                     ? 2048
@@ -148,7 +155,7 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
                         ? 8192
                         : key === "temperature"
                           ? 5
-                          : key === "top_p"
+                          : key === "top_p" || key === "min_p" || key === "typical_p" || key === "tfs"
                             ? 1
                             : 2
                 }

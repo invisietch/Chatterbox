@@ -1,3 +1,39 @@
+import hljs from 'highlight.js';
+
+export const extractAndHighlightCodeBlocks = (text: string): {
+  processedText: string;
+  codeBlocks: Record<string, string>;
+} => {
+  const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+  const codeBlocks: Record<string, string> = {};
+  let placeholderIndex = 0;
+
+  const processedText = text.replace(codeBlockRegex, (match, lang, code) => {
+    const placeholder = `{CODE_BLOCK_${placeholderIndex++}}`;
+
+    try {
+      // If a language is specified, highlight using that language
+      if (lang && hljs.getLanguage(lang)) {
+        const highlighted = hljs.highlight(code, { language: lang }).value;
+        codeBlocks[placeholder] = `<pre><code class="hljs ${lang}">${highlighted}</code></pre>`;
+      } else {
+        // Auto-detect language if none is specified
+        const highlighted = hljs.highlightAuto(code).value;
+        codeBlocks[placeholder] = `<pre><code class="hljs">${highlighted}</code></pre>`;
+      }
+    } catch (error) {
+      console.error('Failed to highlight code block:', error);
+      // Fallback to plain text rendering
+      codeBlocks[placeholder] = `<pre><code>${code}</code></pre>`;
+    }
+
+    return placeholder;
+  });
+
+  return { processedText, codeBlocks };
+};
+
+
 export const highlightPlaceholders = (
   inputText: string,
   characterName: string | null,

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../lib/api';
 import { toast } from 'react-toastify';
-import { highlightPlaceholders, highlightText } from '../lib/textUtils';
+import { extractAndHighlightCodeBlocks, highlightPlaceholders, highlightText } from '../lib/textUtils';
 import Avatar from './Avatar';
 import { highlightSlop } from '../lib/slop';
 import { CheckIcon, RefreshIcon, StopIcon, TrashIcon } from '@heroicons/react/outline';
@@ -38,6 +38,10 @@ const ProposedAiMessage = ({
   const [message, setMessage] = useState<any>({ author: '', content: '', conversation_id: '' });
   const [messageText, setMessageText] = useState(content);
   const [slopCount, setSlopCount] = useState(0);
+
+  const { llmUrl } = useSelector(
+    (state: RootState) => state.model
+  );
 
   useEffect(() => {
     const fetchTokenCount = async () => {
@@ -84,28 +88,32 @@ const ProposedAiMessage = ({
 
   useEffect(() => {
     if (content) {
+      const { processedText, codeBlocks } = extractAndHighlightCodeBlocks(content);
+
       const { highlightedText, count } = highlightSlop(
         highlightPlaceholders(
-          highlightText(content),
+          highlightText(processedText), // Apply other highlights only to non-code text
           character?.name || '',
           persona?.name || ''
         )
       );
 
-      setMessageText(highlightedText);
+      // Reinsert code blocks into the highlighted text
+      let finalText = highlightedText;
+      Object.entries(codeBlocks).forEach(([placeholder, highlightedCode]) => {
+        finalText = finalText.replace(placeholder, highlightedCode);
+      });
+
+      setMessageText(finalText);
       setSlopCount(count);
     }
-  }, [character?.name, persona?.name, message?.content]);
+  }, [character?.name, persona?.name, content]);
 
   const handleRegenerate = async () => {
     await regenerate();
   };
 
   const handleAbort = async () => {
-    const { llmUrl } = useSelector(
-      (state: RootState) => state.model
-    );
-
     await cancelGeneration(llmUrl);
   }
 
@@ -150,7 +158,7 @@ const ProposedAiMessage = ({
 
   const avatarData = message.author === 'user' ? persona : message.author === 'assistant' ? character : null;
   const wrapperClass =
-    `${errors ? "bg-warningHighlight" : ""} border-fadedYellow border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg`;
+    `${errors ? "bg-warningHighlight" : ""} border-fadedYellow border-2 border-dotted bg-dark1 pb-4 mb-4 pt-2 relative flex rounded-lg`;
 
   return (
     <div className={wrapperClass}>

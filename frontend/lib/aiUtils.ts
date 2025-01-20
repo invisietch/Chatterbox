@@ -25,21 +25,26 @@ export const fetchResponse = async (
   let localResponse = '';
 
   const promptData = {
-    ...samplers,
     prompt,
-    temp: samplers["temperature"],
+    temperature: samplers["temperature"],
+    min_p: samplers["min_p"],
+    top_p: samplers["top_p"],
+    top_k: samplers["top_k"],
+    max_length: samplers["max_tokens"],
     rep_pen: samplers["repetition_penalty"],
     rep_pen_range: samplers["repetition_penalty_range"],
     stopping_strings: [eosToken],
     sampler_order: samplerOrder,
     skip_special_tokens: true,
     ignore_eos: false,
-    seed: -1,
+    typical: samplers["typical_p"],
+    tfs: samplers["tfs"],
+    sampler_seed: -1,
     stream: true,
   };
 
   try {
-    const response = await fetch(`${llmUrl}/api/v1/completions`, {
+    const response = await fetch(`${llmUrl}/api/extra/generate/stream`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -61,15 +66,13 @@ export const fetchResponse = async (
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const jsonString = line.replace('data: ', '').trim();
-          if (jsonString !== '[DONE]') {
-            try {
-              const parsed = JSON.parse(jsonString);
-              const text = parsed.choices[0]?.text || '';
-              localResponse += text;
-              setResponse(localResponse);
-            } catch (e) {
-              console.error('Failed to parse chunk:', e);
-            }
+          try {
+            const parsed = JSON.parse(jsonString);
+            const text = parsed.token;
+            localResponse += text;
+            setResponse(localResponse);
+          } catch (e) {
+            console.error('Failed to parse chunk:', e);
           }
         }
       }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import apiClient from '../lib/api';
 import { toast } from 'react-toastify';
 import ExpandableTextarea from './ExpandableTextarea';
-import { highlightPlaceholders, highlightText } from '../lib/textUtils';
+import { extractAndHighlightCodeBlocks, highlightPlaceholders, highlightText } from '../lib/textUtils';
 import Avatar from './Avatar';
 import { highlightSlop } from '../lib/slop';
 import ReactDOM from 'react-dom';
@@ -55,30 +55,46 @@ const MessageItem = ({
   }, [message.id, modelIdentifier]);
 
   useEffect(() => {
+    const { processedText, codeBlocks } = extractAndHighlightCodeBlocks(message.full_content);
+
     const { highlightedText, count } = highlightSlop(
       highlightPlaceholders(
-        highlightText(message.full_content),
+        highlightText(processedText),
         character?.name || '',
         persona?.name || ''
       )
     );
 
-    setMessageText(highlightedText);
+    let finalText = highlightedText;
+    Object.entries(codeBlocks).forEach(([placeholder, highlightedCode]) => {
+      finalText = finalText.replace(placeholder, highlightedCode);
+    });
+
+    setMessageText(finalText);
     setSlopCount(count);
 
     if (message.rejected) {
+      const { processedText: rejectedProcessed, codeBlocks: rejectedCodeBlocks } =
+        extractAndHighlightCodeBlocks(message.full_rejected);
+
       const { highlightedText: highlightedRejected, count: rejectedCount } = highlightSlop(
         highlightPlaceholders(
-          highlightText(message.full_rejected),
+          highlightText(rejectedProcessed),
           character?.name || '',
           persona?.name || ''
         )
       );
 
-      setMessageRejected(highlightedRejected);
+      let finalRejectedText = highlightedRejected;
+      Object.entries(rejectedCodeBlocks).forEach(([placeholder, highlightedCode]) => {
+        finalRejectedText = finalRejectedText.replace(placeholder, highlightedCode);
+      });
+
+      setMessageRejected(finalRejectedText);
       setRejectedSlopCount(rejectedCount);
     }
   }, [character?.name, persona?.name, message.content, message.rejected]);
+
 
   const handleEdit = () => setIsEditing(true);
 
