@@ -382,13 +382,30 @@ def get_conversation_with_chat_template(conversation_id: int, model_identifier: 
             author = 'assistant'
         if (invert == 'invert' and msg.author.lower() == 'assistant'):
             author = 'user'
+        
+        prepend = ""
+        if (msg.author.lower()) == 'user':
+            prepend = "{{user}}: "
+        if (msg.author.lower()) == 'assistant':
+            prepend = "{{char}}: "
 
         chat_messages.append({
             "role": author,
-            "content": replace_placeholders(f"{msg.content}", conversation)
+            "content": replace_placeholders(f"{prepend}{msg.content}", conversation)
         })
+        last_author = msg.author.lower()
 
-    return apply_template(chat_messages, model_identifier)
+    postfix = ""
+    if (last_author == 'user'):
+        postfix = replace_placeholders('{{char}}: ', conversation)
+    if (last_author == 'assistant'):
+        postfix = replace_placeholders('{{user}}: ', conversation)
+    
+    results = apply_template(chat_messages, model_identifier)
+    history = results["history"]
+    results["history"] = f"{history}{postfix}"
+
+    return results
 
 # Get a list of tags for a conversation
 @router.get("/conversations/{conversation_id}/tags")

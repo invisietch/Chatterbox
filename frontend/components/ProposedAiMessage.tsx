@@ -18,6 +18,7 @@ const ProposedAiMessage = ({
   errors,
   character,
   persona,
+  cancelAuto,
   regenerate,
   onSave,
   onCancel,
@@ -30,6 +31,7 @@ const ProposedAiMessage = ({
   mostRecentMessage: any;
   character: any | null;
   persona: any | null;
+  cancelAuto: () => void;
   regenerate: () => void;
   onSave: (msg: any) => void;
   onCancel: () => void;
@@ -115,6 +117,7 @@ const ProposedAiMessage = ({
 
   const handleAbort = async () => {
     await cancelGeneration(llmUrl);
+    await cancelAuto();
   }
 
   useEffect(() => {

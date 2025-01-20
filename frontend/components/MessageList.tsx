@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { highlightSlop } from '../lib/slop';
 import MessageItem from './MessageItem';
 import Accordion from './Accordion';
 import AddMessageForm from './AddMessageForm';
 import apiClient from '../lib/api';
 import { toast } from 'react-toastify';
-import { PlusIcon, SparklesIcon } from '@heroicons/react/outline';
+import { FastForwardIcon, PlusIcon, SparklesIcon, StopIcon } from '@heroicons/react/outline';
 import ProposedAiMessage from './ProposedAiMessage';
 import { fetchResponse } from '../lib/aiUtils';
 import { useSelector } from 'react-redux';
@@ -41,10 +41,78 @@ const MessageList = ({
   const [generationErrors, setGenerationErrors] = useState('');
   const [aiInferencing, setAiInferencing] = useState(false);
   const [isGeneratingMessage, setIsGeneratingMessage] = useState(false);
+  const [isAutoGenerating, setIsAutoGenerating] = useState(false);
+  const isAutoGeneratingRef = useRef(isAutoGenerating);
+  const [generationLock, setGenerationLock] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    isAutoGeneratingRef.current = isAutoGenerating;
+  }, [isAutoGenerating]);
 
   const { selectedModel, samplers, samplerOrder, llmUrl, maxContext } = useSelector(
     (state: RootState) => state.model
   );
+
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isGeneratingMessage, isAddingMessage]);
+
+  const autoGenerateResponses = async () => {
+    setIsAutoGenerating(true);
+    isAutoGeneratingRef.current = true;
+
+    let localMostRecent = mostRecentMessage;
+
+    while (isAutoGeneratingRef.current) {
+      try {
+        if (generationLock) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          continue;
+        }
+
+        setGenerationLock(true);
+
+        const newText = await generateResponse(localMostRecent);
+
+        if (newText) {
+          const newMessage = {
+            author:
+              localMostRecent?.author === 'assistant' ? 'user' : 'assistant',
+            content: newText,
+            conversation_id: conversationId,
+          };
+
+          const result = await handleSaveMessage(newMessage);
+
+          if (result) {
+            const { savedMessage } = result;
+            // Update our local variables
+            localMostRecent = savedMessage;
+            setIsGeneratingMessage(false);
+          }
+        } else {
+          break;
+        }
+      } catch (error) {
+        toast.error('Error during auto-generation.');
+      } finally {
+        setGenerationLock(false);
+      }
+    }
+
+    setIsAutoGenerating(false);
+  };
+
+  const stopAutoGeneration = () => {
+    setIsAutoGenerating(false);
+  };
 
   const handleKeyPress = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
@@ -152,18 +220,18 @@ const MessageList = ({
       const response = await apiClient.post(`/conversations/${conversationId}/messages`, newMessage);
       if (response.status === 200) {
         const savedMessage = response.data; // Assuming the API returns the saved message with its ID and other properties
-        const prevMessages = messages;
 
-        // Update the messages state
-        setMessages([...prevMessages, savedMessage]);
+        setMessages((prevMessages) => [...prevMessages, savedMessage]);
         setMostRecentMessage(savedMessage);
 
-        const newWarnings = checkForWarnings([...prevMessages, savedMessage]);
+        const newWarnings = checkForWarnings(messages);
         setWarnings(newWarnings);
 
-        toast.success('Message saved successfully.');
         setIsAddingMessage(false); // Hide the form after saving
         onMessagesChange(true); // Notify parent component of change
+        toast.success('Message saved successfully.');
+
+        return { savedMessage };
       } else {
         toast.error('Failed to save message.');
       }
@@ -172,31 +240,46 @@ const MessageList = ({
     }
   };
 
-  const generateResponse = async () => {
+  const generateResponse = async (mostRecent?: any): Promise<string> => {
     setIsGeneratingMessage(true);
+    setAiInferencing(true);
+    setGeneratedResponse('');
+
+    const localMostRecent = mostRecent || mostRecentMessage;
 
     if (selectedModel && samplers && samplerOrder && llmUrl && maxContext) {
-      const invert = mostRecentMessage.author == 'assistant' ? 'invert' : 'no';
+      const invert = localMostRecent?.author === 'assistant' ? 'invert' : 'no';
       const response = await apiClient.get(
         `/conversations/${conversationId}/with_chat_template?model_identifier=${selectedModel}&invert=${invert}`
       );
       const { history, eos_token } = response.data;
 
-      await fetchResponse(
+      const { localResponse: text, lastFinishReason } = await fetchResponse(
         history,
         eos_token,
         samplers,
         samplerOrder,
         llmUrl,
         maxContext,
-        setGeneratedResponse,
-        setGenerationErrors,
-        setAiInferencing
+        (partial) => setGeneratedResponse(partial),  // keep your UI in sync
+        (err) => setGenerationErrors(err),
+        (loading) => setAiInferencing(loading)
       );
+
+      // Wait for streaming to stop
+      while (aiInferencing) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+
+      return lastFinishReason == 'stop' ? text : null; // <--- Return the final text
     } else {
-      toast.error('Please select a preset in the settings menu (cog in the top right). Cannot generate without a preset.');
+      toast.error(
+        'Please select a preset in the settings menu (cog in the top right). Cannot generate without a preset.'
+      );
+      setAiInferencing(false);
+      return ''; // Return empty if you can't generate
     }
-  }
+  };
 
   const createFirstMessage = async () => {
     const newMessage = {
@@ -274,6 +357,7 @@ const MessageList = ({
           conversationId={conversationId}
           character={character}
           persona={persona}
+          cancelAuto={stopAutoGeneration}
           aiInferencing={aiInferencing}
           content={generatedResponse}
           errors={generationErrors}
@@ -311,21 +395,43 @@ const MessageList = ({
       )}
 
       {/* Add new message button */}
-      {!isAddingMessage && !isGeneratingMessage && (
+      {!isAddingMessage && (
         <div className="mt-4 text-center">
-          <button
-            onClick={() => setIsAddingMessage(true)}
-            className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
-          >
-            <PlusIcon className="h-6 w-6" />
-          </button>
-          {messages.length >= 2 && (
+          {!isAutoGenerating && !isGeneratingMessage && (
             <button
-              onClick={generateResponse}
-              className="ml-2 bg-fadedYellow hover:bg-brightYellow text-white font-bold py-2 px-4 rounded"
+              onClick={() => setIsAddingMessage(true)}
+              className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
             >
-              <SparklesIcon className="h-6 w-6" />
+              <PlusIcon className="h-6 w-6" />
             </button>
+          )}
+          {messages.length >= 2 && (
+            <>
+              {!isAutoGenerating && !isGeneratingMessage && (
+                <button
+                  onClick={generateResponse}
+                  className="ml-2 bg-fadedYellow hover:bg-brightYellow text-white font-bold py-2 px-4 rounded"
+                >
+                  <SparklesIcon className="h-6 w-6" />
+                </button>
+              )}
+              {!isAutoGenerating && !isGeneratingMessage && (
+                <button
+                  onClick={autoGenerateResponses}
+                  className="ml-2 bg-fadedAqua hover:bg-brightAqua text-white font-bold py-2 px-4 rounded"
+                >
+                  <FastForwardIcon className="h-6 w-6" />
+                </button>
+              )}
+              {isAutoGenerating && (
+                <button
+                  onClick={stopAutoGeneration}
+                  className="ml-2 bg-fadedRed hover:bg-brightRed text-white font-bold py-2 px-4 rounded"
+                >
+                  <StopIcon className="h-6 w-6" />
+                </button>
+              )}
+            </>
           )}
         </div>
       )}
@@ -341,6 +447,8 @@ const MessageList = ({
           onCancel={() => setIsAddingMessage(false)}
         />
       )}
+
+      <div ref={messagesEndRef} />
     </Accordion>
   );
 };

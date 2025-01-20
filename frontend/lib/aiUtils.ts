@@ -24,6 +24,7 @@ export const fetchResponse = async (
 ) => {
   setLoading(true);
   let localResponse = '';
+  let lastFinishReason = '';
 
   const promptData = {
     prompt,
@@ -72,6 +73,7 @@ export const fetchResponse = async (
             const parsed = JSON.parse(jsonString);
             const text = parsed.token;
             localResponse += text;
+            lastFinishReason = parsed.finish_reason;
             setResponse(localResponse);
           } catch (e) {
             console.error('Failed to parse chunk:', e);
@@ -84,4 +86,6 @@ export const fetchResponse = async (
   } finally {
     setLoading(false);
   }
+
+  return { localResponse, lastFinishReason };
 };
