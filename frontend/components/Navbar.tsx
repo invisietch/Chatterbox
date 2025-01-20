@@ -11,6 +11,7 @@ const Navbar = () => {
     { href: '/personas', label: 'Personas' },
     { href: '/prompts', label: 'Prompts' },
     { href: '/import-export', label: 'Import/Export' },
+    { href: '/llm', label: 'Presets' },
   ];
 
   return (

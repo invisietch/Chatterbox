@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, Integer, ForeignKey
+from sqlalchemy import Column, String, Text, Integer, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -81,3 +81,13 @@ class ConversationTag(Base):
 
     conversation = relationship("Conversation", back_populates="tags")
     tag = relationship("Tag", back_populates="conversations")
+
+class Preset(Base):
+    __tablename__ = "presets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)
+    samplers = Column(JSON, nullable=False)
+    sampler_order = Column(JSON, nullable=False)
+    model_name = Column(String, nullable=False)
+    llm_url = Column(String, nullable=False)

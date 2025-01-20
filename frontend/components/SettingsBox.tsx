@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { CogIcon } from '@heroicons/react/outline'; // Import the cog icon
-import ModelSearch from './ModelSearch';
+import PresetDropdown from './PresetDropdown';
 
 const SettingsBox = () => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -39,12 +39,10 @@ const SettingsBox = () => {
       {/* Dropdown menu */}
       {showDropdown && (
         <div className="absolute top-full right-0 mt-2 w-80 bg-dark border border-dark1 rounded shadow-lg z-50 p-4" ref={dropdownRef}>
-          <ul className="space-y-2">
-            <li>
-              <h3 className="font-bold mb-2">Token Count Model</h3>
-              <ModelSearch />
-            </li>
-          </ul>
+          <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">Select a Preset</h1>
+            <PresetDropdown />
+          </div>
         </div>
       )}
     </div>

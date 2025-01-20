@@ -1,28 +1,33 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-// Define the initial state for the selected model
 interface ModelState {
-  selectedModel: string;
+  selectedModel: string; // Model name
+  samplers: Record<string, any>; // Sampler settings
+  samplerOrder: number[]; // Order of samplers
+  llmUrl: string; // LLM URL
+  selectedPresetId: string | null; // Selected preset ID
 }
 
-export const initialState: ModelState = {
-  selectedModel: 'unsloth/Llama-3.3-70B-Instruct',  // Default model
+const initialState: ModelState = {
+  selectedModel: '',
+  samplers: {},
+  samplerOrder: [],
+  llmUrl: '',
+  selectedPresetId: null,
 };
 
-// Create the slice
 const modelSlice = createSlice({
   name: 'model',
   initialState,
   reducers: {
-    // Action to update the selected model
-    setSelectedModel(state, action: PayloadAction<string>) {
-      state.selectedModel = action.payload;
+    setPreset(state, action: PayloadAction<ModelState>) {
+      return { ...state, ...action.payload };
+    },
+    setSelectedPresetId(state, action: PayloadAction<string | null>) {
+      state.selectedPresetId = action.payload;
     },
   },
 });
 
-// Export the action to change the model
-export const { setSelectedModel } = modelSlice.actions;
-
-// Export the reducer to use in the store
+export const { setPreset, setSelectedPresetId } = modelSlice.actions;
 export default modelSlice.reducer;

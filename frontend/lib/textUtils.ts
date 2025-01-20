@@ -6,6 +6,10 @@ export const highlightPlaceholders = (
 ): string => {
   let highlightedText = inputText;
 
+  if (!highlightedText || typeof highlightedText !== 'string') {
+    return '';
+  }
+
   if (characterName) {
     if (highlights) {
       highlightedText = highlightedText.replaceAll(characterName, `<span class="character">${characterName}</span>`);
@@ -36,7 +40,6 @@ export const highlightText = (text: string): string => {
     regex: RegExp,
     type: string
   ): { highlighted: string; matches: { type: string; match: string }[] } => {
-    console.log(inputText);
     let resultText = inputText;
     const matches: { type: string; match: string }[] = [];
     const matchPositions: { start: number; end: number }[] = [];
@@ -77,6 +80,10 @@ export const highlightText = (text: string): string => {
   };
 
   let highlightedText = text;
+
+  if (!highlightedText || typeof highlightedText !== 'string') {
+    return '';
+  }
 
   // Apply highlighting for each type
   const quoteResult = applyHighlighting(highlightedText, quoteRegex, 'speech');

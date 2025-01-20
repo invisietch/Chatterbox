@@ -5,7 +5,11 @@ import Accordion from './Accordion';
 import AddMessageForm from './AddMessageForm';
 import apiClient from '../lib/api';
 import { toast } from 'react-toastify';
-import { PlusIcon } from '@heroicons/react/outline';
+import { PlusIcon, SparklesIcon } from '@heroicons/react/outline';
+import ProposedAiMessage from './ProposedAiMessage';
+import { fetchResponse } from '../lib/aiUtils';
+import { useSelector } from 'react-redux';
+import { RootState } from '../context/store';
 
 const MessageList = ({
   conversationId,
@@ -33,6 +37,14 @@ const MessageList = ({
   const [warnings, setWarnings] = useState<string[]>([]); // State to store warnings
   const [warningIds, setWarningIds] = useState<number[]>([]);
   const [editingId, setEditingId] = useState(null);
+  const [generatedResponse, setGeneratedResponse] = useState('');
+  const [generationErrors, setGenerationErrors] = useState('');
+  const [aiInferencing, setAiInferencing] = useState(false);
+  const [isGeneratingMessage, setIsGeneratingMessage] = useState(false);
+
+  const { selectedModel, samplers, samplerOrder, llmUrl } = useSelector(
+    (state: RootState) => state.model
+  );
 
   const handleKeyPress = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
@@ -46,21 +58,23 @@ const MessageList = ({
         character
       ) {
         createFirstMessage();
-      } else {
+      } else if (mostRecentMessage.author === 'assistant') {
         setIsAddingMessage(true);
+      } else {
+        generateResponse();
       }
     }
   };
 
   useEffect(() => {
-    if (!isAddingMessage && !editingId && expanded) {
+    if (!isAddingMessage && !editingId && !isGeneratingMessage && expanded) {
       window.addEventListener("keydown", handleKeyPress);
     } else {
       window.removeEventListener("keydown", handleKeyPress);
     }
 
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [isAddingMessage, editingId, messages, expanded]);
+  }, [isAddingMessage, editingId, messages, isGeneratingMessage, expanded]);
 
   // Fetch messages for the conversation
   const fetchMessages = async () => {
@@ -158,6 +172,26 @@ const MessageList = ({
     }
   };
 
+  const generateResponse = async () => {
+    setIsGeneratingMessage(true);
+
+    const invert = mostRecentMessage.author == 'assistant' ? 'invert' : 'no';
+    const response = await apiClient.get(
+      `/conversations/${conversationId}/with_chat_template?model_identifier=${selectedModel}&invert=${invert}`
+    );
+    const { history, eos_token } = response.data;
+
+    await fetchResponse(
+      history,
+      eos_token,
+      samplers,
+      samplerOrder,
+      llmUrl,
+      setGeneratedResponse,
+      setGenerationErrors,
+      setAiInferencing
+    );
+  }
 
   const createFirstMessage = async () => {
     const newMessage = {
@@ -229,6 +263,26 @@ const MessageList = ({
         <div>No messages found.</div>
       )}
 
+      {isGeneratingMessage && (
+        <ProposedAiMessage
+          modelIdentifier={modelIdentifier}
+          conversationId={conversationId}
+          character={character}
+          persona={persona}
+          aiInferencing={aiInferencing}
+          content={generatedResponse}
+          errors={generationErrors}
+          mostRecentMessage={mostRecentMessage}
+          onSave={handleSaveMessage}
+          regenerate={generateResponse}
+          onCancel={() => {
+            setGeneratedResponse('');
+            setGenerationErrors('');
+            setIsGeneratingMessage(false);
+          }}
+        />
+      )}
+
       {!isAddingMessage && messages.length == 0 && (character || persona || prompt) && (
         <div className="mt-4 text-center">
           <button
@@ -252,7 +306,7 @@ const MessageList = ({
       )}
 
       {/* Add new message button */}
-      {!isAddingMessage && (
+      {!isAddingMessage && !isGeneratingMessage && (
         <div className="mt-4 text-center">
           <button
             onClick={() => setIsAddingMessage(true)}
@@ -260,10 +314,17 @@ const MessageList = ({
           >
             <PlusIcon className="h-6 w-6" />
           </button>
+          {messages.length >= 2 && (
+            <button
+              onClick={generateResponse}
+              className="ml-2 bg-fadedYellow hover:bg-brightYellow text-white font-bold py-2 px-4 rounded"
+            >
+              <SparklesIcon className="h-6 w-6" />
+            </button>
+          )}
         </div>
       )}
 
-      {/* Message form */}
       {isAddingMessage && (
         <AddMessageForm
           modelIdentifier={modelIdentifier}

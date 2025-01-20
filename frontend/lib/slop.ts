@@ -209,6 +209,10 @@ export const highlightSlop = (inputText: string) => {
   let count = 0;
   let highlightedText = inputText;
 
+  if (!highlightedText || typeof highlightedText !== 'string') {
+    return { highlightedText: '', count: 0 };
+  }
+
   slopPhrases.forEach(phrase => {
     const regex = new RegExp(`(${phrase})`, 'gi');
 

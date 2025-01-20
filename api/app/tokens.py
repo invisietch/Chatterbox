@@ -34,3 +34,19 @@ def count_tokens(messages: list, model_identifier: str, with_chat_template: bool
 
     return len(tokens)
 
+def apply_template(messages: list, model_identifier: str):
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_identifier)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error loading tokenizer: {str(e)}")
+    
+    if hasattr(tokenizer, "apply_chat_template"):
+        chat_history = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    else:
+        # Fallback: Manually concatenate messages into a single string
+        chat_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in messages])
+    
+    return {
+        "history": chat_history,
+        "eos_token": tokenizer.eos_token
+    }

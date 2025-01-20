@@ -1,12 +1,12 @@
 import os
 from app.image_utils import get_image_path, save_image, validate_image
-from app.count_tokens import count_tokens
+from app.tokens import apply_template, count_tokens
 from fastapi import Body, APIRouter, HTTPException, Depends, UploadFile, File, Query
 from typing import Annotated, Optional, List
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import SessionLocal
-from app.models import Character, Conversation, Message, Persona, Prompt, Tag, ConversationTag
+from app.models import Character, Conversation, Message, Persona, Preset, Prompt, Tag, ConversationTag
 from fastapi.responses import StreamingResponse, FileResponse
 from io import StringIO
 import json
@@ -161,9 +161,19 @@ async def add_message(
     db.commit()
     db.refresh(message)
 
+    full_message = {
+          "id": message.id,
+          "author": message.author,
+          "order": message.order,
+          "content": message.content,
+          "rejected": message.rejected,
+          "full_content": replace_placeholders(message.content, conversation),
+          "full_rejected": replace_placeholders(message.rejected, conversation)
+      }
+
     await invalidate_caches(conversation_id=conversation_id)
 
-    return message
+    return full_message
 
 # Add a tag to a conversation
 @router.post("/conversations/{conversation_id}/tags/{tag_name}")
@@ -327,6 +337,8 @@ async def get_conversations(
     # Filter by prompts (OR search)
     if prompt_ids:
         query = query.filter(Conversation.prompt_id.in_(prompt_ids))
+    
+    query = query.order_by(Conversation.id.desc())
 
     conversations = query.all()
     return conversations
@@ -354,6 +366,29 @@ def get_messages(conversation_id: int, db: Session = Depends(get_db)):
         full_messages.append(full_message)
 
     return full_messages
+
+@router.get("/conversations/{conversation_id}/with_chat_template")
+def get_conversation_with_chat_template(conversation_id: int, model_identifier: str, invert: str, db: Session = Depends(get_db)):
+    conversation = db.query(Conversation).filter_by(id=conversation_id).first()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found.")
+    
+    messages = db.query(Message).filter_by(conversation_id=conversation_id).order_by(Message.order).all()
+
+    chat_messages = []
+    for msg in messages:
+        author = msg.author.lower()
+        if (invert == 'invert' and msg.author.lower() == 'user'):
+            author = 'assistant'
+        if (invert == 'invert' and msg.author.lower() == 'assistant'):
+            author = 'user'
+
+        chat_messages.append({
+            "role": author,
+            "content": replace_placeholders(f"{msg.content}", conversation)
+        })
+
+    return apply_template(chat_messages, model_identifier)
 
 # Get a list of tags for a conversation
 @router.get("/conversations/{conversation_id}/tags")
@@ -801,3 +836,86 @@ async def delete_conversation(conversation_id: int, db: Session = Depends(get_db
     await invalidate_caches(conversation_id=conversation_id)
 
     return {"message": "Conversation and its related data deleted successfully"}
+
+# Create a new preset
+@router.post("/presets/", response_model=dict)
+def create_preset(
+    name: Annotated[str, Body()],
+    samplers: Annotated[dict, Body()],
+    sampler_order: Annotated[list, Body()],
+    model_name: Annotated[str, Body()],
+    llm_url: Annotated[str, Body()],
+    db: Session = Depends(get_db),
+):
+    if not name or not samplers or not sampler_order or not model_name or not llm_url:
+        raise HTTPException(status_code=400, detail="Must provide all fields.")
+    existing = db.query(Preset).filter(Preset.name == name).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Preset with this name already exists.")
+
+    new_preset = Preset(
+        name=name,
+        samplers=samplers,
+        sampler_order=sampler_order,
+        model_name=model_name,
+        llm_url=llm_url,
+    )
+    db.add(new_preset)
+    db.commit()
+    db.refresh(new_preset)
+    return {"message": "Preset created successfully", "preset": new_preset.id}
+
+
+# Edit an existing preset
+@router.put("/presets/{preset_id}/", response_model=dict)
+def update_preset(
+    preset_id: int,
+    name: Annotated[str, Body()],
+    samplers: Annotated[dict, Body()],
+    sampler_order: Annotated[list, Body()],
+    model_name: Annotated[str, Body()],
+    llm_url: Annotated[str, Body()],
+    db: Session = Depends(get_db),
+):
+    preset = db.query(Preset).filter(Preset.id == preset_id).first()
+    if not preset:
+        raise HTTPException(status_code=404, detail="Preset not found.")
+
+    preset.name = name
+    preset.samplers = samplers
+    preset.sampler_order = sampler_order
+    preset.model_name = model_name
+    preset.llm_url = llm_url
+
+    db.commit()
+    db.refresh(preset)
+    return {"message": "Preset updated successfully", "preset": preset.id}
+
+
+# Delete a preset
+@router.delete("/presets/{preset_id}/", response_model=dict)
+def delete_preset(preset_id: int, db: Session = Depends(get_db)):
+    preset = db.query(Preset).filter(Preset.id == preset_id).first()
+    if not preset:
+        raise HTTPException(status_code=404, detail="Preset not found.")
+
+    db.delete(preset)
+    db.commit()
+    return {"message": "Preset deleted successfully"}
+
+
+# List all presets
+@router.get("/presets/", response_model=list)
+def list_presets(db: Session = Depends(get_db)):
+    presets = db.query(Preset).all()
+    return [
+        {
+            "id": preset.id,
+            "name": preset.name,
+            "samplers": preset.samplers,
+            "sampler_order": preset.sampler_order,
+            "model_name": preset.model_name,
+            "llm_url": preset.llm_url,
+        }
+        for preset in presets
+    ]

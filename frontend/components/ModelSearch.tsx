@@ -1,24 +1,14 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useDispatch, useSelector } from 'react-redux';
-import { setSelectedModel, initialState } from '../context/modelSlice';
-import { RootState } from '../context/store';
 import { PencilIcon } from '@heroicons/react/outline';
 
-const ModelSearch = () => {
+export const ModelSearch = ({ model, onModelSelect }: { model?: string, onModelSelect: (model: string) => void }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<any[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('');
 
-  const dispatch = useDispatch();
-  const selectedModel = useSelector((state: RootState) => state.model.selectedModel);
-
-  const handleModelChange = (model: string) => {
-    dispatch(setSelectedModel(model));  // Update the selected model in the store
-  };
-
-  // Debounced search effect
   useEffect(() => {
     const fetchModels = async () => {
       if (searchTerm.length < 3) {
@@ -42,39 +32,44 @@ const ModelSearch = () => {
 
     const debounceTimer = setTimeout(fetchModels, 200);
 
-    return () => clearTimeout(debounceTimer); // Cleanup on input change
+    return () => clearTimeout(debounceTimer);
   }, [searchTerm]);
 
-  // Handle selection
+  useEffect(() => {
+    if (model) {
+      setSelectedModel(model);
+      setIsEditing(false);
+    }
+  }, [model]);
+
   const handleSelectModel = (modelId: string) => {
-    handleModelChange(modelId); // Update global state
-    setResults([]); // Clear search results
-    setSearchTerm(''); // Clear input field
+    setSelectedModel(modelId);
+    onModelSelect(modelId); // Pass the selected model back to the parent
+    setResults([]);
+    setSearchTerm('');
     setIsEditing(false);
   };
 
-  // Handle reset
   const changeModel = () => {
     setIsEditing(true);
   };
 
   return (
     <div className="relative">
-      {/* Search input */}
       {isEditing ? (
         <input
           type="text"
           placeholder="Search for a model..."
-          className="p-2 border rounded w-full bg-dark text-gray-200"
+          className="w-full p-2 border rounded bg-dark text-gray-200 mb-2 pl-4"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       ) : (
         <div className="flex items-center space-x-2">
           <span className="truncate w-full text-gray-200" title={selectedModel}>
-            {selectedModel.length > 25
-              ? `${selectedModel.substring(0, 25)}...`
-              : selectedModel}
+            {selectedModel.length > 60
+              ? `${selectedModel.substring(0, 55)}...`
+              : selectedModel || 'Select a model'}
           </span>
           <button
             onClick={changeModel}
@@ -85,7 +80,6 @@ const ModelSearch = () => {
         </div>
       )}
 
-      {/* Search results */}
       {results.length > 0 && (
         <div className="absolute bg-dark text-gray-200 border border-gray-600 rounded mt-2 w-full z-10 max-h-40 overflow-y-auto">
           {results.map((result) => (
@@ -100,12 +94,9 @@ const ModelSearch = () => {
         </div>
       )}
 
-      {/* Loading indicator */}
       {isSearching && searchTerm.length >= 3 && (
         <div className="absolute mt-2 text-gray-400">Searching...</div>
       )}
     </div>
   );
 };
-
-export default ModelSearch;
