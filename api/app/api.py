@@ -838,7 +838,7 @@ async def delete_conversation(conversation_id: int, db: Session = Depends(get_db
     return {"message": "Conversation and its related data deleted successfully"}
 
 # Create a new preset
-@router.post("/presets/", response_model=dict)
+@router.post("/presets", response_model=dict)
 def create_preset(
     name: Annotated[str, Body()],
     samplers: Annotated[dict, Body()],
@@ -848,7 +848,7 @@ def create_preset(
     max_context: Annotated[int, Body()],
     db: Session = Depends(get_db),
 ):
-    if not name or not samplers or not sampler_order or not model_name or not llm_url:
+    if not name or not samplers or not sampler_order or not model_name or not llm_url or not max_context:
         raise HTTPException(status_code=400, detail="Must provide all fields.")
     existing = db.query(Preset).filter(Preset.name == name).first()
     if existing:
@@ -881,6 +881,8 @@ def update_preset(
     db: Session = Depends(get_db),
 ):
     preset = db.query(Preset).filter(Preset.id == preset_id).first()
+    if not name or not samplers or not sampler_order or not model_name or not llm_url or not max_context:
+        raise HTTPException(status_code=400, detail="Must provide all fields.")
     if not preset:
         raise HTTPException(status_code=404, detail="Preset not found.")
 
@@ -909,7 +911,7 @@ def delete_preset(preset_id: int, db: Session = Depends(get_db)):
 
 
 # List all presets
-@router.get("/presets/", response_model=list)
+@router.get("/presets", response_model=list)
 def list_presets(db: Session = Depends(get_db)):
     presets = db.query(Preset).all()
     return [
