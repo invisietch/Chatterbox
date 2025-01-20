@@ -91,3 +91,4 @@ class Preset(Base):
     sampler_order = Column(JSON, nullable=False)
     model_name = Column(String, nullable=False)
     llm_url = Column(String, nullable=False)
+    max_context = Column(Integer, nullable=False, server_default='16384')

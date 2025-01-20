@@ -16,6 +16,7 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
   const [samplerOrder, setSamplerOrder] = useState([]);
   const [modelName, setModelName] = useState("");
   const [llmUrl, setLlmUrl] = useState("");
+  const [maxContext, setMaxContext] = useState(0);
   const selectedPresetId = useSelector((state: any) => state.model.selectedPresetId);
   const dispatch = useDispatch();
 
@@ -27,6 +28,7 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
     setSamplerOrder(preset.sampler_order);
     setModelName(preset.model_name);
     setLlmUrl(preset.llm_url);
+    setMaxContext(preset.max_context);
   }, [preset]);
 
   const handleSave = async (
@@ -34,7 +36,8 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
     updatedSamplers: Record<string, any>,
     updatedSamplerOrder: number[],
     updatedModelName: string,
-    updatedLlmUrl: string
+    updatedLlmUrl: string,
+    updatedMaxContext: number,
   ) => {
     try {
       const response = await apiClient.put(`/presets/${preset.id}`, {
@@ -43,6 +46,7 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
         sampler_order: updatedSamplerOrder,
         model_name: updatedModelName,
         llm_url: updatedLlmUrl,
+        max_context: updatedMaxContext,
       });
 
       if (selectedPresetId == response.data.preset.toString()) {
@@ -52,6 +56,7 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
             samplers: updatedSamplers,
             samplerOrder: updatedSamplerOrder,
             llmUrl: updatedLlmUrl,
+            maxContext: maxContext,
             selectedPresetId: response.data.preset,
           })
         );
@@ -78,6 +83,7 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
             samplerOrder: [],
             llmUrl: '',
             selectedPresetId: null,
+            maxContext: null,
           })
         );
       }
@@ -93,8 +99,8 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
 
   return isEditing ? (
     <AddPresetForm
-      onSave={(updatedName, updatedSamplers, updatedOrder, updatedModel, updatedLlmUrl) => {
-        handleSave(updatedName, updatedSamplers, updatedOrder, updatedModel, updatedLlmUrl);
+      onSave={(updatedName, updatedSamplers, updatedOrder, updatedModel, updatedLlmUrl, updatedMaxContext) => {
+        handleSave(updatedName, updatedSamplers, updatedOrder, updatedModel, updatedLlmUrl, updatedMaxContext);
       }}
       onCancel={handleCancel}
       initialValues={{
@@ -103,6 +109,7 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
         samplerOrder,
         modelName,
         llmUrl,
+        maxContext
       }}
     />
   ) : (
@@ -139,6 +146,9 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
             </p>
             <p>
               <strong>LLM URL:</strong> {llmUrl}
+            </p>
+            <p>
+              <strong>Max Context:</strong> {maxContext}
             </p>
           </div>
         </div>

@@ -17,6 +17,7 @@ export const fetchResponse = async (
   samplers: Record<string, any>,
   samplerOrder: number[],
   llmUrl: string,
+  maxContext: number,
   setResponse: (text: string) => void,
   setError: (text: string) => void,
   setLoading: (t: boolean) => void
@@ -31,6 +32,7 @@ export const fetchResponse = async (
     top_p: samplers["top_p"],
     top_k: samplers["top_k"],
     max_length: samplers["max_tokens"],
+    max_context_length: maxContext,
     rep_pen: samplers["repetition_penalty"],
     rep_pen_range: samplers["repetition_penalty_range"],
     stopping_strings: [eosToken],

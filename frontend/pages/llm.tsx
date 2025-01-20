@@ -38,7 +38,8 @@ export default function PresetsPage() {
     samplers: Record<string, any>,
     samplerOrder: number[],
     model: string,
-    llmUrl: string
+    llmUrl: string,
+    maxContext: number,
   ) => {
     try {
       const response = await apiClient.post("/presets", {
@@ -47,6 +48,7 @@ export default function PresetsPage() {
         sampler_order: samplerOrder,
         model_name: model,
         llm_url: llmUrl,
+        max_context: maxContext,
       });
 
       if (response.status === 200 || response.status === 201) {

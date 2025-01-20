@@ -18,7 +18,7 @@ import { SortableItem } from "./SortableItem"; // Custom component for sortable 
 import { ModelSearch } from "./ModelSearch";
 
 const AddPresetForm = ({ onSave, onCancel, initialValues }: {
-  onSave: (presetName: string, samplers: Record<string, any>, samplerOrder: number[], model: string, llmUrl: string) => void;
+  onSave: (presetName: string, samplers: Record<string, any>, samplerOrder: number[], model: string, llmUrl: string, maxContext: number) => void;
   onCancel: () => void;
   initialValues?: Record<string, any>;
 }) => {
@@ -36,6 +36,8 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
   });
   const [model, setModel] = useState("");
   const [llmUrl, setLlmUrl] = useState("");
+  const [maxContext, setMaxContext] = useState(32768);
+  const [error, setError] = useState('');
 
   const [samplerOrder, setSamplerOrder] = useState([
     { id: "6", label: "Repetition Penalty", value: 6 },
@@ -79,9 +81,9 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
   const handleSubmit = () => {
     if (presetName) {
       const orderValues = samplerOrder.map((item) => item.value);
-      onSave(presetName, samplers, orderValues, model, llmUrl);
+      onSave(presetName, samplers, orderValues, model, llmUrl, maxContext);
     } else {
-      toast.error("Please provide a name for the preset.");
+      toast.error("Please fill in the entire form.");
     }
   };
 
@@ -118,6 +120,14 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
           className="w-full p-2 border rounded bg-dark text-gray-200 mb-2 pl-4"
         />
       </div>
+      {error && (
+        <div className="bg-orange-500 text-white p-4 mb-4 rounded">
+          <h4 className="font-bold">Warning: This preset has the following issues:</h4>
+          <ul>
+            <li>{error}</li>
+          </ul>
+        </div>
+      )}
 
       <div className="space-y-6">
         <label className="text-gray-300 text-lg">Select Model (choose the same model you're running locally)</label>
@@ -131,6 +141,24 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
           onChange={(e) => setLlmUrl(e.target.value)}
           className="w-full p-2 border rounded bg-dark text-gray-200 mb-2 pl-4"
           placeholder="http://127.0.0.1:5001"
+        />
+      </div>
+
+      <div className="space-y-6">
+        <label className="text-gray-300 text-lg">Max Context (integer)</label>
+        <input
+          type='number'
+          value={maxContext}
+          onChange={(e) => {
+            if (parseInt(e.target.value)) {
+              setMaxContext(parseInt(e.target.value));
+              setError('');
+            } else {
+              setError('Max context must be an integer.');
+            }
+          }}
+          className="w-full p-2 border rounded bg-dark text-gray-200 mb-2 pl-4"
+          placeholder="32768"
         />
       </div>
 

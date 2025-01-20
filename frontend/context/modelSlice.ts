@@ -6,6 +6,7 @@ interface ModelState {
   samplerOrder: number[]; // Order of samplers
   llmUrl: string; // LLM URL
   selectedPresetId: string | null; // Selected preset ID
+  maxContext: number | null;
 }
 
 const initialState: ModelState = {
@@ -14,6 +15,7 @@ const initialState: ModelState = {
   samplerOrder: [],
   llmUrl: '',
   selectedPresetId: null,
+  maxContext: null,
 };
 
 const modelSlice = createSlice({

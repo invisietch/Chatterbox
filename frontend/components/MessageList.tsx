@@ -42,7 +42,7 @@ const MessageList = ({
   const [aiInferencing, setAiInferencing] = useState(false);
   const [isGeneratingMessage, setIsGeneratingMessage] = useState(false);
 
-  const { selectedModel, samplers, samplerOrder, llmUrl } = useSelector(
+  const { selectedModel, samplers, samplerOrder, llmUrl, maxContext } = useSelector(
     (state: RootState) => state.model
   );
 
@@ -175,22 +175,27 @@ const MessageList = ({
   const generateResponse = async () => {
     setIsGeneratingMessage(true);
 
-    const invert = mostRecentMessage.author == 'assistant' ? 'invert' : 'no';
-    const response = await apiClient.get(
-      `/conversations/${conversationId}/with_chat_template?model_identifier=${selectedModel}&invert=${invert}`
-    );
-    const { history, eos_token } = response.data;
+    if (selectedModel && samplers && samplerOrder && llmUrl && maxContext) {
+      const invert = mostRecentMessage.author == 'assistant' ? 'invert' : 'no';
+      const response = await apiClient.get(
+        `/conversations/${conversationId}/with_chat_template?model_identifier=${selectedModel}&invert=${invert}`
+      );
+      const { history, eos_token } = response.data;
 
-    await fetchResponse(
-      history,
-      eos_token,
-      samplers,
-      samplerOrder,
-      llmUrl,
-      setGeneratedResponse,
-      setGenerationErrors,
-      setAiInferencing
-    );
+      await fetchResponse(
+        history,
+        eos_token,
+        samplers,
+        samplerOrder,
+        llmUrl,
+        maxContext,
+        setGeneratedResponse,
+        setGenerationErrors,
+        setAiInferencing
+      );
+    } else {
+      toast.error('Please select a preset in the settings menu (cog in the top right). Cannot generate without a preset.');
+    }
   }
 
   const createFirstMessage = async () => {

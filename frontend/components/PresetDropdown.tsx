@@ -42,6 +42,7 @@ const PresetDropdown = () => {
         samplerOrder: preset.sampler_order,
         llmUrl: preset.llm_url,
         selectedPresetId: presetId,
+        maxContext: preset.maxContext,
       })
     );
 

@@ -845,6 +845,7 @@ def create_preset(
     sampler_order: Annotated[list, Body()],
     model_name: Annotated[str, Body()],
     llm_url: Annotated[str, Body()],
+    max_context: Annotated[int, Body()],
     db: Session = Depends(get_db),
 ):
     if not name or not samplers or not sampler_order or not model_name or not llm_url:
@@ -859,6 +860,7 @@ def create_preset(
         sampler_order=sampler_order,
         model_name=model_name,
         llm_url=llm_url,
+        max_context=max_context,
     )
     db.add(new_preset)
     db.commit()
@@ -875,6 +877,7 @@ def update_preset(
     sampler_order: Annotated[list, Body()],
     model_name: Annotated[str, Body()],
     llm_url: Annotated[str, Body()],
+    max_context: Annotated[int, Body()],
     db: Session = Depends(get_db),
 ):
     preset = db.query(Preset).filter(Preset.id == preset_id).first()
@@ -886,6 +889,7 @@ def update_preset(
     preset.sampler_order = sampler_order
     preset.model_name = model_name
     preset.llm_url = llm_url
+    preset.max_context = max_context
 
     db.commit()
     db.refresh(preset)
@@ -916,6 +920,7 @@ def list_presets(db: Session = Depends(get_db)):
             "sampler_order": preset.sampler_order,
             "model_name": preset.model_name,
             "llm_url": preset.llm_url,
+            "max_context": preset.max_context,
         }
         for preset in presets
     ]
