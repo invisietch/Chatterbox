@@ -88,6 +88,9 @@ def replace_placeholders(content: str, conversation: Conversation):
         content = content.replace("{{char}}", character.name)
     else:
         content = content.replace("{{char}}", "assistant")
+    
+    # TODO: Replace original in post history instructions properly.
+    content = content.replace("{{original}}", "")
 
     return content
 
@@ -400,6 +403,7 @@ async def get_conversation_with_chat_template(conversation_id: int, model_identi
             author = 'user'
         
         prepend = ""
+        
         if (msg.author.lower()) == 'user':
             prepend = "{{user}}: "
         if (msg.author.lower()) == 'assistant':
@@ -411,6 +415,12 @@ async def get_conversation_with_chat_template(conversation_id: int, model_identi
             "content": replace_placeholders(f"{prepend}{msg.content}", conversation)
         })
         last_author = msg.author.lower()
+    
+    if conversation and conversation.character and conversation.character.post_history_instructions:
+        chat_messages.append({
+            "role": "user",
+            "content": replace_placeholders(conversation.character.post_history_instructions, conversation)
+        })
 
     postfix = ""
     if (last_author == 'user'):

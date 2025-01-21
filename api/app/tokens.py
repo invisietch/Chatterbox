@@ -84,27 +84,22 @@ async def apply_template_with_context_limit(
 
     included_messages = []
 
-    # Include example messages if they fit in the context
-    if example_messages:
-        example_tokens = sum(
-            len(tokenizer(example["content"])["input_ids"]) for example in example_messages
-        )
-        if context_budget_remaining >= example_tokens:
-            included_messages.extend(example_messages)
-            context_budget_remaining -= example_tokens
-
     # Process chat messages backward
     shifted_messages = []
     for message in reversed(messages[1:]):
-        message_cache_key = f"prompt:message:{message['id']}:{model_identifier}"
-        cached_message = await redis.get(message_cache_key)
+        if "id" in message:
+            message_cache_key = f"prompt:message:{message['id']}:{model_identifier}"
+            cached_message = await redis.get(message_cache_key)
 
-        if cached_message:
-            message_tokens = int(cached_message)
+            if cached_message:
+                message_tokens = int(cached_message)
+            else:
+                message_text = tokenizer.apply_chat_template([message], tokenize=True, add_generation_prompt=False)
+                message_tokens = len(message_text)
+                await cache_message(redis, message, message_tokens, model_identifier)
         else:
             message_text = tokenizer.apply_chat_template([message], tokenize=True, add_generation_prompt=False)
             message_tokens = len(message_text)
-            await cache_message(redis, message, message_tokens, model_identifier)
 
         if context_budget_remaining >= message_tokens:
             included_messages.append(message)
@@ -132,4 +127,3 @@ async def apply_template_with_context_limit(
         "eos_token": tokenizer.eos_token,
         "shifted_messages": shifted_messages
     }
-
