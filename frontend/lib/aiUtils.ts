@@ -32,6 +32,8 @@ export const fetchResponse = async (
     min_p: samplers["min_p"],
     top_p: samplers["top_p"],
     top_k: samplers["top_k"],
+    xtc_probability: samplers["xtc_probability"],
+    xtc_threshold: samplers["xtc_threshold"],
     max_length: samplers["max_tokens"],
     max_context_length: maxContext,
     rep_pen: samplers["repetition_penalty"],

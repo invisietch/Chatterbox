@@ -33,6 +33,8 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
     repetition_penalty_range: 1536,
     typical_p: 1,
     tfs: 1,
+    xtc_probability: 0,
+    xtc_threshold: 0,
   });
   const [model, setModel] = useState("");
   const [llmUrl, setLlmUrl] = useState("");
@@ -173,7 +175,7 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
               <label className="text-gray-200 text-sm font-medium">{key}</label>
               <input
                 type="range"
-                min={key === "max_tokens" || key === "top_k" || key === "top_p" || key === "min_p" || key === "temperature" || key === "typical_p" || key === "tfs" ? 0 : 1}
+                min={key === "max_tokens" || key === "top_k" || key === "top_p" || key === "min_p" || key === "temperature" || key === "typical_p" || key === "tfs" || key === "xtc_probability" || key === "xtc_threshold" ? 0 : 1}
                 max={
                   key === "max_tokens"
                     ? 2048
@@ -183,7 +185,7 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
                         ? 8192
                         : key === "temperature"
                           ? 5
-                          : key === "top_p" || key === "min_p" || key === "typical_p" || key === "tfs"
+                          : key === "top_p" || key === "min_p" || key === "typical_p" || key === "tfs" || key === "xtc_threshold" || key === "xtc_probability"
                             ? 1
                             : 2
                 }
@@ -202,7 +204,6 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
           ))}
         </div>
       </div>
-
 
       {/* Sampler Order */}
       <div className="mt-4">

@@ -139,7 +139,6 @@ const MessageItem = ({
       fetchMessages();
     } catch (error) {
       toast.error('Failed to update message.');
-      console.error('Error saving message:', error);
     }
   };
 
@@ -151,7 +150,6 @@ const MessageItem = ({
       fetchMessages();
     } catch (error) {
       toast.error('Failed to delete message.');
-      console.error('Error deleting message:', error);
     }
   };
 

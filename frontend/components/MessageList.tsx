@@ -61,7 +61,9 @@ const MessageList = ({
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages) {
+      scrollToBottom();
+    }
   }, [messages, isGeneratingMessage, isAddingMessage]);
 
   const autoGenerateResponses = async () => {
@@ -334,18 +336,21 @@ const MessageList = ({
       {isLoading ? (
         <div>Loading messages...</div>
       ) : messages.length > 0 ? (
-        messages.map((message) => (
-          <MessageItem
-            key={message.id}
-            isEditing={message.id === editingId}
-            setIsEditing={(t: boolean) => t ? setEditingId(message.id) : setEditingId(null)}
-            message={message}
-            modelIdentifier={modelIdentifier}
-            fetchMessages={fetchMessages}
-            warning={warningIds.includes(message.id)}
-            character={character || null}
-            persona={persona || null}
-          />
+        messages.map((message, i, arr) => (
+          <>
+            {(arr.length - 1 === i) && (<div ref={messagesEndRef} />)}
+            <MessageItem
+              key={message.id}
+              isEditing={message.id === editingId}
+              setIsEditing={(t: boolean) => t ? setEditingId(message.id) : setEditingId(null)}
+              message={message}
+              modelIdentifier={modelIdentifier}
+              fetchMessages={fetchMessages}
+              warning={warningIds.includes(message.id)}
+              character={character || null}
+              persona={persona || null}
+            />
+          </>
         ))
       ) : (
         <div>No messages found.</div>
@@ -447,8 +452,6 @@ const MessageList = ({
           onCancel={() => setIsAddingMessage(false)}
         />
       )}
-
-      <div ref={messagesEndRef} />
     </Accordion>
   );
 };
