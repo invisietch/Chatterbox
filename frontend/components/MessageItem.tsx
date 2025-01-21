@@ -6,7 +6,7 @@ import { extractAndHighlightCodeBlocks, highlightPlaceholders, highlightText } f
 import Avatar from './Avatar';
 import { highlightSlop } from '../lib/slop';
 import ReactDOM from 'react-dom';
-import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
+import { PencilIcon, SwitchVerticalIcon, TrashIcon } from '@heroicons/react/outline';
 
 const MessageItem = ({
   message,
@@ -118,6 +118,10 @@ const MessageItem = ({
   }
 
   const handleSave = async () => {
+    if (!content.trim()) {
+      toast.error('Cannot save message without content.');
+      return;
+    }
     try {
       const newContent = await replaceCharAndUser(content);
       const newRejected = await replaceCharAndUser(rejected);
@@ -125,8 +129,8 @@ const MessageItem = ({
       await apiClient.put(
         `/messages/${message.id}`,
         {
-          content: newContent,
-          rejected: newRejected || null
+          content: newContent.trim(),
+          rejected: newRejected ? newRejected.trim() : '',
         });
 
       const response = await apiClient.get(`/messages/${message.id}/token_count`, {
@@ -250,6 +254,21 @@ const MessageItem = ({
         ) : (
           <div className="w-11/12">
             <ExpandableTextarea label="Content" onChange={setContent} value={content} />
+            {message.author === 'assistant' && (
+              <div className="flex items-center justify-center mt-2 mb-2">
+                <button
+                  onClick={() => {
+                    // Swap content and rejected field values
+                    setContent(rejected || '');
+                    setRejected(content || '');
+                  }}
+                  className="p-2 rounded-full bg-fadedGreen text-white hover:bg-brightGreen transition-colors duration-300"
+                  aria-label="Swap content and rejected"
+                >
+                  <SwitchVerticalIcon className="h-5 w-5" />
+                </button>
+              </div>
+            )}
             {message.author === 'assistant' && <ExpandableTextarea label="Rejected" onChange={setRejected} value={rejected} />}
             <div className="mt-2 flex justify-end space-x-2">
               <button

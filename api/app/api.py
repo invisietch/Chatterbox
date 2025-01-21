@@ -1,6 +1,6 @@
 import os
 from app.image_utils import get_image_path, save_image, validate_image
-from app.tokens import apply_template, count_tokens
+from app.tokens import apply_template, apply_template_with_context_limit, count_tokens
 from fastapi import Body, APIRouter, HTTPException, Depends, UploadFile, File, Query
 from typing import Annotated, Optional, List
 from sqlalchemy.orm import Session
@@ -91,11 +91,27 @@ def replace_placeholders(content: str, conversation: Conversation):
 
     return content
 
+def parse_example_messages(example_messages_raw: str, conversation) -> list:
+    examples = []
+    for example in example_messages_raw.split("<START>"):
+        example = example.strip()
+        if example:
+            formatted_message = replace_placeholders(
+                f"This is an example conversation between {{char}} and another person:\n\n{example}", 
+                conversation
+            )
+            examples.append({"role": "assistant", "content": formatted_message})
+    return examples
+
 async def invalidate_caches(message_id=None, conversation_id=None):
     if message_id:
         pattern = f"message:{message_id}:*"
         keys = await redis.keys(pattern)
         for key in keys:
+            await redis.delete(key)
+        second_pattern = f"prompt:message:{message_id}:*"
+        second_keys = await redis.keys(second_pattern)
+        for key in second_keys:
             await redis.delete(key)
     if conversation_id:
         pattern = f"conversation:{conversation_id}:*"
@@ -368,7 +384,7 @@ def get_messages(conversation_id: int, db: Session = Depends(get_db)):
     return full_messages
 
 @router.get("/conversations/{conversation_id}/with_chat_template")
-def get_conversation_with_chat_template(conversation_id: int, model_identifier: str, invert: str, db: Session = Depends(get_db)):
+async def get_conversation_with_chat_template(conversation_id: int, model_identifier: str, invert: str, max_context: int, max_length: int, db: Session = Depends(get_db)):
     conversation = db.query(Conversation).filter_by(id=conversation_id).first()
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found.")
@@ -390,6 +406,7 @@ def get_conversation_with_chat_template(conversation_id: int, model_identifier: 
             prepend = "{{char}}: "
 
         chat_messages.append({
+            "id": msg.id,
             "role": author,
             "content": replace_placeholders(f"{prepend}{msg.content}", conversation)
         })
@@ -401,11 +418,22 @@ def get_conversation_with_chat_template(conversation_id: int, model_identifier: 
     if (last_author == 'assistant'):
         postfix = replace_placeholders('{{user}}: ', conversation)
     
-    results = apply_template(chat_messages, model_identifier)
-    history = results["history"]
-    results["history"] = f"{history}{postfix}"
-
-    return results
+    example_messages = []
+    if conversation and conversation.character and conversation.character.example_messages:
+        example_messages = parse_example_messages(conversation.character.example_messages, conversation)
+    
+    try:
+        return await apply_template_with_context_limit(
+            chat_messages,
+            model_identifier,
+            max_context,
+            max_length,
+            postfix,
+            redis,
+            example_messages,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error loading tokenizer: {str(e)}")
 
 # Get a list of tags for a conversation
 @router.get("/conversations/{conversation_id}/tags")

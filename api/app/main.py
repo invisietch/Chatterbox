@@ -9,26 +9,21 @@ from app.api import router  # Import the router
 from alembic.config import Config
 from starlette.exceptions import HTTPException
 from alembic import command
-
-log = logging.getLogger("uvicorn")
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,  # Set to DEBUG for more detailed logs
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout),  # Send logs to stdout
-    ],
-)
+from fastapi.logger import logger as fastapi_logger
+import traceback
 
 # Get specific loggers
 uvicorn_logger = logging.getLogger("uvicorn")
 uvicorn_error_logger = logging.getLogger("uvicorn.error")
 uvicorn_access_logger = logging.getLogger("uvicorn.access")
 
-for logger in [uvicorn_logger, uvicorn_error_logger, uvicorn_access_logger]:
+handler = logging.StreamHandler(sys.stdout)
+handlerErr = logging.StreamHandler(sys.stderr)
+
+for logger in [uvicorn_logger, uvicorn_error_logger, uvicorn_access_logger, fastapi_logger]:
     logger.setLevel(logging.DEBUG)  # Adjust level if necessary
-    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.addHandler(handler)
+    logger.addHandler(handlerErr)
 
 def run_migrations():
     alembic_cfg = Config("alembic.ini")
@@ -36,17 +31,26 @@ def run_migrations():
 
 @asynccontextmanager
 async def lifespan(app_: FastAPI):
-    log.info("Starting up...")
-    log.info("run alembic upgrade head...")
+    fastapi_logger.info("Starting up...")
+    fastapi_logger.info("run alembic upgrade head...")
     run_migrations()
     yield
-    log.info("Shutting down...")
+    fastapi_logger.info("Shutting down...")
 
 app = FastAPI(lifespan=lifespan)
 
+async def catch_exceptions_middleware(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception as e:
+        fastapi_logger.error(traceback.format_exc())
+        raise e
+
+app.middleware('http')(catch_exceptions_middleware)
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
-    log.error(f"HTTPException: {exc.detail} - Path: {request.url.path}", exc_info=True)
+    fastapi_logger.error(f"HTTPException: {exc.detail} - Path: {request.url.path}", exc_info=True)
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
@@ -54,7 +58,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
-    log.error(f"Unhandled Exception: {str(exc)} - Path: {request.url.path}", exc_info=True)
+    fastapi_logger.error(f"Unhandled Exception: {str(exc)} - Path: {request.url.path}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={"detail": "An internal server error occurred."},

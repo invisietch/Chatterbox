@@ -220,7 +220,12 @@ const MessageList = ({
 
   const handleSaveMessage = async (newMessage: any) => {
     try {
-      const response = await apiClient.post(`/conversations/${conversationId}/messages`, newMessage);
+      const localMessage = {
+        ...newMessage,
+        content: newMessage.content.trim(),
+        rejected: newMessage.rejected?.trim()
+      }
+      const response = await apiClient.post(`/conversations/${conversationId}/messages`, localMessage);
       if (response.status === 200) {
         const savedMessage = response.data; // Assuming the API returns the saved message with its ID and other properties
 
@@ -253,7 +258,7 @@ const MessageList = ({
     if (selectedModel && samplers && samplerOrder && llmUrl && maxContext) {
       const invert = localMostRecent?.author === 'assistant' ? 'invert' : 'no';
       const response = await apiClient.get(
-        `/conversations/${conversationId}/with_chat_template?model_identifier=${selectedModel}&invert=${invert}`
+        `/conversations/${conversationId}/with_chat_template?model_identifier=${selectedModel}&invert=${invert}&max_length=${samplers["max_tokens"]}&max_context=${maxContext}`
       );
       const { history, eos_token } = response.data;
 
