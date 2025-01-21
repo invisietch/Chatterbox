@@ -46,6 +46,12 @@ const ProposedAiMessage = ({
   );
 
   useEffect(() => {
+    if (content == '' && aiInferencing) {
+      setMessageText('');
+    }
+  }, [content, aiInferencing]);
+
+  useEffect(() => {
     const fetchTokenCount = async () => {
       try {
         const response = await apiClient.post(

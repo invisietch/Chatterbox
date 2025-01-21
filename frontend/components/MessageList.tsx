@@ -62,9 +62,10 @@ const MessageList = ({
 
   useEffect(() => {
     if (messages) {
-      scrollToBottom();
+      // Scroll to bottom after 200ms. This gives messages time to render on a re-fetch.
+      setTimeout(scrollToBottom, 200);
     }
-  }, [messages, isGeneratingMessage, isAddingMessage]);
+  }, [messages, isGeneratingMessage, isAddingMessage, expanded]);
 
   const autoGenerateResponses = async () => {
     setIsAutoGenerating(true);
