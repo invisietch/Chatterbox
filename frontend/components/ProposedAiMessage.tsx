@@ -147,6 +147,17 @@ const ProposedAiMessage = ({
     }
   };
 
+  const handleReject = async () => {
+    if (message && message?.author && message?.content && !aiInferencing) {
+      message.rejected = message.content;
+      message.content = ' ';
+      await onSave(message);
+      onCancel();
+    } else {
+      toast.error('Could not save message.');
+    }
+  };
+
   const handleTrash = async () => {
     await onCancel();
   }
@@ -208,6 +219,13 @@ const ProposedAiMessage = ({
                   onClick={handleSave}
                   className="text-fadedGreen hover:text-brightGreen"
                   aria-label="Save Message"
+                >
+                  <CheckIcon className='h-5 w-5' />
+                </button>
+                <button
+                  onClick={handleReject}
+                  className="text-fadedRed hover:text-brightRed"
+                  aria-label="Reject Message"
                 >
                   <CheckIcon className='h-5 w-5' />
                 </button>
