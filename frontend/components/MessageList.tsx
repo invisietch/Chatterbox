@@ -261,10 +261,19 @@ const MessageList = ({
         `/conversations/${conversationId}/with_chat_template?model_identifier=${selectedModel}&invert=${invert}&max_length=${samplers["max_tokens"]}&max_context=${maxContext}`
       );
       const { history, eos_token } = response.data;
+      const eosTokens = [eos_token]
+
+      if (character) {
+        eosTokens.push(`\n{character.name}:`);
+      }
+
+      if (persona) {
+        eosTokens.push(`\n{persona.name}:`)
+      }
 
       const { localResponse: text, lastFinishReason } = await fetchResponse(
         history,
-        eos_token,
+        eosTokens,
         samplers,
         samplerOrder,
         llmUrl,

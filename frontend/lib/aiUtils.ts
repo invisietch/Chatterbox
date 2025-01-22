@@ -13,7 +13,7 @@ export const cancelGeneration = async (llmUrl) => {
 
 export const fetchResponse = async (
   prompt: string,
-  eosToken: string,
+  eosTokens: string[],
   samplers: Record<string, any>,
   samplerOrder: number[],
   llmUrl: string,
@@ -38,7 +38,7 @@ export const fetchResponse = async (
     max_context_length: maxContext,
     rep_pen: samplers["repetition_penalty"],
     rep_pen_range: samplers["repetition_penalty_range"],
-    stopping_strings: [eosToken],
+    stopping_strings: eosTokens,
     sampler_order: samplerOrder,
     skip_special_tokens: true,
     ignore_eos: false,

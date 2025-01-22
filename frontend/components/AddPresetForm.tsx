@@ -109,6 +109,7 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
       }));
       setModel(initialValues.modelName);
       setLlmUrl(initialValues.llmUrl);
+      setMaxContext(initialValues.maxContext)
     }
   }, [initialValues]);
 
