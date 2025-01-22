@@ -2,17 +2,15 @@ import Select, { MultiValue } from 'react-select';
 import { useState, useEffect, useRef } from 'react';
 import { FilterIcon } from '@heroicons/react/outline'; // Import the filter icon
 import apiClient from '../lib/api';
-import TagPill from './TagPill';
+import TagSelector from './TagSelector';
 
 const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void }) => {
   const [filters, setFilters] = useState({
-    tags: [] as string[],
+    tags: [] as any[],
     characterIds: [] as number[],
     personaIds: [] as number[],
     promptIds: [] as number[],
   });
-  const [tagInput, setTagInput] = useState('');
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
   const [characters, setCharacters] = useState([]);
   const [personas, setPersonas] = useState([]);
   const [prompts, setPrompts] = useState([]);
@@ -58,44 +56,6 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
     fetchDropdownData();
   }, []);
 
-  const fetchTagSuggestions = async (query: string) => {
-    if (query.length < 3) {
-      setTagSuggestions([]);
-      return;
-    }
-    try {
-      const response = await apiClient.get('/tags', { params: { search: query } });
-      setTagSuggestions(response.data.map((tag: any) => tag.name));
-    } catch (error) {
-      console.error('Error fetching tag suggestions:', error);
-    }
-  };
-
-  const handleTagInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTagInput(e.target.value);
-    if (e.target.value.length >= 3) {
-      fetchTagSuggestions(e.target.value);
-    } else {
-      setTagSuggestions([]);
-    }
-  };
-
-  const handleAddTag = (tag: string) => {
-    if (!filters.tags.includes(tag)) {
-      const updatedTags = [...filters.tags, tag];
-      setFilters({ ...filters, tags: updatedTags });
-      onFilterChange({ ...filters, tags: updatedTags });
-    }
-    setTagInput('');
-    setTagSuggestions([]);
-  };
-
-  const handleRemoveTag = (tag: string) => {
-    const updatedTags = filters.tags.filter((t) => t !== tag);
-    setFilters({ ...filters, tags: updatedTags });
-    onFilterChange({ ...filters, tags: updatedTags });
-  };
-
   const handleMultiSelectChange = (
     key: string,
     selectedOptions: MultiValue<{ value: any; label: any }>
@@ -125,31 +85,11 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
           {/* Tag Filter */}
           <div className="mb-4">
             <h3 className="font-bold mb-2">Tags (AND)</h3>
-            <input
-              type="text"
-              placeholder="Type to search tags..."
-              value={tagInput}
-              onChange={handleTagInput}
-              className="w-full p-2 border rounded bg-dark text-gray-200"
+            <TagSelector
+              selectedTags={filters.tags}
+              onTagChange={(tags: any[]) => setFilters({ ...filters, tags })}
+              defaultColor={'#3C3836'}
             />
-            {tagSuggestions.length > 0 && (
-              <div className="bg-dark border border-gray-600 rounded mt-2">
-                {tagSuggestions.map((tag) => (
-                  <div
-                    key={tag}
-                    className="p-2 cursor-pointer hover:bg-dark"
-                    onClick={() => handleAddTag(tag)}
-                  >
-                    {tag}
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="flex flex-wrap mt-2">
-              {filters.tags.map((tag) => (
-                <TagPill key={tag} tag={tag} onRemove={handleRemoveTag} />
-              ))}
-            </div>
           </div>
 
           {/* Character Filter */}

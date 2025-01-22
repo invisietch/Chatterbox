@@ -3,6 +3,7 @@ import TagPill from './TagPill';
 import apiClient from '../lib/api';
 import ExpandableTextarea from './ExpandableTextarea';
 import { toast } from 'react-toastify';
+import TagSelector from './TagSelector';
 
 const AddConversationForm = ({
   onSave,
@@ -14,33 +15,14 @@ const AddConversationForm = ({
   const [newConversation, setNewConversation] = useState({
     name: '',
     description: '',
-    tags: [] as string[],
+    tags: [] as any[],
     characterId: null as number | null,
     personaId: null as number | null,
     promptId: null as number | null,
   });
-  const [tagInput, setTagInput] = useState('');
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
   const [characters, setCharacters] = useState<{ id: number; name: string }[]>([]);
   const [personas, setPersonas] = useState([]);
   const [prompts, setPrompts] = useState([]);
-
-  // Fetch matching tags from the API
-  const fetchTagSuggestions = async (query: string) => {
-    if (query.length < 3) {
-      setTagSuggestions([]);
-      return;
-    }
-
-    try {
-      const response = await apiClient.get('/tags', {
-        params: { search: query },
-      });
-      setTagSuggestions(response.data.map((tag: any) => tag.name));
-    } catch (error) {
-      console.error('Error fetching tag suggestions:', error);
-    }
-  };
 
   // Fetch characters for the dropdown and sort them alphabetically by name
   const fetchCharacters = async () => {
@@ -85,54 +67,6 @@ const AddConversationForm = ({
     fetchPrompts();
   }, []);
 
-  // Handle tag input changes
-  const handleTagInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTagInput(e.target.value);
-
-    if (e.target.value.length >= 2) {
-      fetchTagSuggestions(e.target.value);
-    } else {
-      setTagSuggestions([]);
-    }
-  };
-
-  // Handle keyboard events in the tag input
-  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      if (tagInput.trim() && !newConversation.tags.includes(tagInput.trim())) {
-        setNewConversation({
-          ...newConversation,
-          tags: [...newConversation.tags, tagInput.trim()],
-        });
-      }
-      setTagInput('');
-      setTagSuggestions([]);
-    } else if (e.key === 'Backspace' && !tagInput && newConversation.tags.length) {
-      const updatedTags = [...newConversation.tags];
-      updatedTags.pop();
-      setNewConversation({ ...newConversation, tags: updatedTags });
-    }
-  };
-
-  const addTag = (tag: string) => {
-    if (!newConversation.tags.includes(tag)) {
-      setNewConversation({
-        ...newConversation,
-        tags: [...newConversation.tags, tag],
-      });
-    }
-    setTagInput('');
-    setTagSuggestions([]);
-  };
-
-  const removeTag = (tag: string) => {
-    setNewConversation({
-      ...newConversation,
-      tags: newConversation.tags.filter((t) => t !== tag),
-    });
-  };
-
   const handleSave = () => {
     if (newConversation.name.trim() && newConversation.description.trim()) {
       onSave(newConversation);
@@ -159,39 +93,14 @@ const AddConversationForm = ({
           ...newConversation,
           description: e,
         })} label='Description' />
-      <div className="mb-2">
-        <div className="border-gray-600 pb-1 relative">
-          <h3>Tags</h3>
-        </div>
-        <div className="flex flex-col items-center p-4">
-          <input
-            type="text"
-            placeholder="Type to search tags..."
-            value={tagInput}
-            onChange={handleTagInput}
-            onKeyDown={handleTagKeyDown}
-            className="w-full p-2 border rounded bg-dark text-gray-200"
-          />
-        </div>
-        {tagSuggestions.length > 0 && (
-          <div className="bg-gray-700 border border-gray-600 rounded mt-2">
-            {tagSuggestions.map((tag) => (
-              <div
-                key={tag}
-                className="p-2 hover:bg-gray-600 cursor-pointer"
-                onClick={() => addTag(tag)}
-              >
-                {tag}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-      <div className="flex flex-wrap gap-2 mb-2">
-        {newConversation.tags.map((tag) => (
-          <TagPill key={tag} tag={tag} onRemove={removeTag} />
-        ))}
-      </div>
+      <TagSelector
+        selectedTags={newConversation.tags}
+        onTagChange={(tags: any[]) => setNewConversation({
+          ...newConversation,
+          tags,
+        })}
+        defaultColor='#3C3836'
+      />
       <div className="mb-2">
         <div className="border-gray-600 pb-1 relative">
           <h3>Character (Optional)</h3>
@@ -272,7 +181,7 @@ const AddConversationForm = ({
           Cancel
         </button>
         <button
-          className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
+          className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGeen"
           onClick={handleSave}
         >
           Save

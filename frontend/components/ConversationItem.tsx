@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import TagPill from '../components/TagPill';
 import MessageList from './MessageList';
 import apiClient from '../lib/api';
 import FormattedText from './FormattedText';
@@ -7,6 +6,9 @@ import { toast } from 'react-toastify';
 import ExpandableTextarea from './ExpandableTextarea';
 import ReactDOM from 'react-dom';
 import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
+import TagSelector from './TagSelector';
+import { SortedTags } from './SortedTags';
+import Avatar from './Avatar';
 
 const ConversationItem = ({
   conversation,
@@ -31,12 +33,9 @@ const ConversationItem = ({
   const [personaId, setPersonaId] = useState(null);
   const [prompt, setPrompt] = useState(null);
   const [promptId, setPromptId] = useState(null);
-  const [tags, setTags] = useState<string[]>([]);
-  const [removedTags, setRemovedTags] = useState<string[]>([]);
-  const [newTags, setNewTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
-  const [hoveredSuggestionIndex, setHoveredSuggestionIndex] = useState<number | null>(null);
+  const [tags, setTags] = useState<any[]>([]);
+  const [removedTags, setRemovedTags] = useState<any[]>([]);
+  const [newTags, setNewTags] = useState<any[]>([]);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [tokenCount, setTokenCount] = useState<number | null>(null);
   const [needsTokenRecount, setNeedsTokenRecount] = useState<boolean>(false);
@@ -181,72 +180,6 @@ const ConversationItem = ({
     setUnsavedChanges(hasChanges);
   }, [name, description, tags, removedTags, newTags, conversation, characterId, personaId, promptId]);
 
-  // Fetch tag suggestions
-  const fetchTagSuggestions = async (query: string) => {
-    if (query.length < 3) {
-      setTagSuggestions([]);
-      return;
-    }
-
-    try {
-      const response = await apiClient.get('/tags', { params: { search: query } });
-      setTagSuggestions(response.data.map((tag: any) => tag.name));
-    } catch (error) {
-      console.error('Error fetching tag suggestions:', error);
-    }
-  };
-
-  // Handle tag input changes
-  const handleTagInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTagInput(e.target.value);
-
-    if (e.target.value.length >= 3) {
-      fetchTagSuggestions(e.target.value);
-    } else {
-      setTagSuggestions([]);
-    }
-  };
-
-  // Add a tag
-  const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim()) && !newTags.includes(tagInput.trim())) {
-      setNewTags([...newTags, tagInput.trim()]);
-    }
-    setTagInput('');
-    setTagSuggestions([]);
-  };
-
-  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-        handleAddTag();
-      }
-      setTagSuggestions([]);
-    } else if (e.key === 'Backspace' && !tagInput && tags.length) {
-      handleRemoveTag(tagInput.trim());
-      setTagInput('');
-    }
-  };
-
-  const handleAddSuggestedTag = (tag: string) => {
-    if (!tags.includes(tag) && !newTags.includes(tag)) {
-      setNewTags([...newTags, tag]);
-    }
-    setTagInput('');
-    setTagSuggestions([]);
-    setHoveredSuggestionIndex(null);
-  };
-
-  const handleRemoveTag = (tag: string) => {
-    if (tags.includes(tag)) {
-      setRemovedTags([...removedTags, tag]);
-      setTags(tags.filter((t) => t !== tag));
-    } else if (newTags.includes(tag)) {
-      setNewTags(newTags.filter((t) => t !== tag));
-    }
-  };
-
   // Save changes
   const handleSave = async () => {
     try {
@@ -268,11 +201,11 @@ const ConversationItem = ({
       }
 
       for (const tag of newTags) {
-        await apiClient.post(`/conversations/${conversation.id}/tags/${tag}`);
+        await apiClient.post(`/conversations/${conversation.id}/tags/${tag.name}`);
       }
 
       for (const tag of removedTags) {
-        await apiClient.delete(`/conversations/${conversation.id}/tags/${tag}`);
+        await apiClient.delete(`/conversations/${conversation.id}/tags/${tag.name}`);
       }
 
       await fetchConversations();
@@ -298,6 +231,34 @@ const ConversationItem = ({
     });
   };
 
+  const handleTagChange = (handleTags: any[]) => {
+    for (const tag of handleTags) {
+      // Handle adding tags that haven't been added.
+      if (!newTags.some(t => t.name === tag.name) && !tags.some(t => t.name === tag.name)) {
+        setNewTags([...newTags, tag]);
+      }
+
+      // Remove re-added tags from removedTags.
+      if (removedTags.some(t => t.name === tag.name)) {
+        setRemovedTags(removedTags.filter(t => t.name !== tag.name));
+      }
+    }
+
+    // Remove tags that aren't in the newly handled tags array.
+    for (const tag of tags) {
+      if (!handleTags.some(t => t.name === tag.name) && !removedTags.some(t => t.name === tag.name)) {
+        setRemovedTags([...removedTags, tag]);
+      }
+    }
+
+    // Remove newly deleted tags from newTags.
+    for (const tag of newTags) {
+      if (!handleTags.some(t => t.name === tag.name)) {
+        setNewTags(newTags.filter(t => t.name !== tag.name));
+      }
+    }
+  }
+
   return (
     <div className="pb-4 mb-4">
       {isEditing ? (
@@ -314,43 +275,14 @@ const ConversationItem = ({
             />
           </div>
           <ExpandableTextarea value={description} onChange={setDescription} label='Description' />
-
-          <div className="mb-2">
-            <div className="pb-1 relative">
-              <h3>Tags</h3>
-            </div>
-            <div className="flex flex-col items-center p-4">
-              <input
-                type="text"
-                placeholder="Type to search tags..."
-                value={tagInput}
-                onChange={handleTagInput}
-                onKeyDown={handleTagKeyDown}
-                className="w-full p-2 border rounded bg-dark text-gray-200"
-              />
-            </div>
-            {tagSuggestions.length > 0 && (
-              <div className="bg-dark border border-gray-600 rounded mt-2">
-                {tagSuggestions.map((tag) => (
-                  <div
-                    key={tag}
-                    className="p-2 hover:bg-dark1 cursor-pointer"
-                    onClick={() => handleAddSuggestedTag(tag)}
-                  >
-                    {tag}
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className="pb-1 relative">
+            <h3>Tags</h3>
           </div>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {tags.map((tag) => (
-              <TagPill key={tag} tag={tag} onRemove={handleRemoveTag} />
-            ))}
-            {newTags.map((tag) => (
-              <TagPill key={tag} tag={tag} onRemove={handleRemoveTag} />
-            ))}
-          </div>
+          <TagSelector
+            selectedTags={[...tags, ...newTags].filter(t => !removedTags.some(tag => t.name === tag.name))}
+            onTagChange={handleTagChange}
+            defaultColor='#3C3836'
+          />
           <div className="mb-2">
             <div className="pb-1 relative">
               <h3>Character (Optional)</h3>
@@ -433,38 +365,40 @@ const ConversationItem = ({
         </div>
       ) : (
         <div className="pb-4 mb-4 relative">
-          <div className="flex justify-between items-center">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-lg font-bold">{conversation.name}</h2>
-                <div className="text-sm text-gray-400">
-                  {tokenCount !== null ? `${tokenCount} tokens with chat template applied` : 'Loading tokens...'}
-                </div>
-                <p className="text-gray-300 mt-2"><FormattedText t={conversation.description} /></p>
-                {character && <p className="text-gray-100 mt-2"><strong>Character: </strong><FormattedText t={character.name} /></p>}
-                {prompt && <p className="text-gray-100"><strong>Prompt: </strong><FormattedText t={prompt.name} /></p>}
-                {persona && <p className="text-gray-100"><strong>Persona: </strong><FormattedText t={persona.name} /></p>}
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {tags.map((tag) => (
-                    <TagPill key={tag} tag={tag} isLink />
-                  ))}
-                </div>
+          <div className="flex items-center">
+            {character && (
+              <Avatar
+                id={character.id}
+                name={character.name}
+                type="character"
+                size={120}
+              />
+            )}
+            <div className="ml-4">
+              <h2 className="text-lg font-bold">{conversation.name}</h2>
+              <div className="text-sm text-gray-400">
+                {tokenCount !== null ? `${tokenCount} tokens with chat template applied` : 'Loading tokens...'}
               </div>
-              <div className="flex space-x-2 absolute top-1 right-1">
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="text-grey-300 hover:text-yellow-300"
-                >
-                  <PencilIcon className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => setIsDeleting(true)}
-                  className="text-grey-300 hover:text-red-300"
-                  aria-label="Delete message"
-                >
-                  <TrashIcon className="h-5 w-5" />
-                </button>
-              </div>
+              <p className="text-gray-300 mt-2"><FormattedText t={conversation.description} /></p>
+              {character && <p className="text-gray-100 mt-2"><strong>Character: </strong><FormattedText t={character.name} /></p>}
+              {prompt && <p className="text-gray-100"><strong>Prompt: </strong><FormattedText t={prompt.name} /></p>}
+              {persona && <p className="text-gray-100"><strong>Persona: </strong><FormattedText t={persona.name} /></p>}
+              <SortedTags tags={tags} />
+            </div>
+            <div className="flex space-x-2 absolute top-1 right-1">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="text-grey-300 hover:text-yellow-300"
+              >
+                <PencilIcon className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setIsDeleting(true)}
+                className="text-grey-300 hover:text-red-300"
+                aria-label="Delete message"
+              >
+                <TrashIcon className="h-5 w-5" />
+              </button>
             </div>
           </div>
 

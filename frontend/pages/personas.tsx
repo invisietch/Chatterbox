@@ -26,7 +26,7 @@ export default function PersonasPage() {
       setPersonas(sortedPersonas);
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch character list.");
+      setError("Failed to fetch persona list.");
     }
   };
 

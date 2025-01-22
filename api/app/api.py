@@ -6,7 +6,7 @@ from typing import Annotated, Optional, List
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import SessionLocal
-from app.models import Character, Conversation, Message, Persona, Preset, Prompt, Tag, ConversationTag
+from app.models import Character, Conversation, Message, Persona, Preset, Prompt, Tag, ConversationTag, TagCategory
 from fastapi.responses import StreamingResponse, FileResponse
 from io import StringIO
 import json
@@ -403,7 +403,7 @@ async def get_conversation_with_chat_template(conversation_id: int, model_identi
             author = 'user'
         
         prepend = ""
-        
+
         if (msg.author.lower()) == 'user':
             prepend = "{{user}}: "
         if (msg.author.lower()) == 'assistant':
@@ -445,11 +445,21 @@ async def get_conversation_with_chat_template(conversation_id: int, model_identi
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error loading tokenizer: {str(e)}")
 
-# Get a list of tags for a conversation
 @router.get("/conversations/{conversation_id}/tags")
 def get_tags(conversation_id: int, db: Session = Depends(get_db)):
     tags = db.query(ConversationTag).filter_by(conversation_id=conversation_id).all()
-    return [tag.tag_name for tag in tags]
+
+    # Include category details in the response
+    return [
+        {
+            "name": tag.tag_name,
+            "category": {
+                "name": tag.tag.category.name if tag.tag.category else None,
+                "color": tag.tag.category.color if tag.tag.category else None
+            }
+        }
+        for tag in tags
+    ]
 
 # Get a list of conversations for a tag
 @router.get("/tags/{tag_name}/conversations")
@@ -582,8 +592,8 @@ async def delete_message(message_id: int, db: Session = Depends(get_db)):
 
 @router.get("/tags")
 def search_tags(
-    search: str = Query(None, min_length=1),  # Search query parameter
-    limit: int = Query(10, gt=0),  # Optional limit on the number of results
+    search: str = Query(None, min_length=1),
+    limit: int = Query(10, gt=0),
     db: Session = Depends(get_db),
 ):
     if not search:
@@ -591,7 +601,18 @@ def search_tags(
 
     # Perform case-insensitive search
     tags = db.query(Tag).filter(Tag.name.ilike(f"%{search}%")).limit(limit).all()
-    return [{"name": tag.name} for tag in tags]
+
+    # Include category details in the response
+    return [
+        {
+            "name": tag.name,
+            "category": {
+                "name": tag.category.name if tag.category else None,
+                "color": tag.category.color if tag.category else None
+            }
+        }
+        for tag in tags
+    ]
 
 # Add a character
 @router.post("/characters", response_model=dict)
@@ -981,3 +1002,99 @@ def list_presets(db: Session = Depends(get_db)):
         }
         for preset in presets
     ]
+
+@router.get("/tag_categories")
+def get_categories(db: Session = Depends(get_db)):
+    categories = db.query(TagCategory).all()
+    return [{"name": category.name, "color": category.color, "tags": category.tags} for category in categories]
+
+@router.post("/tag_categories")
+def create_category(
+    name: Annotated[str, Body()], 
+    color: Annotated[str, Body()], 
+    db: Session = Depends(get_db)
+):
+    if not name or not color:
+        raise HTTPException(status_code=400, detail="Must provide all fields.")
+    existing = db.query(TagCategory).filter(TagCategory.name == name).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Preset with this name already exists.")
+
+    new_category = TagCategory(name=name, color=color)
+    db.add(new_category)
+    db.commit()
+    db.refresh(new_category)
+    return {"message": "Category created successfully", "category": new_category.name} 
+
+@router.put("/tag_categories/{category_name}")
+def update_category(category_name: str, color: Annotated[str, Body(embed=True)], db: Session = Depends(get_db)):
+    category = db.query(TagCategory).filter_by(name=category_name).first()
+
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found.")
+    
+    category.color = color
+
+    db.commit()
+    return {"message": "Category created or updated", "category": {"name": category.name, "color": category.color}}
+
+@router.delete("/tag_categories/{category_name}")
+def delete_category(category_name: str, db: Session = Depends(get_db)):
+    category = db.query(TagCategory).filter_by(name=category_name).first()
+
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+
+    db.delete(category)
+    db.commit()
+    return {"message": "Category deleted"}
+
+@router.post("/tag_categories/{category_name}/tag/{tag_name}")
+def assign_tag_to_category(
+    category_name: str,
+    tag_name: str,
+    db: Session = Depends(get_db)
+):
+    try:
+        # Ensure the category exists
+        category = db.query(TagCategory).filter_by(name=category_name).first()
+        if not category:
+            raise HTTPException(status_code=404, detail="Category not found")
+
+        # Ensure the tag exists, or create it
+        tag = db.query(Tag).filter_by(name=tag_name).first()
+        if not tag:
+            tag = Tag(name=tag_name, category=category)
+            db.add(tag)
+        
+        tag.category_name = category.name
+
+        db.commit()
+        return {
+            "message": "Tag assigned to category",
+            "tag": {"name": tag.name, "category_name": tag.category_name}
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error: {str(e)}")
+
+@router.delete("/tag_categories/{category_name}/tag/{tag_name}")
+def remove_tag_from_category(
+    category_name: str,
+    tag_name: str,
+    db: Session = Depends(get_db)
+):
+    category = db.query(TagCategory).filter_by(name=category_name).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+
+    tag = db.query(Tag).filter_by(name=tag_name).first()
+    if not tag:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    tag.category_name = None
+
+    db.commit()
+    return {
+        "message": "Tag removed from category.",
+        "tag": {"name": tag.name, "category_name": None}
+    }

@@ -68,7 +68,7 @@ const Conversations = () => {
 
       // Add tags to the new conversation
       for (const tag of newConversation.tags) {
-        await apiClient.post(`/conversations/${conversationId}/tags/${tag}`);
+        await apiClient.post(`/conversations/${conversationId}/tags/${tag.name}`);
       }
 
       toast.success('Conversation saved successfully.');

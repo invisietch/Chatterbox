@@ -11,6 +11,7 @@ interface AccordionProps {
   isOpen?: boolean; // Optional external control
   defaultOpen?: boolean; // Optional default open state
   onToggle?: (isOpen: boolean) => void; // Callback for state changes
+  color?: string;
 }
 
 const Accordion = ({
@@ -22,8 +23,10 @@ const Accordion = ({
   isOpen,
   defaultOpen = false,
   onToggle,
+  color,
 }: AccordionProps) => {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const defaultColor = '#504945';
 
   // Determine the "open" state based on external or internal control
   const open = isOpen !== undefined ? isOpen : internalOpen;
@@ -43,7 +46,8 @@ const Accordion = ({
       <div>
         <button
           onClick={handleToggle}
-          className="flex justify-between items-center w-full px-4 py-2 text-sm font-medium text-left text-gray-200 bg-dark2 rounded-lg hover:bg-dark2 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"
+          className="flex justify-between items-center w-full px-4 py-2 text-sm font-medium text-left text-gray-200 rounded-lg hover:bg-dark2 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"
+          style={{ backgroundColor: color || defaultColor }}
         >
           <div className="flex items-center space-x-3">
             {id && name && type && <Avatar id={id} name={name} type={type} size={36} />}

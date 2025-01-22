@@ -66,11 +66,21 @@ class Message(Base):
 
     conversation = relationship("Conversation", back_populates="messages")
 
+class TagCategory(Base):
+    __tablename__ = 'tag_category'
+
+    name = Column(String, primary_key=True)
+    color = Column(String, nullable=False)
+
+    tags = relationship("Tag", back_populates="category", cascade="all, delete-orphan")
+
 class Tag(Base):
     __tablename__ = 'tag'
 
     name = Column(String, primary_key=True)
+    category_name = Column(String, ForeignKey("tag_category.name"), nullable=True)
 
+    category = relationship("TagCategory", back_populates="tags")
     conversations = relationship("ConversationTag", back_populates="tag", cascade="all, delete-orphan")
 
 class ConversationTag(Base):

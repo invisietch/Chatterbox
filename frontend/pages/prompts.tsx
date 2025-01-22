@@ -26,7 +26,7 @@ export default function PromptsPage() {
       setPrompts(sortedPrompts);
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch character list.");
+      setError("Failed to fetch prompt list.");
     }
   };
 
