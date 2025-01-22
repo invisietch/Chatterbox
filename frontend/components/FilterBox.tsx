@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { FilterIcon } from '@heroicons/react/outline'; // Import the filter icon
 import apiClient from '../lib/api';
 import TagSelector from './TagSelector';
+import Avatar from './Avatar';
 
 const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void }) => {
   const [filters, setFilters] = useState({
@@ -70,7 +71,7 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
     const updatedFilters = { ...filters, tags };
     setFilters(updatedFilters);
     onFilterChange(updatedFilters);
-  }
+  };
 
   return (
     <div className="relative">
@@ -106,9 +107,22 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
               closeMenuOnSelect={false}
               value={filters.characterIds.map((id) => ({
                 value: id,
-                label: characters.find((char) => char.id === id)?.name || id,
+                label: (
+                  <div className="flex items-center gap-2">
+                    <Avatar id={id} name={characters.find((char) => char.id === id)?.name} type="character" size={24} />
+                    {characters.find((char) => char.id === id)?.name || id}
+                  </div>
+                ),
               }))}
-              options={characters.map((char: any) => ({ value: char.id, label: char.name }))}
+              options={characters.map((char: any) => ({
+                value: char.id,
+                label: (
+                  <div className="flex items-center gap-2">
+                    <Avatar id={char.id} name={char.name} type="character" size={24} />
+                    {char.name}
+                  </div>
+                ),
+              }))}
               onChange={(selected) => handleMultiSelectChange('characterIds', selected)}
               classNamePrefix="react-select"
               styles={{
@@ -141,9 +155,22 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
               closeMenuOnSelect={false}
               value={filters.personaIds.map((id) => ({
                 value: id,
-                label: personas.find((persona) => persona.id === id)?.name || id,
+                label: (
+                  <div className="flex items-center gap-2">
+                    <Avatar id={id} name={personas.find((persona) => persona.id === id)?.name} type="persona" size={24} />
+                    {personas.find((persona) => persona.id === id)?.name || id}
+                  </div>
+                ),
               }))}
-              options={personas.map((persona: any) => ({ value: persona.id, label: persona.name }))}
+              options={personas.map((persona: any) => ({
+                value: persona.id,
+                label: (
+                  <div className="flex items-center gap-2">
+                    <Avatar id={persona.id} name={persona.name} type="persona" size={24} />
+                    {persona.name}
+                  </div>
+                ),
+              }))}
               onChange={(selected) => handleMultiSelectChange('personaIds', selected)}
               classNamePrefix="react-select"
               styles={{
