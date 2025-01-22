@@ -25,8 +25,8 @@ const Conversations = () => {
     try {
       let url = '/conversations?';
       if (filters.tags.length > 0) {
-        filters.tags.forEach((tag: string) => {
-          url += `tags=${encodeURIComponent(tag)}&`;
+        filters.tags.forEach((tag: any) => {
+          url += `tags=${encodeURIComponent(tag.name)}&`;
         });
       }
       if (filters.characterIds.length > 0) {
@@ -52,7 +52,6 @@ const Conversations = () => {
       toast.error('Error fetching conversations.');
     }
   };
-
 
   const handleSaveConversation = async (newConversation: any) => {
     try {

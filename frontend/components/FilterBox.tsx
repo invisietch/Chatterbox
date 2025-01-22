@@ -66,6 +66,12 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
     onFilterChange(updatedFilters);
   };
 
+  const handleTagChange = (tags: any[]) => {
+    const updatedFilters = { ...filters, tags };
+    setFilters(updatedFilters);
+    onFilterChange(updatedFilters);
+  }
+
   return (
     <div className="relative">
       {/* Button to toggle filter visibility */}
@@ -87,7 +93,7 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
             <h3 className="font-bold mb-2">Tags (AND)</h3>
             <TagSelector
               selectedTags={filters.tags}
-              onTagChange={(tags: any[]) => setFilters({ ...filters, tags })}
+              onTagChange={handleTagChange}
               defaultColor={'#3C3836'}
             />
           </div>

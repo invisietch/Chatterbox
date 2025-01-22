@@ -343,7 +343,12 @@ async def get_conversations(
 
     # Filter by tags
     if tags:
-        query = query.join(Conversation.tags).filter(Tag.name.in_(tags))
+        query = (
+            query.join(ConversationTag)
+                 .join(Tag)
+                 .filter(Tag.name.in_(tags))
+                 .distinct()
+        )
 
     # Filter by characters (OR search)
     if character_ids:
@@ -356,7 +361,7 @@ async def get_conversations(
     # Filter by prompts (OR search)
     if prompt_ids:
         query = query.filter(Conversation.prompt_id.in_(prompt_ids))
-    
+
     query = query.order_by(Conversation.id.desc())
 
     conversations = query.all()
