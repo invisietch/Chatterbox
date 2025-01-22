@@ -56,6 +56,38 @@ async def cache_message(redis, message, result, model_identifier):
     message_cache_key = f"prompt:message:{message['id']}:{model_identifier}"
     await redis.set(message_cache_key, result)
 
+def attempt_difficult_chat_template(tokenizer: AutoTokenizer, messages, tokenize=True, add_generation_prompt=False):
+    try:
+        return_toks = tokenizer.apply_chat_template(
+            messages, 
+            tokenize=tokenize,
+            add_generation_prompt=add_generation_prompt
+        )
+    except Exception as e:
+        new_messages = []
+        for msg in messages:
+            if msg["role"] == "system":
+                msg["role"] = "user"
+            
+            if new_messages and new_messages[-1]["role"] == msg["role"]:
+                new_messages[-1]["content"] += f"\n\n{msg['content']}"
+            else:
+                new_messages.append(msg)
+        
+        if len(new_messages) == 1:
+            new_messages[0]["role"] = "user"
+        
+        try:
+            return_toks = tokenizer.apply_chat_template(
+                new_messages, 
+                tokenize=tokenize,
+                add_generation_prompt=add_generation_prompt
+            )
+        except Exception as ei:
+            raise HTTPException(status_code=400, detail=f"Error tokenizing messages: {str(new_messages)}")
+    
+    return return_toks
+
 async def apply_template_with_context_limit(
     messages: list,
     model_identifier: str,
@@ -75,7 +107,7 @@ async def apply_template_with_context_limit(
 
     # Tokenize system message and postfix
     system_message = messages[0]
-    templated_system_message = tokenizer.apply_chat_template([system_message], tokenize=True, add_generation_prompt=False)
+    templated_system_message = attempt_difficult_chat_template(tokenizer, [system_message], tokenize=True, add_generation_prompt=False)
     system_tokens = len(templated_system_message)
     current_context_tokens = system_tokens
 
@@ -94,11 +126,11 @@ async def apply_template_with_context_limit(
             if cached_message:
                 message_tokens = int(cached_message)
             else:
-                message_text = tokenizer.apply_chat_template([message], tokenize=True, add_generation_prompt=False)
+                message_text = attempt_difficult_chat_template(tokenizer, [message], tokenize=True, add_generation_prompt=False)
                 message_tokens = len(message_text)
                 await cache_message(redis, message, message_tokens, model_identifier)
         else:
-            message_text = tokenizer.apply_chat_template([message], tokenize=True, add_generation_prompt=False)
+            message_text = attempt_difficult_chat_template(tokenizer, [message], tokenize=True, add_generation_prompt=False)
             message_tokens = len(message_text)
 
         if context_budget_remaining >= message_tokens:
@@ -111,7 +143,8 @@ async def apply_template_with_context_limit(
     included_messages.reverse()
 
     if len(example_messages) > 0:
-        example_tokens = len(tokenizer.apply_chat_template(example_messages, tokenize=True, add_generation_prompt=False))
+        example_tokens = attempt_difficult_chat_template(tokenizer, example_messages, tokenize=True, add_generation_prompt=False)
+        example_tokens = len(example_tokens)
 
         if context_budget_remaining >= example_tokens:
             included_messages = example_messages + included_messages
@@ -119,7 +152,8 @@ async def apply_template_with_context_limit(
 
     included_messages.insert(0, system_message)
 
-    chat_history = tokenizer.apply_chat_template(included_messages, tokenize=False, add_generation_prompt=True)
+    chat_history = attempt_difficult_chat_template(tokenizer, included_messages, tokenize=False, add_generation_prompt=True)
+        
     chat_history_with_postfix = f"{chat_history}{postfix}"
 
     return {
