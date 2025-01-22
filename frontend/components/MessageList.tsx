@@ -154,7 +154,7 @@ const MessageList = ({
       const response = await apiClient.get(`/conversations/${conversationId}/messages`);
       const sortedMessages = response.data.sort((a: any, b: any) => a.order - b.order);
       const messagesWithSlopEnhancement = sortedMessages.map(message => {
-        const { highlightedText, count } = highlightSlop(message.content);
+        const { highlightedText, count } = highlightSlop(message.content || '');
 
         return {
           ...message,
@@ -222,7 +222,7 @@ const MessageList = ({
     try {
       const localMessage = {
         ...newMessage,
-        content: newMessage.content.trim(),
+        content: newMessage.content.trim() || '',
         rejected: newMessage.rejected?.trim()
       }
       const response = await apiClient.post(`/conversations/${conversationId}/messages`, localMessage);

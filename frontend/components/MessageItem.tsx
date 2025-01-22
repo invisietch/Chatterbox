@@ -55,7 +55,7 @@ const MessageItem = ({
   }, [message.id, modelIdentifier]);
 
   useEffect(() => {
-    const { processedText, codeBlocks } = extractAndHighlightCodeBlocks(message.full_content);
+    const { processedText, codeBlocks } = extractAndHighlightCodeBlocks(message.full_content || '');
 
     const { highlightedText, count } = highlightSlop(
       highlightPlaceholders(
@@ -104,6 +104,9 @@ const MessageItem = ({
   };
 
   const replaceCharAndUser = async (c: string): Promise<string> => {
+    if (!c) {
+      return '';
+    }
     let newC = c;
 
     if (newC && character && character.name) {
