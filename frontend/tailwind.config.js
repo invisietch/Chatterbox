@@ -18,6 +18,8 @@ module.exports = {
         brightYellow: '#fabd2f',
         fadedAqua: '#427b58',
         brightAqua: '#8ec07c',
+        fadedOrange: '#af3a03',
+        brightOrange: '#fe8019',
         slopHighlight: '#9A9D1F',
         characterHighlight: '#458588',
         personaHighlight: '#b16286',

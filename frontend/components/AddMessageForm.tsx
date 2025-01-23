@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import ExpandableTextarea from "./ExpandableTextarea";
 import apiClient from "../lib/api";
+import { highlightText, highlightPlaceholders, extractAndHighlightCodeBlocks } from '../lib/textUtils';
+import { highlightSlop } from '../lib/slop';
+import Avatar from './Avatar';
+import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
 
 const AddMessageForm = ({
   conversationId,
@@ -22,9 +26,12 @@ const AddMessageForm = ({
   const [author, setAuthor] = useState("system");
   const [content, setContent] = useState("");
   const [rejected, setRejected] = useState("");
+  const [newContent, setNewContent] = useState("");
+  const [newRejected, setNewRejected] = useState("");
   const [contentTokenCount, setContentTokenCount] = useState(0);
   const [rejectedTokenCount, setRejectedTokenCount] = useState(0);
-  const contentRef = useRef<HTMLTextAreaElement>(null);
+  const [editRejected, setEditRejected] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
   const lastCallTimestamp = useRef<number | null>(null);
 
   useEffect(() => {
@@ -32,6 +39,18 @@ const AddMessageForm = ({
       contentRef.current.focus(); // Automatically focus the content field
     }
   }, []);
+
+  useEffect(() => {
+    if (mostRecentMessage) {
+      setAuthor(
+        mostRecentMessage.author === "user" || mostRecentMessage.author === "system"
+          ? "assistant"
+          : "user"
+      );
+    } else {
+      setAuthor("system");
+    }
+  }, [mostRecentMessage]);
 
   const fetchTokenCount = async () => {
     try {
@@ -65,17 +84,9 @@ const AddMessageForm = ({
     }
   };
 
-  // Trigger token count throttling whenever content or rejected changes
   useEffect(() => {
     throttledFetchTokenCount();
   }, [author, content, rejected]);
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  };
 
   const replaceCharAndUser = (c: string): string => {
     let newC = c;
@@ -91,39 +102,44 @@ const AddMessageForm = ({
     return newC;
   };
 
-  useEffect(() => {
-    if (mostRecentMessage) {
-      setAuthor(
-        mostRecentMessage.author === "user" || mostRecentMessage.author === "system"
-          ? "assistant"
-          : "user"
-      );
-    } else {
-      setAuthor("system");
-    }
-  }, [mostRecentMessage]);
-
-  const handleSubmit = (e?: React.FormEvent) => {
-    e && e.preventDefault();
-
-    if (content.trim()) {
+  const handleSave = () => {
+    if (newContent.trim()) {
       onSave({
         conversationId,
         author,
-        content: replaceCharAndUser(content),
-        rejected: author === "assistant" && rejected ? replaceCharAndUser(rejected) : null,
+        content: replaceCharAndUser(newContent),
+        rejected: author === "assistant" && newRejected ? replaceCharAndUser(newRejected) : null,
       });
-      setContent(""); // Clear content after saving
+
+      setContent("");
+      setRejected("");
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSave();
+    }
+  };
+
+  const avatarData = author === "user" ? persona : author === "assistant" ? character : null;
+  const border = editRejected ? "border-fadedOrange" : "border-fadedAqua";
+
   return (
-    <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-      <div>
-        <div className="pb-1 relative">
-          <h3>Author</h3>
-        </div>
-        <div className="flex flex-col items-center p-4">
+    <div className={`border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg ${border} border-dotted`}>
+      <div className="flex-shrink-0 p-4">
+        {avatarData ? (
+          <Avatar
+            id={avatarData.id}
+            name={avatarData.name}
+            type={author === "user" ? "persona" : "character"}
+            size={120}
+          />
+        ) : (
+          <Avatar seed={author} size={120} />
+        )}
+        <div className="text-center mt-2">
           <select
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
@@ -136,23 +152,59 @@ const AddMessageForm = ({
         </div>
       </div>
 
-      <ExpandableTextarea
-        label={`Message Content [${contentTokenCount} tokens]`}
-        ref={contentRef}
-        onChange={setContent}
-        value={content}
-        onKeyDown={handleKeyDown}
-      />
-      {author === "assistant" && (
-        <ExpandableTextarea
-          label={`Rejected Content (optional) [${rejectedTokenCount} tokens]`}
-          onChange={setRejected}
-          value={rejected}
-          onKeyDown={handleKeyDown}
-        />
-      )}
+      <div className="flex-grow relative">
+        {author === "assistant" && (
+          <div className="absolute top-2 right-2">
+            <label className="flex items-center space-x-2">
+              <div
+                className={`relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in`}
+              >
+                <div className="relative inline-block w-12 h-5 mt-1">
+                  <input
+                    type="checkbox"
+                    checked={editRejected}
+                    onChange={() => {
+                      if (editRejected) {
+                        setRejected(newRejected);
+                      } else {
+                        setContent(newContent);
+                      }
+                      setEditRejected(!editRejected)
+                    }}
+                    className="toggle-checkbox absolute opacity-0 w-0 h-0"
+                  />
+                  <span
+                    className={`toggle-label block w-full h-full rounded-full cursor-pointer transition-colors duration-300 ${editRejected ? 'bg-fadedRed' : 'bg-fadedGreen'}`}
+                  ></span>
+                  <span
+                    className={`toggle-indicator absolute top-0 left-0 w-5 h-5 rounded-full bg-white border-4 transform transition-transform duration-300 ${editRejected ? 'translate-x-8' : 'translate-x-0'}`}
+                  ></span>
+                </div>
+              </div>
+            </label>
+          </div>
+        )}
 
-      <div className="flex justify-end gap-2 mt-2">
+        <div
+          ref={contentRef}
+          contentEditable={true}
+          suppressContentEditableWarning={true}
+          className="text-gray-300 mt-2 w-full rounded p-2 outline-none"
+          style={{ whiteSpace: 'pre-wrap' }}
+          onInput={(e) => {
+            const updatedText = e.currentTarget.innerText.trim();
+            if (!editRejected) {
+              setNewContent(updatedText);
+            } else {
+              setNewRejected(updatedText);
+            }
+          }}
+          onKeyDown={handleKeyDown}
+        >
+          {editRejected ? rejected : content}
+        </div>
+      </div>
+      <div className="absolute bottom-2 right-2 flex gap-2">
         <button
           type="button"
           onClick={onCancel}
@@ -161,13 +213,13 @@ const AddMessageForm = ({
           Cancel
         </button>
         <button
-          type="submit"
+          onClick={handleSave}
           className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
         >
-          Save Message
+          Save
         </button>
       </div>
-    </form>
+    </div>
   );
 };
 

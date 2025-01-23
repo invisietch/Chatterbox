@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import apiClient from '../lib/api';
 import { toast } from 'react-toastify';
-import ExpandableTextarea from './ExpandableTextarea';
 import { extractAndHighlightCodeBlocks, highlightPlaceholders, highlightText } from '../lib/textUtils';
 import Avatar from './Avatar';
 import { highlightSlop } from '../lib/slop';
 import ReactDOM from 'react-dom';
-import { PencilIcon, SwitchVerticalIcon, TrashIcon } from '@heroicons/react/outline';
+import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
 
 const MessageItem = ({
   message,
@@ -33,10 +32,14 @@ const MessageItem = ({
   const [rejectedTokenCount, setRejectedTokenCount] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showRejected, setShowRejected] = useState(false);
-  const [messageText, setMessageText] = useState(message.content);
-  const [messageRejected, setMessageRejected] = useState(message.rejected);
+  const [messageText, setMessageText] = useState('');
+  const [messageRejected, setMessageRejected] = useState('');
   const [slopCount, setSlopCount] = useState(0);
   const [rejectedSlopCount, setRejectedSlopCount] = useState(0);
+  const [editRejected, setEditRejected] = useState(false);
+  const [newContent, setNewContent] = useState(message.content);
+  const [newRejected, setNewRejected] = useState(message.rejected);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchTokenCount = async () => {
@@ -95,12 +98,17 @@ const MessageItem = ({
     }
   }, [character?.name, persona?.name, message.content, message.rejected]);
 
-
-  const handleEdit = () => setIsEditing(true);
+  const handleEdit = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      contentRef.current?.focus(); // Focus the editable div
+    }, 100);
+  }
 
   const handleCancel = () => {
     setIsEditing(false);
     setContent(message.content);
+    setRejected(message.rejected);
   };
 
   const replaceCharAndUser = async (c: string): Promise<string> => {
@@ -117,24 +125,18 @@ const MessageItem = ({
       newC = newC.replaceAll(persona.name, '{{user}}');
     }
 
-    return newC
+    return newC.trim();
   }
 
   const handleSave = async () => {
-    if (!content.trim()) {
-      toast.error('Cannot save message without content.');
-      return;
-    }
     try {
-      const newContent = await replaceCharAndUser(content);
-      const newRejected = await replaceCharAndUser(rejected);
+      const contentToSave = await replaceCharAndUser(newContent);
+      const rejectedToSave = await replaceCharAndUser(newRejected);
 
-      await apiClient.put(
-        `/messages/${message.id}`,
-        {
-          content: newContent.trim(),
-          rejected: newRejected ? newRejected.trim() : '',
-        });
+      await apiClient.put(`/messages/${message.id}`, {
+        content: contentToSave,
+        rejected: rejectedToSave,
+      });
 
       const response = await apiClient.get(`/messages/${message.id}/token_count`, {
         params: { model_identifier: modelIdentifier },
@@ -161,8 +163,8 @@ const MessageItem = ({
   };
 
   const avatarData = message.author === 'user' ? persona : message.author === 'assistant' ? character : null;
-  const wrapperClass = `${warning ? "bg-warningHighlight" : ""} ${showRejected ? "border-fadedRed" : "border-fadedGreen"
-    } border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg`;
+  const wrapperClass = `${warning ? 'bg-warningHighlight' : ''} ${(!isEditing && showRejected) || (isEditing && editRejected) ? 'border-fadedRed' : 'border-fadedGreen'
+    } border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg ${isEditing && 'border-dashed'}`;
   const typeLabelClass = showRejected ? 'text-brightRed' : 'text-brightGreen';
 
   return (
@@ -198,7 +200,7 @@ const MessageItem = ({
       <div className="flex-grow">
         <div className="flex justify-between items-center">
           <div className="flex space-x-2 absolute top-2 right-2">
-            {messageRejected && !isEditing && (
+            {message.author === 'assistant' && (isEditing || !!messageRejected) && (
               <label className="flex items-center space-x-2">
                 <div
                   className={`relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in`}
@@ -206,17 +208,24 @@ const MessageItem = ({
                   <div className="relative inline-block w-12 h-5 mt-1">
                     <input
                       type="checkbox"
-                      checked={showRejected}
-                      onChange={() => setShowRejected(!showRejected)}
+                      checked={isEditing ? editRejected : showRejected}
+                      onChange={isEditing ? () => {
+                        if (editRejected) {
+                          setRejected(newRejected);
+                        } else {
+                          setContent(newContent);
+                        }
+                        setEditRejected(!editRejected)
+                      } : () => {
+                        setShowRejected(!showRejected)
+                      }}
                       className="toggle-checkbox absolute opacity-0 w-0 h-0"
                     />
                     <span
-                      className={`toggle-label block w-full h-full rounded-full cursor-pointer transition-colors duration-300 ${showRejected ? 'bg-fadedRed' : 'bg-fadedGreen'
-                        }`}
+                      className={`toggle-label block w-full h-full rounded-full cursor-pointer transition-colors duration-300 ${(isEditing && editRejected) || showRejected ? 'bg-fadedRed' : 'bg-fadedGreen'}`}
                     ></span>
                     <span
-                      className={`toggle-indicator absolute top-0 left-0 w-5 h-5 rounded-full bg-white border-4 transform transition-transform duration-300 ${showRejected ? 'translate-x-8' : 'translate-x-0'
-                        }`}
+                      className={`toggle-indicator absolute top-0 left-0 w-5 h-5 rounded-full bg-white border-4 transform transition-transform duration-300 ${(isEditing && editRejected) || showRejected ? 'translate-x-8' : 'translate-x-0'}`}
                     ></span>
                   </div>
                 </div>
@@ -229,7 +238,7 @@ const MessageItem = ({
                 className="text-grey-300 hover:text-yellow-300"
                 aria-label="Edit message"
               >
-                <PencilIcon className='h-5 w-5' />
+                <PencilIcon className="h-5 w-5" />
               </button>
             )}
 
@@ -239,54 +248,57 @@ const MessageItem = ({
                 className="text-grey-300 hover:text-red-300"
                 aria-label="Delete message"
               >
-                <TrashIcon className='h-5 w-5' />
+                <TrashIcon className="h-5 w-5" />
               </button>
             )}
           </div>
         </div>
 
-        {!isEditing ? (
-          <>
-            <div
-              className="text-gray-300 mt-2 w-10/12"
-              dangerouslySetInnerHTML={{
-                __html: showRejected ? messageRejected : messageText,
-              }}
-            />
-          </>
+        {isEditing ? (
+          <div
+            ref={contentRef}
+            contentEditable={true}
+            suppressContentEditableWarning={true}
+            className='text-gray-300 mt-2 w-10/12 rounded p-2 outline-none'
+            style={{ whiteSpace: 'pre-wrap' }}
+            onInput={(e) => {
+              const updatedText = e.currentTarget.innerText.trim();
+              console.log(updatedText);
+
+              if (!editRejected && updatedText !== newContent) {
+                setNewContent(updatedText);
+              } else if (editRejected && updatedText !== newRejected) {
+                setNewRejected(updatedText);
+              }
+            }}
+          >
+            {editRejected ? rejected : content}
+          </div>
         ) : (
-          <div className="w-11/12">
-            <ExpandableTextarea label="Content" onChange={setContent} value={content} />
-            {message.author === 'assistant' && (
-              <div className="flex items-center justify-center mt-2 mb-2">
-                <button
-                  onClick={() => {
-                    // Swap content and rejected field values
-                    setContent(rejected || '');
-                    setRejected(content || '');
-                  }}
-                  className="p-2 rounded-full bg-fadedGreen text-white hover:bg-brightGreen transition-colors duration-300"
-                  aria-label="Swap content and rejected"
-                >
-                  <SwitchVerticalIcon className="h-5 w-5" />
-                </button>
-              </div>
-            )}
-            {message.author === 'assistant' && <ExpandableTextarea label="Rejected" onChange={setRejected} value={rejected} />}
-            <div className="mt-2 flex justify-end space-x-2">
-              <button
-                onClick={handleCancel}
-                className="px-4 py-2 bg-dark1 text-white rounded hover:bg-dark2"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
-              >
-                Save Message
-              </button>
-            </div>
+          <div
+            ref={contentRef}
+            className="text-gray-300 mt-2 w-10/12"
+            dangerouslySetInnerHTML={{
+              __html: !showRejected ? messageText : messageRejected
+            }}
+          />
+        )}
+
+        {isEditing && (
+          <div className="absolute bottom-2 right-2 flex gap-2">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-4 py-2 bg-dark1 text-white rounded hover:bg-dark2"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
+            >
+              Save
+            </button>
           </div>
         )}
       </div>
@@ -316,7 +328,6 @@ const MessageItem = ({
           </div>,
           document.body // Portal to the <body> element
         )}
-
     </div>
   );
 };
