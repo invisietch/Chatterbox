@@ -150,6 +150,14 @@ npm install
 npm run start
 ```
 
+## Sponsorships
+
+If you're using Chatterbox and getting something out of it, please consider a one-time or monthly sponsorship to help keep the project going.
+
+If you can't afford to sponsor the project comfortably, please don't do it. I'm not strapped for cash, I just won't say no to a pizza or coffee for my work.
+
+[Sponsor here](https://github.com/sponsors/invisietch).
+
 ## Troubleshooting
 
 ### failed to bind port 0.0.0.0:5432/tcp
