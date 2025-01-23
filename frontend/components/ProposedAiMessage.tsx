@@ -261,11 +261,11 @@ const ProposedAiMessage = ({
 
         {messageText.length > 0 ? (
           <div
-            className="text-gray-300 mt-2 w-10/12"
+            className="text-gray-300 w-10/12"
             dangerouslySetInnerHTML={{ __html: messageText }}
           />
         ) : (
-          <div className="text-gray-300 mt-2 w-10/12">
+          <div className="text-gray-300 w-10/12">
             Generating content...
           </div>
         )}
