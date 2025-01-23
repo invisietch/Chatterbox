@@ -54,6 +54,10 @@ const MessageList = ({
     (state: RootState) => state.model
   );
 
+  const { rpMode } = useSelector(
+    (state: RootState) => state.quickSettings
+  );
+
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -123,6 +127,11 @@ const MessageList = ({
 
       if (messages.length === 0 && (character || prompt)) {
         createSystemMessage();
+
+        if (rpMode) {
+          createFirstMessage();
+          setIsAddingMessage(true);
+        }
       } else if (
         messages.length === 1 &&
         messages[0].author === "system" &&
@@ -239,6 +248,10 @@ const MessageList = ({
         onMessagesChange(true); // Notify parent component of change
         toast.success('Message saved successfully.');
 
+        if (rpMode && !isAutoGenerating && savedMessage.author === 'user') {
+          await generateResponse(savedMessage);
+        }
+
         return { savedMessage };
       } else {
         toast.error('Failed to save message.');
@@ -286,6 +299,24 @@ const MessageList = ({
       // Wait for streaming to stop
       while (aiInferencing) {
         await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+
+      if (rpMode && !isAutoGenerating) {
+        if (text && lastFinishReason == 'stop') {
+          const newMessage = {
+            author:
+              localMostRecent?.author === 'assistant' ? 'user' : 'assistant',
+            content: text,
+            conversation_id: conversationId,
+          };
+
+          const result = await handleSaveMessage(newMessage);
+
+          if (result) {
+            setIsGeneratingMessage(false);
+            setIsAddingMessage(true);
+          }
+        }
       }
 
       return lastFinishReason == 'stop' ? text : null; // <--- Return the final text

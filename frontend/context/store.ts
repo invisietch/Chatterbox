@@ -3,6 +3,7 @@ import { persistReducer, persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // Default is localStorage
 import { PersistConfig } from 'redux-persist';
 import modelReducer from './modelSlice';
+import quickSettingsReducer from './quickSettingsSlice';
 
 // Persist configuration
 const persistConfig: PersistConfig<any> = {
@@ -11,11 +12,13 @@ const persistConfig: PersistConfig<any> = {
 };
 
 // Create a persisted reducer
-const persistedReducer = persistReducer(persistConfig, modelReducer);
+const modelPersistedReducer = persistReducer(persistConfig, modelReducer);
+const quickSettingsPersistedReducer = persistReducer(persistConfig, quickSettingsReducer);
 
 export const store = configureStore({
   reducer: {
-    model: persistedReducer, // Persisted reducer
+    model: modelPersistedReducer,
+    quickSettings: quickSettingsPersistedReducer,
   },
 });
 
