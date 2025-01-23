@@ -9,3 +9,7 @@ span.newCode {
   font-family: monospace, monospace;
   color: #d79921;
 }
+
+ol.list-decimal {
+  list-style-type: decimal !important;
+}

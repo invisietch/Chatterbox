@@ -13,18 +13,15 @@ export const extractAndHighlightCodeBlocks = (text: string): {
     const placeholder = `{CODE_BLOCK_${placeholderIndex++}}`;
 
     try {
-      // If a language is specified, highlight using that language
       if (lang && hljs.getLanguage(lang)) {
         const highlighted = hljs.highlight(code, { language: lang }).value;
         codeBlocks[placeholder] = `<pre><code class="hljs ${lang}">${highlighted}</code></pre>`;
       } else {
-        // Auto-detect language if none is specified
         const highlighted = hljs.highlightAuto(code).value;
         codeBlocks[placeholder] = `<pre><code class="hljs">${highlighted}</code></pre>`;
       }
     } catch (error) {
       console.error('Failed to highlight code block:', error);
-      // Fallback to plain text rendering
       codeBlocks[placeholder] = `<pre><code>${code}</code></pre>`;
     }
 
@@ -77,78 +74,137 @@ export const highlightText = (text: string): string => {
   const doubleUnderscoreRegex = /\_\_([^\n]+?)\_\_/g;
   const doubleTildeRegex = /\~\~([^\n]+?)\~\~/g;
   const asteriskRegex = /(?:^|[\s.,!?])(\*)([^\n*]+?)\1(?=[\s.,!?]|$)/g;
-  const headingRegex = /^(#{1,6})(.+)$/gm;
+  const headingRegex = /^(#{1,6})\s*(.+)$/gm;
 
   const highlightSpan = (type: string, match: string): string =>
     `<span class="${type}">${match}</span>`;
 
-  const processLists = (lines: string[]): string => {
+  function processLists(lines: string[]): string {
     let result = '';
-    const indentUnordered: Record<number, boolean> = {};
-    const indentOrdered: Record<number, boolean> = {};
-    let currentIndent = 0;
 
-    const closeLists = (startIndent: number, isOrdered: boolean): void => {
-      const indentState = isOrdered ? indentOrdered : indentUnordered;
-      for (let i = currentIndent; i >= startIndent; i--) {
-        if (indentState[i]) {
-          result += isOrdered ? `</ol>` : `</ul>`;
-          indentState[i] = false;
-        }
+    const listStack: Array<{ type: 'ul' | 'ol'; indent: number }> = [];
+
+    function openList(type: 'ul' | 'ol') {
+      if (type === 'ul') {
+        result += `<ul class="list-disc pl-4">`;
+      } else {
+        result += `<ol class="list-decimal pl-4">`;
       }
-      currentIndent = startIndent - 1;
-    };
+    }
+
+    function closeList() {
+      const last = listStack.pop();
+      if (!last) return;
+      if (last.type === 'ul') {
+        result += `</ul>`;
+      } else {
+        result += `</ol>`;
+      }
+    }
 
     lines.forEach(line => {
-      const trimmedLine = line.trim();
-      const indent = line.length - trimmedLine.length;
-      const unorderedMatch = /^- (.+)$/.exec(trimmedLine);
-      const orderedMatch = /^\d+\. (.+)$/.exec(trimmedLine);
+      const trimmed = line.trim();
+      const indent = line.length - trimmed.length;
+      const unorderedMatch = /^- (.+)$/.exec(trimmed);
+      const orderedMatch = /^\d+\. (.+)$/.exec(trimmed);
 
       if (unorderedMatch) {
         const content = unorderedMatch[1];
 
-        if (indent > currentIndent) {
-          // Open a new nested list
-          result += `<ul class="list-disc pl-4">`;
-          indentUnordered[indent] = true;
-        } else if (indent < currentIndent) {
-          // Close lists for higher indentation levels
-          closeLists(indent, false);
+        if (listStack.length === 0) {
+          openList('ul');
+          listStack.push({ type: 'ul', indent });
+        } else {
+          let top = listStack[listStack.length - 1];
+
+          if (indent > top.indent) {
+            openList('ul');
+            listStack.push({ type: 'ul', indent });
+          } else if (indent < top.indent) {
+            while (listStack.length && indent < listStack[listStack.length - 1].indent) {
+              closeList();
+            }
+
+            if (listStack.length) {
+              top = listStack[listStack.length - 1];
+              if (top.type !== 'ul' || top.indent !== indent) {
+                closeList();
+                openList('ul');
+                listStack.push({ type: 'ul', indent });
+              }
+            } else {
+              openList('ul');
+              listStack.push({ type: 'ul', indent });
+            }
+          } else {
+            if (top.type !== 'ul') {
+              closeList();
+              openList('ul');
+              listStack.push({ type: 'ul', indent });
+            }
+          }
         }
 
-        // Add the list item
         result += `<li class="mb-1">${content}</li>`;
-        currentIndent = indent;
-      } else if (orderedMatch) {
+      }
+      else if (orderedMatch) {
         const content = orderedMatch[1];
 
-        if (indent > currentIndent) {
-          // Open a new nested list
-          result += `<ol class="list-decimal pl-4">`;
-          indentOrdered[indent] = true;
-        } else if (indent < currentIndent) {
-          // Close lists for higher indentation levels
-          closeLists(indent, true);
+        if (listStack.length === 0) {
+          openList('ol');
+          listStack.push({ type: 'ol', indent });
+        } else {
+          let top = listStack[listStack.length - 1];
+
+          if (indent > top.indent) {
+            openList('ol');
+            listStack.push({ type: 'ol', indent });
+          } else if (indent < top.indent) {
+            while (listStack.length && indent < listStack[listStack.length - 1].indent) {
+              closeList();
+            }
+            if (listStack.length) {
+              top = listStack[listStack.length - 1];
+              if (top.type !== 'ol' || top.indent !== indent) {
+                closeList();
+                openList('ol');
+                listStack.push({ type: 'ol', indent });
+              }
+            } else {
+              openList('ol');
+              listStack.push({ type: 'ol', indent });
+            }
+          } else {
+            if (top.type !== 'ol') {
+              closeList();
+              openList('ol');
+              listStack.push({ type: 'ol', indent });
+            }
+          }
         }
 
-        // Add the list item
         result += `<li class="mb-1">${content}</li>`;
-        currentIndent = indent;
-      } else {
-        // Close all lists when encountering a non-list line
-        closeLists(0, false); // Close unordered lists
-        closeLists(0, true);  // Close ordered lists
-        result += `${line}\n`; // Add the non-list line as-is
+      }
+      else if (!trimmed) {
+        while (listStack.length) {
+          closeList();
+        }
+        result += `\n`;
+      }
+      else {
+        while (listStack.length) {
+          closeList();
+        }
+        result += `${line}\n`;
       }
     });
 
-    // Close any remaining open lists
-    closeLists(0, false);
-    closeLists(0, true);
+    while (listStack.length) {
+      closeList();
+    }
 
     return result;
-  };
+  }
 
   const applyHighlighting = (
     inputText: string,
@@ -196,11 +252,35 @@ export const highlightText = (text: string): string => {
     return '';
   }
 
-  // Process lists first
-  const lines = text.split('\n');
+  // Fix headings by processing them first
+  const headingResult = applyHighlighting(
+    highlightedText,
+    headingRegex,
+    'heading',
+    match => {
+      const headingLevel = match[1].length;
+      const heading = match[1].trim();
+      const content = match[2].trim();
+
+      const sizeClasses = {
+        1: 'text-3xl font-bold',
+        2: 'text-2xl font-bold',
+        3: 'text-xl font-bold',
+        4: 'text-lg font-semibold',
+        5: 'text-base font-semibold',
+        6: 'text-sm font-semibold',
+      };
+      const textSizeClass = sizeClasses[headingLevel] || 'text-base';
+
+      return `<span class="${textSizeClass}">${heading} ${content}</span>`;
+    }
+  );
+  highlightedText = headingResult.highlighted;
+
+  const lines = highlightedText.split('\n');
   highlightedText = processLists(lines);
 
-  // Apply highlighting for other features
+  // Apply remaining highlights
   const quoteResult = applyHighlighting(highlightedText, quoteRegex, 'speech');
   highlightedText = quoteResult.highlighted;
 
@@ -218,30 +298,6 @@ export const highlightText = (text: string): string => {
 
   const asteriskResult = applyHighlighting(highlightedText, asteriskRegex, 'actions');
   highlightedText = asteriskResult.highlighted;
-
-  const headingResult = applyHighlighting(
-    highlightedText,
-    headingRegex,
-    'heading',
-    match => {
-      const headingLevel = match[1].length;
-      const hashChars = match[1];
-      const content = match[2].trim();
-
-      const sizeClasses = {
-        1: 'text-3xl',
-        2: 'text-2xl',
-        3: 'text-xl',
-        4: 'text-lg',
-        5: 'text-base',
-        6: 'text-sm',
-      };
-      const textSizeClass = sizeClasses[headingLevel] || 'text-base';
-
-      return `<span class="${textSizeClass}">${hashChars} ${content}</span>`;
-    }
-  );
-  highlightedText = headingResult.highlighted;
 
   return highlightedText;
 };
