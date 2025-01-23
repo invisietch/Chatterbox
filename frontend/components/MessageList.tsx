@@ -151,7 +151,7 @@ const MessageList = ({
     }
 
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [isAddingMessage, editingId, messages, isGeneratingMessage, expanded]);
+  }, [isAddingMessage, editingId, messages, isGeneratingMessage, expanded, rpMode]);
 
   // Fetch messages for the conversation
   const fetchMessages = async () => {
