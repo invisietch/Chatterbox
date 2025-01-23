@@ -74,6 +74,8 @@ export const highlightText = (text: string): string => {
   const quoteRegex = /(?:^|[\s.,!?])(["“”])((?:[^\n"“”]+|'[^\s']+)+?)\1(?=[\s.,!?]|$)/g;
   const apostropheRegex = /(?:^|[\s.,!?])['‘]((?:[^\n'‘’]*?(?:\b['‘’]\b|[^\n'‘’])+?))['’](?=[\s.,!?]|$)/g;
   const doubleAsteriskRegex = /\*\*([^\n]+?)\*\*/g;
+  const doubleUnderscoreRegex = /\_\_([^\n]+?)\_\_/g;
+  const doubleTildeRegex = /\~\~([^\n]+?)\~\~/g;
   const asteriskRegex = /(?:^|[\s.,!?])(\*)([^\n*]+?)\1(?=[\s.,!?]|$)/g;
   const headingRegex = /^(#{1,6})(.+)$/gm;
 
@@ -205,8 +207,14 @@ export const highlightText = (text: string): string => {
   const apostropheResult = applyHighlighting(highlightedText, apostropheRegex, 'thoughts');
   highlightedText = apostropheResult.highlighted;
 
-  const doubleAsteriskResult = applyHighlighting(highlightedText, doubleAsteriskRegex, 'bold');
+  const doubleAsteriskResult = applyHighlighting(highlightedText, doubleAsteriskRegex, 'bolded');
   highlightedText = doubleAsteriskResult.highlighted;
+
+  const doubleUnderscoreResult = applyHighlighting(highlightedText, doubleUnderscoreRegex, 'underlined');
+  highlightedText = doubleUnderscoreResult.highlighted;
+
+  const doubleTildeResult = applyHighlighting(highlightedText, doubleTildeRegex, 'strikethroughd');
+  highlightedText = doubleTildeResult.highlighted;
 
   const asteriskResult = applyHighlighting(highlightedText, asteriskRegex, 'actions');
   highlightedText = asteriskResult.highlighted;

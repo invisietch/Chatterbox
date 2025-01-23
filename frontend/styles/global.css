@@ -36,6 +36,14 @@ body {
   @apply italic text-thoughtsHighlight
 }
 
-.bold {
+.bolded {
   @apply font-bold
+}
+
+.underlined {
+  @apply underline
+}
+
+.strikethroughd {
+  @apply line-through
 }
