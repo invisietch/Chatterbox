@@ -15,6 +15,7 @@ Features so far:
 - Create/edit/delete conversations
 - Token counting for every conversation (you choose the model)
 - Tagging for every conversation
+- Tag category management, group similar tags by color
 - Add/edit/delete messages (with highlighted markup)
 - Add/edit rejected alternative for assistant messages
 - Warnings for detected slop in messages
@@ -28,8 +29,8 @@ Features so far:
 
 To do:
 
-- Connection to orther AI backends
 - Message variants with chosen/rejected
+- User management for multi-user dataset management
 - Import SillyTavern convos with auto-link to character/persona if imported
 - ORPO/DPO multi-turn export
 - More... (put suggestions in GitHub issues)

@@ -4,3 +4,8 @@ code.hljs {
   border-style: solid;
   border-width: 1px;
 }
+
+span.newCode {
+  font-family: monospace, monospace;
+  color: #d79921;
+}

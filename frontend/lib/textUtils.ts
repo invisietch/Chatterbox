@@ -5,10 +5,11 @@ export const extractAndHighlightCodeBlocks = (text: string): {
   codeBlocks: Record<string, string>;
 } => {
   const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+  const codeRegex = /`([\s\S]*?)`/g;
   const codeBlocks: Record<string, string> = {};
   let placeholderIndex = 0;
 
-  const processedText = text.replace(codeBlockRegex, (match, lang, code) => {
+  let processedText = text.replace(codeBlockRegex, (match, lang, code) => {
     const placeholder = `{CODE_BLOCK_${placeholderIndex++}}`;
 
     try {
@@ -26,6 +27,13 @@ export const extractAndHighlightCodeBlocks = (text: string): {
       // Fallback to plain text rendering
       codeBlocks[placeholder] = `<pre><code>${code}</code></pre>`;
     }
+
+    return placeholder;
+  });
+
+  processedText = processedText.replace(codeRegex, (match, code) => {
+    const placeholder = `{CODE_BLOCK_${placeholderIndex++}}`;
+    codeBlocks[placeholder] = `<span class="newCode">\`${code}\`</span>`;
 
     return placeholder;
   });
