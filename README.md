@@ -30,7 +30,7 @@ If you need any help, ask on [our Discord server](https://discord.gg/gXQzQcnedb)
 
 ### Docker-Compose (Recommended)
 
-You will need Docker and Compose installed, the easiest way to get both is to install [Docker Desktop](https://docs.docker.com/desktop/).
+You will need Docker and Compose installed, the easiest way to get both is to install [Docker Desktop](https://docs.docker.com/desktop/). On Windows Home Editions, you'll also need to [set up WSL2 with Ubuntu before installing Docker](https://documentation.ubuntu.com/wsl/en/latest/howto/install-ubuntu-wsl2/).
 
 Then just open a terminal and run:
 
