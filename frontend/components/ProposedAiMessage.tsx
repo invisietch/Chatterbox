@@ -178,7 +178,7 @@ const ProposedAiMessage = ({
 
   const avatarData = message.author === 'user' ? persona : message.author === 'assistant' ? character : null;
   const wrapperClass =
-    `${errors ? "bg-warningHighlight" : ""} border-fadedYellow border-2 border-dotted bg-dark1 pb-4 mb-4 pt-2 relative flex rounded-lg`;
+    `${errors ? "bg-warningHighlight" : ""} border-fadedYellow border-2 border-dotted bg-dark1 pb-4 mb-4 relative flex rounded-lg`;
 
   return (
     <div className={wrapperClass}>
@@ -261,11 +261,11 @@ const ProposedAiMessage = ({
 
         {messageText.length > 0 ? (
           <div
-            className="text-gray-300 w-10/12"
-            dangerouslySetInnerHTML={{ __html: messageText }}
+            className="text-gray-300 w-10/12 mt-2"
+            dangerouslySetInnerHTML={{ __html: messageText.trim() }}
           />
         ) : (
-          <div className="text-gray-300 w-10/12">
+          <div className="text-gray-300 w-10/12 mt-2">
             Generating content...
           </div>
         )}
