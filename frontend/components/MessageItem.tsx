@@ -259,7 +259,7 @@ const MessageItem = ({
             ref={contentRef}
             contentEditable={true}
             suppressContentEditableWarning={true}
-            className='text-gray-300 mt-2 w-10/12 rounded p-2 outline-none'
+            className='text-gray-300 mt-2 w-10/12 rounded outline-none'
             style={{ whiteSpace: 'pre-wrap' }}
             onInput={(e) => {
               const updatedText = e.currentTarget.innerText.trim();

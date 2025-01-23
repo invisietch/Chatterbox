@@ -58,8 +58,8 @@ const AddMessageForm = ({
         `/proposed_messages/token_count?model_identifier=${modelIdentifier}`,
         {
           author,
-          content,
-          rejected: author === "assistant" ? rejected : null,
+          content: newContent,
+          rejected: author === "assistant" ? newRejected : null,
           conversation_id: conversationId,
         }
       );
@@ -86,7 +86,7 @@ const AddMessageForm = ({
 
   useEffect(() => {
     throttledFetchTokenCount();
-  }, [author, content, rejected]);
+  }, [author, newContent, newRejected]);
 
   const replaceCharAndUser = (c: string): string => {
     let newC = c;
@@ -149,6 +149,7 @@ const AddMessageForm = ({
             <option value="user">User</option>
             <option value="assistant">Assistant</option>
           </select>
+          <div className="mt-2">[{editRejected ? rejectedTokenCount ?? '...' : contentTokenCount ?? '...'} tokens]</div>
         </div>
       </div>
 
@@ -189,7 +190,7 @@ const AddMessageForm = ({
           ref={contentRef}
           contentEditable={true}
           suppressContentEditableWarning={true}
-          className="text-gray-300 mt-2 w-full rounded p-2 outline-none"
+          className="text-gray-300 mt-2 w-full rounded outline-none"
           style={{ whiteSpace: 'pre-wrap' }}
           onInput={(e) => {
             const updatedText = e.currentTarget.innerText.trim();
