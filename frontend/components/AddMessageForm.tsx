@@ -128,7 +128,7 @@ const AddMessageForm = ({
 
   return (
     <div className={`border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg ${border} border-dotted`}>
-      <div className="flex-shrink-0 p-4">
+      <div className="flex-shrink-0 p-4 mr-4">
         {avatarData ? (
           <Avatar
             id={avatarData.id}
