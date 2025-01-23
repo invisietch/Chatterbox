@@ -2,56 +2,51 @@
 
 ## Demo
 
-![Chatterbox Demo](./demo.gif)
+![Chatterbox Demo](./demo2.gif)
 
 ## Introduction
 
-Chatterbox is a free software tool for managing datasets for training LLM, licensed under the 3-clause BSD license. It's a user-friendly tool for creating human (and later synthetic) datasets for training. 
+Chatterbox is a free software tool for chatting with large language models, it can be used for building training datasets or just roleplaying (or a mix of both, if you prefer).
 
-Particularly, Chatterbox is designed for managing multi-turn instruct/RP style datasets.
-
-Features so far:
-
-- Create/edit/delete conversations
-- Token counting for every conversation (you choose the model)
-- Tagging for every conversation
-- Tag category management, group similar tags by color
-- Add/edit/delete messages (with highlighted markup)
-- Add/edit rejected alternative for assistant messages
-- Warnings for detected slop in messages
-- Warning if messages are wrongly ordered
-- Import CCv2 character cards
-- Add/edit/delete characters from text definitions
-- Add/edit/delete exchangeable system prompts
-- Add/edit/delete exchangeable user personas
-- Export datasets as sharegpt
-- Connection to koboldcpp & generation of user & assistant responses
-
-To do:
-
-- Message variants with chosen/rejected
-- User management for multi-user dataset management
-- Import SillyTavern convos with auto-link to character/persona if imported
-- ORPO/DPO multi-turn export
-- More... (put suggestions in GitHub issues)
-
-## Local Setup
+While most tools are character-focused, Chatterbox is conversation-focused. This means that your conversations can be filtered by persona, character, prompt and tags.
 
 If you need any help, ask on [our Discord server](https://discord.gg/gXQzQcnedb).
+
+## Features
+
+- Roleplay with all your favorite characters
+- Import Character Card v2 character cards
+- Connect to koboldcpp to generate responses
+- RP mode to simulate chat
+- Manage prompts, personas, sampler presets &amp; characters
+- Filter conversations by character, prompt, persona &amp; tags
+
+### Dataset Features
+
+- Generate synthetic datasets with 'autoplay' function
+- Add rejected messages to any assistant response
+
+## Local Setup
 
 ### Docker-Compose (Recommended)
 
 You will need Docker and Compose installed, the easiest way to get both is to install [Docker Desktop](https://docs.docker.com/desktop/).
 
-Then just run:
+Then just open a terminal and run:
 
 ```bash
+git clone https://github.com/invisietch/Chatterbox.git
+cd Chatterbox
 docker-compose up --build
 ```
 
 And when it's done the application will be available on [http://localhost:3000](http://localhost:3000).
 
+Whenever you update (`cd Chatterbox && git pull`), you'll need to re-run `docker-compose up --build`.
+
 ### Manual Setup (For development)
+
+Only do this if you're planning to develop or if you really don't want to use Docker, it's a pain.
 
 #### Database
 
