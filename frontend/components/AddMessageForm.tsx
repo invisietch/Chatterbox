@@ -190,7 +190,7 @@ const AddMessageForm = ({
           ref={contentRef}
           contentEditable={true}
           suppressContentEditableWarning={true}
-          className="text-gray-300 mt-2 w-full rounded outline-none"
+          className="text-gray-300 mt-2 w-full outline-none"
           style={{ whiteSpace: 'pre-wrap' }}
           onInput={(e) => {
             const updatedText = e.currentTarget.innerText.trim();
