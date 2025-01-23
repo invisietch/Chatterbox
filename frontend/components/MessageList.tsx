@@ -54,9 +54,11 @@ const MessageList = ({
     (state: RootState) => state.model
   );
 
-  const { rpMode } = useSelector(
-    (state: RootState) => state.quickSettings
-  );
+  const rpMode = useSelector((state: RootState) => {
+    const quickSettings = state.quickSettings;
+
+    return quickSettings.rpMode;
+  });
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -242,7 +244,7 @@ const MessageList = ({
         ...newMessage,
         content: await replaceCharAndUser(newMessage.content.trim()) || '',
         rejected: await replaceCharAndUser(newMessage.rejected?.trim()),
-      }
+      };
       const response = await apiClient.post(`/conversations/${conversationId}/messages`, localMessage);
       if (response.status === 200) {
         const savedMessage = response.data; // Assuming the API returns the saved message with its ID and other properties
