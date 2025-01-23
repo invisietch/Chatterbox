@@ -35,3 +35,7 @@ body {
 .thoughts {
   @apply italic text-thoughtsHighlight
 }
+
+.bold {
+  @apply font-bold
+}
