@@ -222,12 +222,26 @@ const MessageList = ({
     fetchMessages();
   }, [conversationId]);
 
+  const replaceCharAndUser = (c: string): string => {
+    let newC = c;
+
+    if (newC && character && character.name) {
+      newC = newC.replaceAll(character.name, "{{char}}");
+    }
+
+    if (newC && persona && persona.name) {
+      newC = newC.replaceAll(persona.name, "{{user}}");
+    }
+
+    return newC;
+  };
+
   const handleSaveMessage = async (newMessage: any) => {
     try {
       const localMessage = {
         ...newMessage,
-        content: newMessage.content.trim() || '',
-        rejected: newMessage.rejected?.trim()
+        content: await replaceCharAndUser(newMessage.content.trim()) || '',
+        rejected: await replaceCharAndUser(newMessage.rejected?.trim()),
       }
       const response = await apiClient.post(`/conversations/${conversationId}/messages`, localMessage);
       if (response.status === 200) {
