@@ -127,11 +127,6 @@ const MessageList = ({
 
       if (messages.length === 0 && (character || prompt)) {
         createSystemMessage();
-
-        if (rpMode) {
-          createFirstMessage();
-          setIsAddingMessage(true);
-        }
       } else if (
         messages.length === 1 &&
         messages[0].author === "system" &&
@@ -335,7 +330,11 @@ const MessageList = ({
       content: '{{first_message}}',
     };
 
-    await handleSaveMessage(newMessage);
+    const { savedMessage } = await handleSaveMessage(newMessage);
+
+    if (savedMessage && rpMode) {
+      setIsAddingMessage(true);
+    }
   };
 
   const createSystemMessage = async () => {
@@ -360,7 +359,11 @@ const MessageList = ({
       content,
     };
 
-    await handleSaveMessage(newMessage);
+    const { savedMessage } = await handleSaveMessage(newMessage);
+
+    if (savedMessage && rpMode) {
+      createFirstMessage();
+    }
   }
 
   const accordionTitle = `${warnings.length > 0 ? "⚠️ " : ""} Messages (${messages.length})`;
