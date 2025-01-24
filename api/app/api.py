@@ -398,8 +398,8 @@ async def get_conversation_with_chat_template(
     invert: str, 
     max_context: int, 
     max_length: int,
-    authors_note: Optional[str],
-    authors_note_loc: Optional[int],
+    authors_note: Optional[str] = Query(None),
+    authors_note_loc: Optional[int] = Query(None),
     db: Session = Depends(get_db)
 ):
     conversation = db.query(Conversation).filter_by(id=conversation_id).first()

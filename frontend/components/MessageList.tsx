@@ -264,7 +264,7 @@ const MessageList = ({
         toast.success('Message saved successfully.');
 
         if (rpMode && !isAutoGenerating && savedMessage.author === 'user') {
-          await generateResponse(savedMessage);
+          await generateResponse(savedMessage, true);
         }
 
         return { savedMessage };
@@ -276,7 +276,7 @@ const MessageList = ({
     }
   };
 
-  const generateResponse = async (mostRecent?: any): Promise<string> => {
+  const generateResponse = async (mostRecent?: any, autoSave: boolean = false): Promise<string> => {
     setIsGeneratingMessage(true);
     setAiInferencing(true);
     setGeneratedResponse('');
@@ -318,7 +318,7 @@ const MessageList = ({
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
-      if (rpMode && !isAutoGenerating) {
+      if (rpMode && !isAutoGenerating && autoSave && !isAutoGenerating) {
         if (text && lastFinishReason == 'stop') {
           const newMessage = {
             author:
