@@ -54,10 +54,14 @@ const MessageList = ({
     (state: RootState) => state.model
   );
 
-  const rpMode = useSelector((state: RootState) => {
+  const { rpMode, authorsNote, authorsNoteLoc } = useSelector((state: RootState) => {
     const quickSettings = state.quickSettings;
 
-    return quickSettings.rpMode;
+    return {
+      rpMode: quickSettings.rpMode,
+      authorsNote: quickSettings.authorsNote,
+      authorsNoteLoc: quickSettings.authorsNoteLoc,
+    };
   });
 
   const scrollToBottom = () => {
@@ -281,18 +285,20 @@ const MessageList = ({
 
     if (selectedModel && samplers && samplerOrder && llmUrl && maxContext) {
       const invert = localMostRecent?.author === 'assistant' ? 'invert' : 'no';
+      const authorsNoteQs = authorsNote ? `&authors_note=${encodeURIComponent(authorsNote)}` : '';
+      const authorsNoteLocQs = authorsNote && authorsNoteLoc ? `&authors_note_loc=${authorsNoteLoc}` : '';
       const response = await apiClient.get(
-        `/conversations/${conversationId}/with_chat_template?model_identifier=${selectedModel}&invert=${invert}&max_length=${samplers["max_tokens"]}&max_context=${maxContext}`
+        `/conversations/${conversationId}/with_chat_template?model_identifier=${selectedModel}&invert=${invert}&max_length=${samplers["max_tokens"]}&max_context=${maxContext}${authorsNoteQs}${authorsNoteLocQs}`
       );
       const { history, eos_token } = response.data;
       const eosTokens = [eos_token]
 
       if (character) {
-        eosTokens.push(`\n{character.name}:`);
+        eosTokens.push(`\n${character.name}:`);
       }
 
       if (persona) {
-        eosTokens.push(`\n{persona.name}:`)
+        eosTokens.push(`\n${persona.name}:`)
       }
 
       const { localResponse: text, lastFinishReason } = await fetchResponse(

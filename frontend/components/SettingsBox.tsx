@@ -185,7 +185,7 @@ const SettingsBox = () => {
                       type="number"
                       value={customDepth}
                       onChange={(e) => handleCustomDepthChange(e.target.value)}
-                      className="w-full p-2 border rounded bg-dark text-gray-200 mt-2"
+                      className="w-2/5 p-2 border rounded bg-dark text-gray-200 mt-2 ml-4"
                       placeholder="Enter custom depth"
                     />
                   )}

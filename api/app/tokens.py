@@ -1,3 +1,4 @@
+from typing import Optional
 from transformers import AutoTokenizer
 from fastapi import HTTPException
 from redis import asyncio as aioredis
@@ -95,7 +96,9 @@ async def apply_template_with_context_limit(
     max_length: int,
     postfix: str,
     redis: aioredis,
-    example_messages: list = []
+    example_messages: list = [],
+    authors_note: Optional[str] = None,
+    authors_note_loc: Optional[int] = None
 ):
     try:
         tokenizer = AutoTokenizer.from_pretrained(model_identifier)
@@ -110,6 +113,15 @@ async def apply_template_with_context_limit(
     templated_system_message = attempt_difficult_chat_template(tokenizer, [system_message], tokenize=True, add_generation_prompt=False)
     system_tokens = len(templated_system_message)
     current_context_tokens = system_tokens
+
+    if authors_note and authors_note_loc:
+        authors_note_message = {
+            "role": "system",
+            "content": authors_note
+        }
+        templated_an_message = attempt_difficult_chat_template(tokenizer, [authors_note_message], tokenize=True, add_generation_prompt=False)
+        authors_note_tokens = len(templated_an_message)
+        current_context_tokens = current_context_tokens + authors_note_tokens
 
     # Take off 50 toks for generation prompt & postfix.
     context_budget_remaining = max_context - current_context_tokens - max_length - 50 
@@ -152,8 +164,14 @@ async def apply_template_with_context_limit(
 
     included_messages.insert(0, system_message)
 
+    if authors_note and authors_note_loc:
+        authors_note_message = {
+            "role": "system",
+            "content": authors_note
+        }
+        included_messages.insert(authors_note_loc, authors_note_message)
+
     chat_history = attempt_difficult_chat_template(tokenizer, included_messages, tokenize=False, add_generation_prompt=True)
-        
     chat_history_with_postfix = f"{chat_history}{postfix}"
 
     return {

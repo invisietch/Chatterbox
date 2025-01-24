@@ -392,7 +392,16 @@ def get_messages(conversation_id: int, db: Session = Depends(get_db)):
     return full_messages
 
 @router.get("/conversations/{conversation_id}/with_chat_template")
-async def get_conversation_with_chat_template(conversation_id: int, model_identifier: str, invert: str, max_context: int, max_length: int, db: Session = Depends(get_db)):
+async def get_conversation_with_chat_template(
+    conversation_id: int, 
+    model_identifier: str, 
+    invert: str, 
+    max_context: int, 
+    max_length: int,
+    authors_note: Optional[str],
+    authors_note_loc: Optional[int],
+    db: Session = Depends(get_db)
+):
     conversation = db.query(Conversation).filter_by(id=conversation_id).first()
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found.")
@@ -446,6 +455,8 @@ async def get_conversation_with_chat_template(conversation_id: int, model_identi
             postfix,
             redis,
             example_messages,
+            authors_note,
+            authors_note_loc,
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error loading tokenizer: {str(e)}")
