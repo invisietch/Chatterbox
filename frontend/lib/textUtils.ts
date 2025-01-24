@@ -75,6 +75,8 @@ export const highlightText = (text: string): string => {
   const doubleTildeRegex = /\~\~([^\n]+?)\~\~/g;
   const asteriskRegex = /(?:^|[\s.,!?])(\*)([^\n*]+?)\1(?=[\s.,!?]|$)/g;
   const headingRegex = /^(#{1,6})\s*(.+)$/gm;
+  const urlRegex = /\[([^\]]+)\]\(([^\)]+)\)/g;
+  const imageRegex = /!\[([^\]]*)\]\(([^\)]+)\)/g;
 
   const highlightSpan = (type: string, match: string): string =>
     `<span class="${type}">${match}</span>`;
@@ -279,6 +281,16 @@ export const highlightText = (text: string): string => {
 
   const lines = highlightedText.split('\n');
   highlightedText = processLists(lines);
+
+  // Apply image highlighting
+  highlightedText = highlightedText.replace(imageRegex, (match, alt, url) => {
+    return `<img src="${url}" alt="${alt}" class="rounded shadow" />`;
+  });
+
+  // Apply URL highlighting
+  highlightedText = highlightedText.replace(urlRegex, (match, text, url) => {
+    return `<a href="${url}" class="text-fadedYellow no-underline hover:underline">${text}</a>`;
+  });
 
   // Apply remaining highlights
   const quoteResult = applyHighlighting(highlightedText, quoteRegex, 'speech');
