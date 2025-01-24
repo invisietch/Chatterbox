@@ -49,14 +49,14 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
         max_context: updatedMaxContext,
       });
 
-      if (selectedPresetId == response.data.id) {
+      if (selectedPresetId == response.data.preset) {
         dispatch(
           setPreset({
             selectedModel: updatedModelName,
             samplers: updatedSamplers,
             samplerOrder: updatedSamplerOrder,
             llmUrl: updatedLlmUrl,
-            maxContext: maxContext,
+            maxContext: updatedMaxContext,
             selectedPresetId: response.data.preset,
           })
         );

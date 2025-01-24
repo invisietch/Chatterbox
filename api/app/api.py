@@ -950,7 +950,7 @@ def create_preset(
 
 
 # Edit an existing preset
-@router.put("/presets/{preset_id}/", response_model=dict)
+@router.put("/presets/{preset_id}", response_model=dict)
 def update_preset(
     preset_id: int,
     name: Annotated[str, Body()],
