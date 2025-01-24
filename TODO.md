@@ -15,6 +15,7 @@
 - [x] Push generation to web worker
 - [ ] Pagination on conversation list
 - [ ] Conversation page
+- [ ] Group chats
 
 ## Messages
 
