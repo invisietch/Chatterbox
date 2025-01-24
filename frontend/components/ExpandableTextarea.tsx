@@ -5,11 +5,12 @@ interface ExpandableTextareaProps {
   value: string;
   label: string;
   onChange: (value: string) => void;
+  onModal?: (t: boolean) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
   ref?: RefObject<HTMLTextAreaElement>;
 }
 
-const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, onChange, ref, onKeyDown }) => {
+const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, onChange, ref, onKeyDown, onModal }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -22,6 +23,7 @@ const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, o
   // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      event.stopPropagation();
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         setIsModalOpen(false);
       }
@@ -36,6 +38,11 @@ const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, o
     };
   }, [isModalOpen]);
 
+  const handleModalOpenClose = (open: boolean) => {
+    setIsModalOpen(open);
+    onModal && onModal(open);
+  };
+
   return (
     <>
       <div className="border-dark2 pb-1 relative mt-1">
@@ -45,7 +52,7 @@ const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, o
             {/* Expand Button */}
             {!isModalOpen && (
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => handleModalOpenClose(true)}
                 className="text-grey-300 hover:text-yellow-300"
                 aria-label="Edit message"
               >
@@ -83,7 +90,10 @@ const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, o
 
                 <div className="flex justify-end mt-4">
                   <button
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleModalOpenClose(false);
+                    }}
                     className="px-4 py-2 bg-fadedGreen text-gray-200 rounded-lg shadow hover:bg-brightGreen focus:outline-none focus:ring-2 focus:ring-gray-300"
                   >
                     Save

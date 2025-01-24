@@ -2,10 +2,14 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface QuickSettingsState {
   rpMode: boolean;
+  authorsNote?: string;
+  authorsNoteLoc?: number;
 }
 
 const initialState: QuickSettingsState = {
   rpMode: false,
+  authorsNote: undefined,
+  authorsNoteLoc: undefined,
 };
 
 const quickSettingsSlice = createSlice({
