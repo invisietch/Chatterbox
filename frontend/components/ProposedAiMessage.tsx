@@ -115,7 +115,7 @@ const ProposedAiMessage = ({
         setMessageText(finalText);
         setSlopCount(count);
       } else {
-        setMessageText(content.replace('\n', '<br />'));
+        setMessageText(content.replaceAll('\n', '<br />'));
       }
     }
   }, [character?.name, persona?.name, content, aiInferencing]);
