@@ -77,6 +77,7 @@ export const highlightText = (text: string): string => {
   const headingRegex = /^(#{1,6})\s*(.+)$/gm;
   const urlRegex = /\[([^\]]+)\]\(([^\)]+)\)/g;
   const imageRegex = /!\[([^\]]*)\]\(([^\)]+)\)/g;
+  const tableRegex = /\|(.+?)\|\n\|([-:]+\|)+\n((?:\|.+?\|\n)+)/g;
 
   const highlightSpan = (type: string, match: string): string =>
     `<span class="${type}">${match}</span>`;
@@ -281,6 +282,37 @@ export const highlightText = (text: string): string => {
 
   const lines = highlightedText.split('\n');
   highlightedText = processLists(lines);
+
+  // Apply table highlighting
+  highlightedText = highlightedText.replace(tableRegex, (match, headerRow, dividerRow, bodyRows) => {
+    const headers = headerRow.split('|').map(header => header.trim());
+    const rows = bodyRows.trim().split('\n').map(row => row.split('|').map(cell => cell.trim()).filter(c => c !== ''));
+    console.log(headers);
+    console.log(rows);
+
+    let tableHtml = '<table class="table-auto border-collapse border border-dark">';
+    tableHtml += '<thead><tr>';
+    headers.forEach(header => {
+      tableHtml += `<th class="border border-dark px-4 py-2 bg-dark1">${header}</th>`;
+    });
+    tableHtml += '</tr></thead>';
+
+    tableHtml += '<tbody>';
+    rows.forEach((row, rowIndex) => {
+      const bgClass = rowIndex % 2 === 0 ? 'bg-dark1' : 'bg-dark2';
+      tableHtml += `<tr class="${bgClass}">`;
+      row.forEach(cell => {
+        if (cell.trim !== '') {
+          tableHtml += `<td class="border border-dark px-4 py-2">${cell}</td>`;
+        }
+      });
+      tableHtml += '</tr>';
+    });
+    tableHtml += '</tbody>';
+
+    tableHtml += '</table>';
+    return tableHtml;
+  });
 
   // Apply image highlighting
   highlightedText = highlightedText.replace(imageRegex, (match, alt, url) => {
