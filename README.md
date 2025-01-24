@@ -36,12 +36,22 @@ See [TODO.md](./TODO.md).
 
 You will need Docker and Compose installed, the easiest way to get both is to install [Docker Desktop](https://docs.docker.com/desktop/). On Windows Home Editions, you'll also need to [set up WSL2 with Ubuntu before installing Docker](https://documentation.ubuntu.com/wsl/en/latest/howto/install-ubuntu-wsl2/).
 
-Then just open a terminal and run:
+Then just open a terminal and run the following commands (note: the 'run' file automatically updates the files):
+
+#### Linux / Mac
 
 ```bash
 git clone https://github.com/invisietch/Chatterbox.git
 cd Chatterbox
-docker-compose up --build
+./run.sh
+```
+
+#### Windows
+
+```bash
+git clone https://github.com/invisietch/Chatterbox.git
+cd Chatterbox
+run.bat
 ```
 
 And when it's done the application will be available on [http://localhost:3000](http://localhost:3000).
