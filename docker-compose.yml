@@ -9,8 +9,8 @@ services:
       - DATABASE_PASSWORD=${DATABASE_PASSWORD}
       - DATABASE_NAME=${DATABASE_NAME}
       - DATABASE_USERNAME=${DATABASE_USERNAME}
-      - REDIS_HOSTNAME=chatterboxredis
-      - REDIS_PORT=6379
+      - REDIS_HOSTNAME=${REDIS_HOSTNAME}
+      - REDIS_PORT=${REDIS_PORT}
     command: bash -c "export DATABASE_URL=${DATABASE_URL} && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload --log-level info"
     depends_on:
       - chatterboxdb
@@ -19,7 +19,7 @@ services:
       - uploaded-images:/usr/src/app/uploaded_images
 
   chatterboxdb:
-    image: postgres
+    image: postgres:17.2-alpine3.21
     environment:
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
       - POSTGRES_DB=${DATABASE_NAME}
