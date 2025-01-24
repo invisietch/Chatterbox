@@ -455,7 +455,7 @@ async def get_conversation_with_chat_template(
             postfix,
             redis,
             example_messages,
-            authors_note,
+            replace_placeholders(authors_note, conversation),
             authors_note_loc,
         )
     except Exception as e:
