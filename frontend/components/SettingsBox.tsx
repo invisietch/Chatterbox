@@ -68,7 +68,7 @@ const SettingsBox = () => {
         realTimeProcessText,
       })
     );
-  }, [rpMode, authorsNote, authorsNoteLoc]);
+  }, [rpMode, authorsNote, authorsNoteLoc, realTimeProcessText]);
 
   const handleRadioChange = (value: string) => {
     if (value === '0') {
