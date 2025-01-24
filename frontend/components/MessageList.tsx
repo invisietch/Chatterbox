@@ -7,9 +7,9 @@ import apiClient from '../lib/api';
 import { toast } from 'react-toastify';
 import { FastForwardIcon, PlusIcon, SparklesIcon, StopIcon } from '@heroicons/react/outline';
 import ProposedAiMessage from './ProposedAiMessage';
-import { fetchResponse } from '../lib/aiUtils';
 import { useSelector } from 'react-redux';
 import { RootState } from '../context/store';
+import useAiWorker from '../hooks/useAiWorker';
 
 const MessageList = ({
   conversationId,
@@ -45,6 +45,7 @@ const MessageList = ({
   const isAutoGeneratingRef = useRef(isAutoGenerating);
   const [generationLock, setGenerationLock] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const { generateWithWorker, terminateWorker } = useAiWorker();
 
   useEffect(() => {
     isAutoGeneratingRef.current = isAutoGenerating;
@@ -276,6 +277,12 @@ const MessageList = ({
     }
   };
 
+  useEffect(() => {
+    return () => {
+      terminateWorker(); // Clean up worker on unmount
+    };
+  }, []);
+
   const generateResponse = async (mostRecent?: any, autoSave: boolean = false): Promise<string> => {
     setIsGeneratingMessage(true);
     setAiInferencing(true);
@@ -291,60 +298,65 @@ const MessageList = ({
         `/conversations/${conversationId}/with_chat_template?model_identifier=${selectedModel}&invert=${invert}&max_length=${samplers["max_tokens"]}&max_context=${maxContext}${authorsNoteQs}${authorsNoteLocQs}`
       );
       const { history, eos_token } = response.data;
-      const eosTokens = [eos_token]
+      const eosTokens = [eos_token];
 
       if (character) {
         eosTokens.push(`\n${character.name}:`);
       }
 
       if (persona) {
-        eosTokens.push(`\n${persona.name}:`)
+        eosTokens.push(`\n${persona.name}:`);
       }
 
-      const { localResponse: text, lastFinishReason } = await fetchResponse(
-        history,
-        eosTokens,
-        samplers,
-        samplerOrder,
-        llmUrl,
-        maxContext,
-        (partial) => setGeneratedResponse(partial),  // keep your UI in sync
-        (err) => setGenerationErrors(err),
-        (loading) => setAiInferencing(loading)
-      );
+      return new Promise((resolve, reject) => {
+        generateWithWorker({
+          prompt: history,
+          eosTokens,
+          samplers,
+          samplerOrder,
+          llmUrl,
+          maxContext,
+          onPartial: (partial) => {
+            setGeneratedResponse(partial); // Update UI with partial results
+          },
+          onComplete: async ({ text, finishReason }) => {
+            setAiInferencing(false);
 
-      // Wait for streaming to stop
-      while (aiInferencing) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
+            if (rpMode && localMostRecent && !isAutoGenerating && autoSave && finishReason === 'stop') {
+              const newMessage = {
+                author: localMostRecent?.author === 'assistant' ? 'user' : 'assistant',
+                content: text,
+                conversation_id: conversationId,
+              };
 
-      if (rpMode && !isAutoGenerating && autoSave && !isAutoGenerating) {
-        if (text && lastFinishReason == 'stop') {
-          const newMessage = {
-            author:
-              localMostRecent?.author === 'assistant' ? 'user' : 'assistant',
-            content: text,
-            conversation_id: conversationId,
-          };
+              const result = await handleSaveMessage(newMessage);
 
-          const result = await handleSaveMessage(newMessage);
+              if (result) {
+                setIsGeneratingMessage(false);
+                setIsAddingMessage(true);
+              }
+            }
 
-          if (result) {
+            resolve(finishReason === 'stop' ? text : null);
+          },
+          onError: (err) => {
+            setAiInferencing(false);
             setIsGeneratingMessage(false);
-            setIsAddingMessage(true);
-          }
-        }
-      }
-
-      return lastFinishReason == 'stop' ? text : null; // <--- Return the final text
+            toast.error(`Error during generation: ${err}`);
+            reject(err);
+          },
+        });
+      });
     } else {
       toast.error(
         'Please select a preset in the settings menu (cog in the top right). Cannot generate without a preset.'
       );
       setAiInferencing(false);
-      return ''; // Return empty if you can't generate
+      setIsGeneratingMessage(false);
+      return ''; // Return empty since generation can't proceed
     }
   };
+
 
   const createFirstMessage = async () => {
     const newMessage = {

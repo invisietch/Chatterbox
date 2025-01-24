@@ -26,6 +26,10 @@ If you need any help, ask on [our Discord server](https://discord.gg/gXQzQcnedb)
 - Generate synthetic datasets with 'autoplay' function
 - Add rejected messages to any assistant response
 
+### Todo List
+
+See [TODO.md](./TODO.md).
+
 ## Local Setup
 
 ### Docker-Compose (Recommended)
