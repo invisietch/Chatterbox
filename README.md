@@ -53,7 +53,7 @@ cd Chatterbox
 ```bash
 git clone https://github.com/invisietch/Chatterbox.git
 cd Chatterbox
-run.bat
+.\run.bat
 ```
 
 And when it's done (takes a few minutes the first time, and about 30-60 seconds thereafter on most machines) the application will be available on [http://localhost:3000](http://localhost:3000).
