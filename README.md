@@ -56,9 +56,9 @@ cd Chatterbox
 run.bat
 ```
 
-And when it's done the application will be available on [http://localhost:3000](http://localhost:3000).
+And when it's done (takes a few minutes the first time, and about 30-60 seconds thereafter on most machines) the application will be available on [http://localhost:3000](http://localhost:3000).
 
-Whenever you update (`cd Chatterbox && git pull`), you'll need to re-run `docker-compose up --build`.
+In future, just re-run `./run.sh` or `run.bat` (depending on your OS) to start Chatterbox again.
 
 ### Manual Setup (For development)
 
