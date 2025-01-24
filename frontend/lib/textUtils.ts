@@ -15,14 +15,14 @@ export const extractAndHighlightCodeBlocks = (text: string): {
     try {
       if (lang && hljs.getLanguage(lang)) {
         const highlighted = hljs.highlight(code, { language: lang }).value;
-        codeBlocks[placeholder] = `<pre><code class="hljs ${lang}">${highlighted}</code></pre>`;
+        codeBlocks[placeholder] = `<pre><code class="hljs ${lang}">\`\`\`{lang}\n${highlighted}\n\`\`\`</code></pre>`;
       } else {
         const highlighted = hljs.highlightAuto(code).value;
-        codeBlocks[placeholder] = `<pre><code class="hljs">${highlighted}</code></pre>`;
+        codeBlocks[placeholder] = `<pre><code class="hljs">\`\`\`\n${highlighted}\n\`\`\`</code></pre>`;
       }
     } catch (error) {
       console.error('Failed to highlight code block:', error);
-      codeBlocks[placeholder] = `<pre><code>${code}</code></pre>`;
+      codeBlocks[placeholder] = `<pre><code>\`\`\`\n${code}\n\`\`\`</code></pre>`;
     }
 
     return placeholder;
@@ -289,7 +289,7 @@ export const highlightText = (text: string): string => {
 
   // Apply URL highlighting
   highlightedText = highlightedText.replace(urlRegex, (match, text, url) => {
-    return `<a href="${url}" class="text-fadedYellow no-underline hover:underline">${text}</a>`;
+    return `<a href="${url}" class="text-fadedYellow underline">${text}</a>`;
   });
 
   // Apply remaining highlights
