@@ -16,9 +16,11 @@ const SettingsBox = () => {
   const rpModeInitial = useSelector((state: RootState) => state.quickSettings.rpMode);
   const authorsNoteInitial = useSelector((state: RootState) => state.quickSettings.authorsNote);
   const authorsNoteLocInitial = useSelector((state: RootState) => state.quickSettings.authorsNoteLoc);
+  const realTimeProcessTextInitial = useSelector((state: RootState) => state.quickSettings.realTimeProcessText);
 
   const dispatch = useDispatch();
 
+  const [realTimeProcessText, setRealTimeProcessText] = useState(realTimeProcessTextInitial)
   const [rpMode, setRpMode] = useState(rpModeInitial || false);
   const [authorsNote, setAuthorsNote] = useState(authorsNoteInitial || '');
   const [authorsNoteLoc, setAuthorsNoteLoc] = useState(authorsNoteLocInitial ?? undefined);
@@ -62,7 +64,8 @@ const SettingsBox = () => {
       setQuickSettings({
         rpMode,
         authorsNote: authorsNote && authorsNote.trim() ? authorsNote.trim() : undefined,
-        authorsNoteLoc
+        authorsNoteLoc,
+        realTimeProcessText,
       })
     );
   }, [rpMode, authorsNote, authorsNoteLoc]);
@@ -138,6 +141,29 @@ const SettingsBox = () => {
               </div>
               <div>RP Mode</div>
             </label>
+
+            <label className="flex items-center space-x-2">
+              <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in mb-2">
+                <div className="relative inline-block w-12 h-5 mt-1">
+                  <input
+                    type="checkbox"
+                    checked={realTimeProcessText}
+                    onChange={() => setRealTimeProcessText(!realTimeProcessText)}
+                    className="toggle-checkbox absolute opacity-0 w-0 h-0"
+                  />
+                  <span
+                    className={`toggle-label block w-full h-full rounded-full cursor-pointer transition-colors duration-300 ${!realTimeProcessText ? 'bg-fadedRed' : 'bg-fadedGreen'
+                      }`}
+                  ></span>
+                  <span
+                    className={`toggle-indicator absolute top-0 left-0 w-5 h-5 rounded-full bg-white border-4 transform transition-transform duration-300 ${!realTimeProcessText ? 'translate-x-8' : 'translate-x-0'
+                      }`}
+                  ></span>
+                </div>
+              </div>
+              <div>Process text in real time</div>
+            </label>
+            <div className="text-sm">(This can crash Chrome-based browsers)</div>
 
             <h2 className="text-lg font-bold mb-2">Author's Note</h2>
             <ExpandableTextarea

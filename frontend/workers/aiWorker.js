@@ -9,6 +9,7 @@ self.onmessage = async (e) => {
   } = e.data;
 
   try {
+    let lastTime = 0;
     let localResponse = '';
     let lastFinishReason = '';
 
@@ -60,11 +61,17 @@ self.onmessage = async (e) => {
           const text = parsed.token;
           localResponse += text;
           lastFinishReason = parsed.finish_reason;
-          self.postMessage({ type: 'partial', text: localResponse });
+          const time = new Date().getTime();
+          // Sending too many partials crashes Chrome tab.
+          if (time - lastTime >= 100) {
+            lastTime = time;
+            self.postMessage({ type: 'partial', text: localResponse });
+          }
         }
       }
     }
 
+    self.postMessage({ type: 'partial', text: localResponse });
     self.postMessage({ type: 'done', text: localResponse, finishReason: lastFinishReason });
   } catch (err) {
     self.postMessage({ type: 'error', message: err.message });

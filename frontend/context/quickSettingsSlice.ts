@@ -4,12 +4,14 @@ interface QuickSettingsState {
   rpMode: boolean;
   authorsNote?: string;
   authorsNoteLoc?: number;
+  realTimeProcessText: boolean;
 }
 
 const initialState: QuickSettingsState = {
   rpMode: false,
   authorsNote: undefined,
   authorsNoteLoc: undefined,
+  realTimeProcessText: false,
 };
 
 const quickSettingsSlice = createSlice({

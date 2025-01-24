@@ -41,9 +41,8 @@ const ProposedAiMessage = ({
   const [messageText, setMessageText] = useState(content);
   const [slopCount, setSlopCount] = useState(0);
 
-  const { llmUrl } = useSelector(
-    (state: RootState) => state.model
-  );
+  const { realTimeProcessText } = useSelector((state: RootState) => state.quickSettings);
+  const { llmUrl } = useSelector((state: RootState) => state.model);
 
   useEffect(() => {
     if (content == '' && aiInferencing) {
@@ -96,26 +95,30 @@ const ProposedAiMessage = ({
 
   useEffect(() => {
     if (content) {
-      const { processedText, codeBlocks } = extractAndHighlightCodeBlocks(content);
+      if (realTimeProcessText || !aiInferencing) {
+        const { processedText, codeBlocks } = extractAndHighlightCodeBlocks(content);
 
-      const { highlightedText, count } = highlightSlop(
-        highlightPlaceholders(
-          highlightText(processedText), // Apply other highlights only to non-code text
-          character?.name || '',
-          persona?.name || ''
-        )
-      );
+        const { highlightedText, count } = highlightSlop(
+          highlightPlaceholders(
+            highlightText(processedText), // Apply other highlights only to non-code text
+            character?.name || '',
+            persona?.name || ''
+          )
+        );
 
-      // Reinsert code blocks into the highlighted text
-      let finalText = highlightedText;
-      Object.entries(codeBlocks).forEach(([placeholder, highlightedCode]) => {
-        finalText = finalText.replace(placeholder, highlightedCode);
-      });
+        // Reinsert code blocks into the highlighted text
+        let finalText = highlightedText;
+        Object.entries(codeBlocks).forEach(([placeholder, highlightedCode]) => {
+          finalText = finalText.replace(placeholder, highlightedCode);
+        });
 
-      setMessageText(finalText);
-      setSlopCount(count);
+        setMessageText(finalText);
+        setSlopCount(count);
+      } else {
+        setMessageText(content);
+      }
     }
-  }, [character?.name, persona?.name, content]);
+  }, [character?.name, persona?.name, content, aiInferencing]);
 
   const handleRegenerate = async () => {
     await regenerate();
