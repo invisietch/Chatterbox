@@ -36,6 +36,8 @@ See [TODO.md](./TODO.md).
 
 You will need Docker and Compose installed, the easiest way to get both is to install [Docker Desktop](https://docs.docker.com/desktop/). On Windows Home Editions, you'll also need to [set up WSL2 with Ubuntu before installing Docker](https://documentation.ubuntu.com/wsl/en/latest/howto/install-ubuntu-wsl2/).
 
+*Note: If this doesn't work, especially on Windows, check the **Troubleshooting** section at the bottom of this doc before opening an issue.*
+
 Then just open a terminal and run the following commands (note: the 'run' file automatically updates the files):
 
 #### Linux / Mac
@@ -169,11 +171,48 @@ If you can't afford to sponsor the project comfortably, please don't do it. I'm 
 
 ## Troubleshooting
 
-### failed to bind port 0.0.0.0:5432/tcp
+### Failed to bind port 0.0.0.0:5432/tcp
 
 If you get a message like this when starting the docker container, it's likely that you already have postgresql running locally. If you do, you should stop your local copy of postgresql.
 
 You could also change the port, but it's more complex than it should be.
+
+### Docker issues on Windows
+
+You need to install WSL2 and add a distribution (suggested Ubuntu).
+
+First, make sure the permissions are set right:
+
+```
+Check in Windows Security -> App & Browser Control -> Exploit Protection Settings:
+
+In System Settings, Control Flow Guard (CFG) should be "On".
+In Program Settings, there should be entries for:
+
+C:\Windows\System32\vmcompute.exe
+C:\Windows\System32\vmwp.exe
+
+Both should have Control Flow Guard set to:
+
+- Override System Settings
+- On
+- Use Strict CFG
+```
+
+Then, install Ubuntu:
+
+```
+wsl.exe --install -d Ubuntu
+```
+
+Then, set the WSL version & default distro:
+
+```
+wsl.exe --set-version Ubuntu 2
+wsl --set-default Ubuntu
+```
+
+Finally, restart your computer & Docker should work.
 
 ## License
 
