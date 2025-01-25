@@ -5,11 +5,12 @@ import { extractAndHighlightCodeBlocks, highlightPlaceholders, highlightText } f
 import Avatar from './Avatar';
 import { highlightSlop } from '../lib/slop';
 import ReactDOM from 'react-dom';
-import { ArrowLeftIcon, ArrowRightIcon, PencilIcon, SparklesIcon, StopIcon, TrashIcon } from '@heroicons/react/outline';
+import { AdjustmentsIcon, ArrowLeftIcon, ArrowRightIcon, PencilIcon, SparklesIcon, StopIcon, TrashIcon } from '@heroicons/react/outline';
 import { useSelector } from 'react-redux';
 import { RootState } from '../context/store';
 import useAiWorker from '../hooks/useAiWorker';
 import { cancelGeneration } from '../lib/aiUtils';
+import VariantModal from './VariantModal';
 
 const MessageItem = ({
   message,
@@ -34,8 +35,8 @@ const MessageItem = ({
   alternateGreetings: string[] | null;
   conversationId: number;
 }) => {
-  const [content, setContent] = useState(message.content);
-  const [rejected, setRejected] = useState(message.rejected);
+  const [content, setContent] = useState<string>(message.content);
+  const [rejected, setRejected] = useState<string>(message.rejected);
   const [tokenCount, setTokenCount] = useState<number | null>(null);
   const [rejectedTokenCount, setRejectedTokenCount] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -49,12 +50,14 @@ const MessageItem = ({
   const [newRejected, setNewRejected] = useState(message.rejected);
   const [greetings, setGreetings] = useState([]);
   const [variants, setVariants] = useState<string[]>([]);
-  const [currentVariantIndex, setCurrentVariantIndex] = useState<number>(-1);
+  const [currentContentVariantIndex, setCurrentContentVariantIndex] = useState<number>(0);
+  const [currentRejectedVariantIndex, setCurrentRejectedVariantIndex] = useState<number>(1);
   const [prevGreeting, setPrevGreeting] = useState({ exists: false, index: 0 });
   const [nextGreeting, setNextGreeting] = useState({ exists: false, index: 0 });
   const [aiGenerating, setAiGenerating] = useState(false);
   const [genRejected, setGenRejected] = useState("");
   const [genContent, setGenContent] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const { generateWithWorker, terminateWorker } = useAiWorker();
 
@@ -71,6 +74,18 @@ const MessageItem = ({
       authorsNoteLoc: quickSettings.authorsNoteLoc,
     };
   });
+
+  useEffect(() => {
+    const localVariants = [];
+    if (message.content) {
+      localVariants.push(message.content);
+    }
+    if (message.rejected) {
+      localVariants.push(message.rejected);
+    }
+
+    setVariants(localVariants);
+  }, [message]);
 
   useEffect(() => {
     const fetchTokenCount = async () => {
@@ -158,26 +173,29 @@ const MessageItem = ({
   }, [character?.name, persona?.name, message.content, message.rejected]);
 
   useEffect(() => {
-    if (currentVariantIndex === -1) {
-      setGenContent('');
-      setGenRejected('');
-      setNewContent(content);
-      setNewRejected(rejected);
-    } else {
-      const variant = variants[currentVariantIndex];
-      if (editRejected) {
-        setGenRejected(variant);
-        setNewRejected(variant);
-      } else {
-        setGenContent(variant);
-        setNewContent(variant);
-      }
-    }
-  }, [currentVariantIndex, editRejected, variants]);
+    const variant = variants[currentContentVariantIndex];
+    setGenContent(variant);
+    setNewContent(variant);
+  }, [currentContentVariantIndex, variants]);
+
+  useEffect(() => {
+    const variant = variants[currentRejectedVariantIndex];
+    setGenRejected(variant);
+    setNewRejected(variant);
+  }, [currentRejectedVariantIndex, variants]);
 
   const handleGenerateVariant = async () => {
+    if (!isEditing) {
+      setIsEditing(true);
+    }
     if (!aiGenerating) {
       setAiGenerating(true);
+
+      if (editRejected) {
+        setGenRejected('Generating rejected variant...');
+      } else {
+        setGenContent('Generating variant...');
+      }
 
       if (!selectedModel || !samplers || !samplerOrder || !llmUrl || !maxContext) {
         toast.error('Missing model configuration.');
@@ -229,14 +247,25 @@ const MessageItem = ({
           },
           onComplete: ({ text, finishReason }) => {
             setAiGenerating(false);
+
             if (finishReason !== 'stop') {
               toast.error('Generation did not complete successfully.');
-              setCurrentVariantIndex(currentVariantIndex);
+              if (editRejected) {
+                setCurrentRejectedVariantIndex(currentRejectedVariantIndex);
+              } else {
+                setCurrentContentVariantIndex(currentContentVariantIndex);
+              }
               throw new Error('Invalid finish reason');
             }
+
             const localVariants = [...variants, text];
             setVariants(localVariants);
-            setCurrentVariantIndex(localVariants.length - 1);
+
+            if (editRejected) {
+              setCurrentRejectedVariantIndex(localVariants.length - 1);
+            } else {
+              setCurrentContentVariantIndex(localVariants.length - 1)
+            }
             toast.success('Variant generated successfully.');
           },
           onError: (err) => {
@@ -250,11 +279,19 @@ const MessageItem = ({
   };
 
   const handleScrollLeft = () => {
-    setCurrentVariantIndex((prev) => (prev > -1 ? prev - 1 : prev));
+    if (editRejected) {
+      setCurrentRejectedVariantIndex((prev) => (prev > -1 ? prev - 1 : prev));
+    } else {
+      setCurrentContentVariantIndex((prev) => (prev > -1 ? prev - 1 : prev));
+    }
   };
 
   const handleScrollRight = () => {
-    setCurrentVariantIndex((prev) => (prev < variants.length - 1 ? prev + 1 : prev));
+    if (editRejected) {
+      setCurrentRejectedVariantIndex((prev) => (prev < variants.length - 1 ? prev + 1 : prev));
+    } else {
+      setCurrentContentVariantIndex((prev) => (prev < variants.length - 1 ? prev + 1 : prev));
+    }
   };
 
   const handleEdit = () => {
@@ -267,6 +304,8 @@ const MessageItem = ({
   const handleCancel = () => {
     setIsEditing(false);
     setAiGenerating(false);
+    setCurrentContentVariantIndex(-1);
+    setCurrentRejectedVariantIndex(-1);
     setContent(message.content);
     setRejected(message.rejected);
   };
@@ -304,6 +343,7 @@ const MessageItem = ({
 
       setTokenCount(response.data.token_count);
       setIsEditing(false);
+
       toast.success('Message updated successfully.');
       fetchMessages();
     } catch (error) {
@@ -402,14 +442,12 @@ const MessageItem = ({
                       onChange={isEditing ? () => {
                         if (editRejected) {
                           setRejected(newRejected);
-
                         } else {
                           setContent(newContent);
                         }
-                        setCurrentVariantIndex(-1);
-                        setEditRejected(!editRejected)
+                        setEditRejected(!editRejected);
                       } : () => {
-                        setShowRejected(!showRejected)
+                        setShowRejected(!showRejected);
                       }}
                       className="toggle-checkbox absolute opacity-0 w-0 h-0"
                     />
@@ -424,7 +462,7 @@ const MessageItem = ({
               </label>
             )}
 
-            {isEditing && !aiGenerating && (
+            {!aiGenerating && (
               <button
                 onClick={handleGenerateVariant}
                 className="text-grey-300 hover:text-brightOrange"
@@ -446,19 +484,56 @@ const MessageItem = ({
             {isEditing && (
               <>
                 <button
-                  disabled={!variants || aiGenerating || currentVariantIndex <= -1}
+                  disabled={variants.length <= 1 || aiGenerating || (editRejected && currentRejectedVariantIndex <= 0) || (!editRejected && currentContentVariantIndex <= 0)}
                   onClick={handleScrollLeft}
-                  className={`text-grey-300 ${!aiGenerating && variants && currentVariantIndex <= -1 && 'hover:text-brightOrange'}`}
+                  className={`text-grey-300 ${!aiGenerating && variants.length > 1 && !(editRejected && currentRejectedVariantIndex <= 0) && !(!editRejected && currentContentVariantIndex <= 0) && 'hover:text-brightOrange'}`}
                 >
                   <ArrowLeftIcon className="h-5 w-5" />
                 </button>
+
                 <button
-                  disabled={!variants || aiGenerating || currentVariantIndex >= variants.length - 1}
+                  disabled={variants.length <= 1 || aiGenerating}
+                  className={(variants.length > 1 && !aiGenerating) ? 'hover:text-brightOrange' : ''}
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  <AdjustmentsIcon className="h-5 w-5" />
+                </button>
+
+                <button
+                  disabled={variants.length <= 1 || aiGenerating || (editRejected && currentRejectedVariantIndex >= variants.length - 1) || (!editRejected && currentContentVariantIndex >= variants.length - 1)}
                   onClick={handleScrollRight}
-                  className={`text-grey-300 ${!aiGenerating && variants && currentVariantIndex >= variants.length - 1 && 'hover:text-brightOrange'}`}
+                  className={`text-grey-300 ${!aiGenerating && variants.length > 1 && !(editRejected && currentRejectedVariantIndex >= variants.length - 1) && !(!editRejected && currentContentVariantIndex >= variants.length - 1) && 'hover:text-brightOrange'}`}
                 >
                   <ArrowRightIcon className="h-5 w-5" />
                 </button>
+                {isModalOpen && (
+                  <VariantModal
+                    vs={variants}
+                    isAssistant={message.author === 'assistant'}
+                    avatarData={{
+                      id: message.author === 'assistant' ? character.id : message.author === 'user' ? persona.id : 0,
+                      type: message.author === 'assistant' ? 'character' : message.author === 'user' ? 'persona' : 'system',
+                      name: message.author === 'assistant' ? character.name : message.author === 'user' ? persona.name : 'System',
+                    }}
+                    onClose={() => setIsModalOpen(false)}
+                    onSave={async (ci, ri) => {
+                      if (ci !== null) {
+                        setCurrentContentVariantIndex(ci);
+                      }
+                      if (ri === -2) {
+                        setRejected('');
+                        setNewRejected('');
+                        setGenRejected('');
+
+                        await setTimeout(() => setCurrentRejectedVariantIndex(-1), 400);
+                      } else if (ri !== null) {
+                        setCurrentRejectedVariantIndex(ri);
+                      }
+
+                      setIsModalOpen(false);
+                    }}
+                  />
+                )}
               </>
             )}
 
