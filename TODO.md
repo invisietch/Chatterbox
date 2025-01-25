@@ -36,7 +36,7 @@
 
 ## Characters
 
-- [ ] Support alternative greetings
+- [x] Support alternative greetings
 - [ ] Import lorebooks from character
 
 ## Import/Export
