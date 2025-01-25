@@ -410,6 +410,7 @@ async def get_conversation_with_chat_template(
     max_length: int,
     authors_note: Optional[str] = Query(None),
     authors_note_loc: Optional[int] = Query(None),
+    message_id: Optional[int] = Query(None),
     db: Session = Depends(get_db)
 ):
     conversation = db.query(Conversation).filter_by(id=conversation_id).first()
@@ -420,6 +421,9 @@ async def get_conversation_with_chat_template(
 
     chat_messages = []
     for msg in messages:
+        if message_id and message_id == msg.id:
+            break
+            
         author = msg.author.lower()
         if (invert == 'invert' and msg.author.lower() == 'user'):
             author = 'assistant'

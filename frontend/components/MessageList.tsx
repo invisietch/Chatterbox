@@ -422,6 +422,7 @@ const MessageList = ({
           <>
             {(arr.length - 1 === i) && (<div ref={messagesEndRef} />)}
             <MessageItem
+              conversationId={conversationId}
               key={message.id}
               isEditing={message.id === editingId}
               setIsEditing={(t: boolean) => t ? setEditingId(message.id) : setEditingId(null)}

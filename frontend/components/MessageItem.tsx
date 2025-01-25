@@ -5,7 +5,11 @@ import { extractAndHighlightCodeBlocks, highlightPlaceholders, highlightText } f
 import Avatar from './Avatar';
 import { highlightSlop } from '../lib/slop';
 import ReactDOM from 'react-dom';
-import { ArrowLeftIcon, ArrowRightIcon, PencilIcon, TrashIcon } from '@heroicons/react/outline';
+import { ArrowLeftIcon, ArrowRightIcon, PencilIcon, SparklesIcon, StopIcon, TrashIcon } from '@heroicons/react/outline';
+import { useSelector } from 'react-redux';
+import { RootState } from '../context/store';
+import useAiWorker from '../hooks/useAiWorker';
+import { cancelGeneration } from '../lib/aiUtils';
 
 const MessageItem = ({
   message,
@@ -16,7 +20,8 @@ const MessageItem = ({
   persona,
   isEditing,
   setIsEditing,
-  alternateGreetings
+  alternateGreetings,
+  conversationId,
 }: {
   message: any;
   modelIdentifier: string;
@@ -27,6 +32,7 @@ const MessageItem = ({
   isEditing: boolean;
   setIsEditing: (t: boolean) => void;
   alternateGreetings: string[] | null;
+  conversationId: number;
 }) => {
   const [content, setContent] = useState(message.content);
   const [rejected, setRejected] = useState(message.rejected);
@@ -42,9 +48,29 @@ const MessageItem = ({
   const [newContent, setNewContent] = useState(message.content);
   const [newRejected, setNewRejected] = useState(message.rejected);
   const [greetings, setGreetings] = useState([]);
+  const [variants, setVariants] = useState<string[]>([]);
+  const [currentVariantIndex, setCurrentVariantIndex] = useState<number>(-1);
   const [prevGreeting, setPrevGreeting] = useState({ exists: false, index: 0 });
   const [nextGreeting, setNextGreeting] = useState({ exists: false, index: 0 });
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [genRejected, setGenRejected] = useState("");
+  const [genContent, setGenContent] = useState("");
   const contentRef = useRef<HTMLDivElement>(null);
+  const { generateWithWorker, terminateWorker } = useAiWorker();
+
+  const { selectedModel, samplers, samplerOrder, llmUrl, maxContext } = useSelector(
+    (state: RootState) => state.model
+  );
+
+  const { authorsNote, authorsNoteLoc } = useSelector((state: RootState) => {
+    const quickSettings = state.quickSettings;
+
+    return {
+      rpMode: quickSettings.rpMode,
+      authorsNote: quickSettings.authorsNote,
+      authorsNoteLoc: quickSettings.authorsNoteLoc,
+    };
+  });
 
   useEffect(() => {
     const fetchTokenCount = async () => {
@@ -131,6 +157,106 @@ const MessageItem = ({
     }
   }, [character?.name, persona?.name, message.content, message.rejected]);
 
+  useEffect(() => {
+    if (currentVariantIndex === -1) {
+      setGenContent('');
+      setGenRejected('');
+      setNewContent(content);
+      setNewRejected(rejected);
+    } else {
+      const variant = variants[currentVariantIndex];
+      if (editRejected) {
+        setGenRejected(variant);
+        setNewRejected(variant);
+      } else {
+        setGenContent(variant);
+        setNewContent(variant);
+      }
+    }
+  }, [currentVariantIndex, editRejected, variants]);
+
+  const handleGenerateVariant = async () => {
+    if (!aiGenerating) {
+      setAiGenerating(true);
+
+      if (!selectedModel || !samplers || !samplerOrder || !llmUrl || !maxContext) {
+        toast.error('Missing model configuration.');
+        return;
+      }
+
+      try {
+        const invert = message.author === 'assistant' ? 'no' : 'invert';
+
+        const response = await apiClient.get(
+          `/conversations/${conversationId}/with_chat_template`,
+          {
+            params: {
+              invert,
+              model_identifier: selectedModel,
+              max_length: samplers["max_tokens"],
+              max_context: maxContext,
+              authors_note: authorsNote || undefined,
+              authors_note_loc: authorsNoteLoc || undefined,
+              message_id: message.id,
+            },
+          }
+        );
+
+        const { history, eos_token } = response.data;
+        const eosTokens = [eos_token];
+
+        if (character) {
+          eosTokens.push(`\n${character.name}:`);
+        }
+
+        if (persona) {
+          eosTokens.push(`\n${persona.name}:`);
+        }
+
+        generateWithWorker({
+          prompt: history,
+          eosTokens,
+          samplers,
+          samplerOrder,
+          llmUrl,
+          maxContext,
+          onPartial: (partial) => {
+            if (!editRejected) {
+              setGenContent(partial);
+            } else {
+              setGenRejected(partial);
+            }
+          },
+          onComplete: ({ text, finishReason }) => {
+            setAiGenerating(false);
+            if (finishReason !== 'stop') {
+              toast.error('Generation did not complete successfully.');
+              setCurrentVariantIndex(currentVariantIndex);
+              throw new Error('Invalid finish reason');
+            }
+            const localVariants = [...variants, text];
+            setVariants(localVariants);
+            setCurrentVariantIndex(localVariants.length - 1);
+            toast.success('Variant generated successfully.');
+          },
+          onError: (err) => {
+            toast.error(`Error generating variant: ${err}`);
+          },
+        });
+      } catch (error) {
+        toast.error('Failed to fetch prompt for variant generation.');
+      }
+    }
+  };
+
+  const handleScrollLeft = () => {
+    setCurrentVariantIndex((prev) => (prev > -1 ? prev - 1 : prev));
+  };
+
+  const handleScrollRight = () => {
+    setCurrentVariantIndex((prev) => (prev < variants.length - 1 ? prev + 1 : prev));
+  };
+
   const handleEdit = () => {
     setIsEditing(true);
     setTimeout(() => {
@@ -140,6 +266,7 @@ const MessageItem = ({
 
   const handleCancel = () => {
     setIsEditing(false);
+    setAiGenerating(false);
     setContent(message.content);
     setRejected(message.rejected);
   };
@@ -220,6 +347,11 @@ const MessageItem = ({
     }
   }
 
+  const handleAbort = async () => {
+    await cancelGeneration(llmUrl);
+    setAiGenerating(false);
+  }
+
   const avatarData = message.author === 'user' ? persona : message.author === 'assistant' ? character : null;
   const wrapperClass = `${warning ? 'bg-warningHighlight' : ''} ${(!isEditing && showRejected) || (isEditing && editRejected) ? 'border-fadedRed' : 'border-fadedGreen'
     } border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg ${isEditing && 'border-dashed'}`;
@@ -258,7 +390,7 @@ const MessageItem = ({
       <div className="flex-grow">
         <div className="flex justify-between items-center">
           <div className="flex space-x-2 absolute top-2 right-2">
-            {message.author === 'assistant' && (isEditing || !!messageRejected) && (
+            {message.author === 'assistant' && !aiGenerating && (isEditing || !!messageRejected) && (
               <label className="flex items-center space-x-2">
                 <div
                   className={`relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in`}
@@ -270,9 +402,11 @@ const MessageItem = ({
                       onChange={isEditing ? () => {
                         if (editRejected) {
                           setRejected(newRejected);
+
                         } else {
                           setContent(newContent);
                         }
+                        setCurrentVariantIndex(-1);
                         setEditRejected(!editRejected)
                       } : () => {
                         setShowRejected(!showRejected)
@@ -288,6 +422,44 @@ const MessageItem = ({
                   </div>
                 </div>
               </label>
+            )}
+
+            {isEditing && !aiGenerating && (
+              <button
+                onClick={handleGenerateVariant}
+                className="text-grey-300 hover:text-brightOrange"
+              >
+                <SparklesIcon className="h-5 w-5" />
+              </button>
+            )}
+
+            {isEditing && aiGenerating && (
+              <button
+                onClick={handleAbort}
+                className="text-fadedRed hover:text-brightRed"
+                aria-label="Stop Generating"
+              >
+                <StopIcon className='h-5 w-5' />
+              </button>
+            )}
+
+            {isEditing && (
+              <>
+                <button
+                  disabled={!variants || aiGenerating || currentVariantIndex <= -1}
+                  onClick={handleScrollLeft}
+                  className={`text-grey-300 ${!aiGenerating && variants && currentVariantIndex <= -1 && 'hover:text-brightOrange'}`}
+                >
+                  <ArrowLeftIcon className="h-5 w-5" />
+                </button>
+                <button
+                  disabled={!variants || aiGenerating || currentVariantIndex >= variants.length - 1}
+                  onClick={handleScrollRight}
+                  className={`text-grey-300 ${!aiGenerating && variants && currentVariantIndex >= variants.length - 1 && 'hover:text-brightOrange'}`}
+                >
+                  <ArrowRightIcon className="h-5 w-5" />
+                </button>
+              </>
             )}
 
             {!isEditing && !showRejected && greetings.length > 1 && (
@@ -337,7 +509,7 @@ const MessageItem = ({
         {isEditing ? (
           <div
             ref={contentRef}
-            contentEditable={true}
+            contentEditable={!aiGenerating}
             suppressContentEditableWarning={true}
             className='text-gray-300 mt-2 w-10/12 h-full outline-none flex-grow'
             style={{ whiteSpace: 'pre-wrap' }}
@@ -351,7 +523,7 @@ const MessageItem = ({
               }
             }}
           >
-            {editRejected ? rejected : content}
+            {editRejected ? genRejected || rejected : genContent || content}
           </div>
         ) : (
           <div
@@ -367,14 +539,16 @@ const MessageItem = ({
           <div className="absolute bottom-2 right-2 flex gap-2">
             <button
               type="button"
+              disabled={aiGenerating}
               onClick={handleCancel}
-              className="px-4 py-2 bg-dark1 text-white rounded hover:bg-dark2"
+              className={`px-4 py-2 bg-dark1 text-white rounded ${!aiGenerating && 'hover:bg-dark2'}`}
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-fadedGreen text-white rounded hover:bg-brightGreen"
+              disabled={aiGenerating}
+              className={`px-4 py-2 bg-fadedGreen text-white rounded ${!aiGenerating && 'hover:bg-brightGreen'}`}
             >
               Save
             </button>

@@ -33,9 +33,9 @@ const useAiWorker = () => {
       const { type, text, finishReason, message } = e.data;
 
       if (type === 'partial' && onPartial) {
-        onPartial(text);
+        onPartial(text.trim());
       } else if (type === 'done' && onComplete) {
-        onComplete({ text, finishReason });
+        onComplete({ text: text.trim(), finishReason });
       } else if (type === 'error' && onError) {
         onError(message);
       }
