@@ -357,7 +357,6 @@ const MessageList = ({
     }
   };
 
-
   const createFirstMessage = async () => {
     const newMessage = {
       author: 'assistant',
@@ -432,6 +431,7 @@ const MessageList = ({
               warning={warningIds.includes(message.id)}
               character={character || null}
               persona={persona || null}
+              alternateGreetings={character && i === 1 && message.author === "assistant" && character.alternate_greetings ? character.alternate_greetings : null}
             />
           </>
         ))

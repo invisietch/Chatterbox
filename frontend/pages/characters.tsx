@@ -24,7 +24,13 @@ export default function CharactersPage() {
     personality: string | null,
     firstMessage: string,
     exampleMessages: string | null,
-    postHistoryInstructions: string | null
+    postHistoryInstructions: string | null,
+    creator: string | null,
+    creatorNotes: string | null,
+    characterVersion: string | null,
+    systemPrompt: string | null,
+    alternateGreetings: string[],
+    tags: any[],
   ) => {
     try {
       const response = await apiClient.post("/characters", {
@@ -35,19 +41,33 @@ export default function CharactersPage() {
         first_message: firstMessage,
         example_messages: exampleMessages,
         post_history_instructions: postHistoryInstructions,
+        creator,
+        creator_notes: creatorNotes,
+        character_version: characterVersion,
+        alternate_greetings: alternateGreetings,
+        system_prompt: systemPrompt,
       });
 
       if (response.status === 200) {
-        toast.success('Successfully saved character.');
+        const characterId = response.data.id;
 
+        for (const tag of tags) {
+          const tagResponse = await apiClient.post(`/characters/${characterId}/tags/${tag.name}`);
+
+          if (tagResponse.status !== 200) {
+            throw new Error(`API error: ${tagResponse.statusText}`)
+          }
+        }
+
+        toast.success('Successfully saved character.');
         await fetchCharacters();
 
         setIsManuallyAddingCharacter(false);
       } else {
-        toast.error('Failed to save character.');
+        toast.error('Failed to save character and/or tags.');
       }
     } catch (error) {
-      toast.error('Failed to save character.');
+      toast.error('Failed to save character and/or tags.');
     }
   };
 

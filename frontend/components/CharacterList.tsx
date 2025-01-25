@@ -19,7 +19,7 @@ const CharacterList = ({ characters, error, fetchCharacters }: { characters: Cha
       {!error && characters.length === 0 && <p className="text-gray-500">No characters found.</p>}
       <div className="space-y-4">
         {characters.map((character) => (
-          <CharacterItem character={character} onSave={fetchCharacters} />
+          <CharacterItem character={character} onSave={fetchCharacters} fetchCharacters={fetchCharacters} />
         ))}
       </div>
     </>

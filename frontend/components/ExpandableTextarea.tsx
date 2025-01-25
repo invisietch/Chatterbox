@@ -1,3 +1,4 @@
+import { TrashIcon } from "@heroicons/react/outline";
 import React, { RefObject, useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 
@@ -7,23 +8,29 @@ interface ExpandableTextareaProps {
   onChange: (value: string) => void;
   onModal?: (t: boolean) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
+  onTrashClick?: () => void; // New optional prop for trash icon functionality
   ref?: RefObject<HTMLTextAreaElement>;
 }
 
-const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, onChange, ref, onKeyDown, onModal }) => {
+const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({
+  value,
+  label,
+  onChange,
+  ref,
+  onKeyDown,
+  onModal,
+  onTrashClick, // Trash icon functionality
+}) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Handle changes to the text
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     onChange(newText);
   };
 
-  // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      event.stopPropagation();
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         setIsModalOpen(false);
       }
@@ -57,6 +64,16 @@ const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, o
                 aria-label="Edit message"
               >
                 ⌞ ⌝
+              </button>
+            )}
+            {/* Trash Icon */}
+            {onTrashClick && (
+              <button
+                onClick={onTrashClick}
+                className="text-grey-300 hover:text-red-300"
+                aria-label="Remove"
+              >
+                <TrashIcon className="w-5 h-5" />
               </button>
             )}
           </div>
@@ -102,8 +119,7 @@ const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({ value, label, o
               </div>
             </div>,
             document.body
-          )
-        }
+          )}
       </div>
     </>
   );

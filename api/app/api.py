@@ -6,7 +6,7 @@ from typing import Annotated, Optional, List
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import SessionLocal
-from app.models import Character, Conversation, Message, Persona, Preset, Prompt, Tag, ConversationTag, TagCategory
+from app.models import Character, CharacterTag, Conversation, Message, Persona, Preset, Prompt, Tag, ConversationTag, TagCategory
 from fastapi.responses import StreamingResponse, FileResponse
 from io import StringIO
 import json
@@ -21,20 +21,30 @@ router = APIRouter()
 
 class CharacterCreate(BaseModel):
     name: str
+    creator: Optional[str] = None
+    creator_notes: Optional[str] = None
+    character_version: Optional[str] = None
+    alternate_greetings: Optional[List[str]] = []
     scenario: Optional[str] = None
     personality: Optional[str] = None
     description: str
     first_message: str
     example_messages: Optional[str] = None
+    system_prompt: Optional[str] = None
     post_history_instructions: Optional[str] = None
 
 class CharacterUpdate(BaseModel):
     name: Optional[str] = None
+    creator: Optional[str] = None
+    creator_notes: Optional[str] = None
+    character_version: Optional[str] = None
+    alternate_greetings: Optional[List[str]] = []
     scenario: Optional[str] = None
     personality: Optional[str] = None
     description: Optional[str] = None
     first_message: Optional[str] = None
     example_messages: Optional[str] = None
+    system_prompt: Optional[str] = None
     post_history_instructions: Optional[str] = None
 
 class ProposedMessage(BaseModel):
@@ -635,11 +645,16 @@ def search_tags(
 def create_character(character: CharacterCreate, db: Session = Depends(get_db)):
     db_character = Character(
         name=character.name,
+        creator=character.creator,
+        creator_notes=character.creator_notes,
+        character_version=character.character_version,
+        alternate_greetings=character.alternate_greetings,
         scenario=character.scenario,
         personality=character.personality,
         description=character.description,
         first_message=character.first_message,
         example_messages=character.example_messages,
+        system_prompt=character.system_prompt,
         post_history_instructions=character.post_history_instructions,
     )
     db.add(db_character)
@@ -652,6 +667,50 @@ def create_character(character: CharacterCreate, db: Session = Depends(get_db)):
 def list_characters(db: Session = Depends(get_db)):
     characters = db.query(Character).all()
     return characters
+
+@router.get("/characters/{character_id}/tags")
+def get_tags(character_id: int, db: Session = Depends(get_db)):
+    tags = db.query(CharacterTag).filter_by(character_id=character_id).all()
+
+    # Include category details in the response
+    return [
+        {
+            "name": tag.tag_name,
+            "category": {
+                "name": tag.tag.category.name if tag.tag.category else None,
+                "color": tag.tag.category.color if tag.tag.category else None
+            }
+        }
+        for tag in tags
+    ]
+
+# Add a tag to a character
+@router.post("/characters/{character_id}/tags/{tag_name}")
+def add_tag(character_id: int, tag_name: str, db: Session = Depends(get_db)):
+    tag = db.query(Tag).filter_by(name=tag_name).first()
+    if not tag:
+        tag = Tag(name=tag_name)
+        db.add(tag)
+        db.commit()
+
+    character_tag = db.query(CharacterTag).filter_by(character_id=character_id, tag_name=tag_name).first()
+    if not character_tag:
+        character_tag = CharacterTag(character_id=character_id, tag_name=tag_name)
+        db.add(character_tag)
+
+    db.commit()
+    return {"message": "Tag added to character"}
+
+# Remove a tag from a character
+@router.delete("/characters/{character_id}/tags/{tag_name}")
+def remove_tag(character_id: int, tag_name: str, db: Session = Depends(get_db)):
+    character_tag = db.query(CharacterTag).filter_by(character_id=character_id, tag_name=tag_name).first()
+    if not character_tag:
+        raise HTTPException(status_code=404, detail="Tag not found on character")
+
+    db.delete(character_tag)
+    db.commit()
+    return {"message": "Tag removed from character"}
 
 # Get character by ID
 @router.get("/characters/{character_id}")

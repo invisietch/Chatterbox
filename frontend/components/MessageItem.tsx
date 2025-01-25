@@ -5,7 +5,7 @@ import { extractAndHighlightCodeBlocks, highlightPlaceholders, highlightText } f
 import Avatar from './Avatar';
 import { highlightSlop } from '../lib/slop';
 import ReactDOM from 'react-dom';
-import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
+import { ArrowLeftIcon, ArrowRightIcon, PencilIcon, TrashIcon } from '@heroicons/react/outline';
 
 const MessageItem = ({
   message,
@@ -16,6 +16,7 @@ const MessageItem = ({
   persona,
   isEditing,
   setIsEditing,
+  alternateGreetings
 }: {
   message: any;
   modelIdentifier: string;
@@ -25,6 +26,7 @@ const MessageItem = ({
   persona: any | null;
   isEditing: boolean;
   setIsEditing: (t: boolean) => void;
+  alternateGreetings: string[] | null;
 }) => {
   const [content, setContent] = useState(message.content);
   const [rejected, setRejected] = useState(message.rejected);
@@ -39,6 +41,9 @@ const MessageItem = ({
   const [editRejected, setEditRejected] = useState(false);
   const [newContent, setNewContent] = useState(message.content);
   const [newRejected, setNewRejected] = useState(message.rejected);
+  const [greetings, setGreetings] = useState([]);
+  const [prevGreeting, setPrevGreeting] = useState({ exists: false, index: 0 });
+  const [nextGreeting, setNextGreeting] = useState({ exists: false, index: 0 });
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,6 +61,34 @@ const MessageItem = ({
 
     fetchTokenCount();
   }, [message.id, modelIdentifier]);
+
+  useEffect(() => {
+    if (alternateGreetings) {
+      setGreetings(['{{first_message}}', ...alternateGreetings]);
+    }
+  }, [message, alternateGreetings]);
+
+  useEffect(() => {
+    if (greetings) {
+      const idx = greetings.findIndex((greeting) => greeting === message.content);
+
+      if (idx >= 0) {
+        if (idx === 0) {
+          setPrevGreeting({ exists: false, index: 0 });
+          setNextGreeting({ exists: true, index: 1 });
+        } else if (idx + 1 === greetings.length) {
+          setNextGreeting({ exists: false, index: 0 });
+          setPrevGreeting({ exists: true, index: idx - 1 });
+        } else {
+          setPrevGreeting({ exists: true, index: idx - 1 });
+          setNextGreeting({ exists: true, index: idx + 1 });
+        }
+      } else {
+        setPrevGreeting({ exists: false, index: 0 });
+        setNextGreeting({ exists: true, index: 1 });
+      }
+    }
+  }, [greetings, message.content]);
 
   useEffect(() => {
     const { processedText, codeBlocks } = extractAndHighlightCodeBlocks(message.full_content || '');
@@ -151,6 +184,25 @@ const MessageItem = ({
     }
   };
 
+  const handleSaveNewContent = async (newContent: string) => {
+    try {
+      const contentToSave = await replaceCharAndUser(newContent);
+
+      await apiClient.put(`/messages/${message.id}`, { content: contentToSave });
+
+      const response = await apiClient.get(`/messages/${message.id}/token_count`, {
+        params: { model_identifier: modelIdentifier },
+      });
+
+      setTokenCount(response.data.token_count);
+      setIsEditing(false);
+      toast.success('Message updated successfully.');
+      fetchMessages();
+    } catch (error) {
+      toast.error('Failed to update message.');
+    }
+  }
+
   const handleDelete = async () => {
     try {
       await apiClient.delete(`/messages/${message.id}`);
@@ -161,6 +213,12 @@ const MessageItem = ({
       toast.error('Failed to delete message.');
     }
   };
+
+  const handleSetGreeting = async (idx: number) => {
+    if (greetings[idx]) {
+      await handleSaveNewContent(greetings[idx]);
+    }
+  }
 
   const avatarData = message.author === 'user' ? persona : message.author === 'assistant' ? character : null;
   const wrapperClass = `${warning ? 'bg-warningHighlight' : ''} ${(!isEditing && showRejected) || (isEditing && editRejected) ? 'border-fadedRed' : 'border-fadedGreen'
@@ -232,6 +290,28 @@ const MessageItem = ({
               </label>
             )}
 
+            {!isEditing && !showRejected && greetings.length > 1 && (
+              <button
+                disabled={!prevGreeting.exists}
+                onClick={() => handleSetGreeting(prevGreeting.index)}
+                className={!prevGreeting.exists ? 'text-grey-700' : 'text-grey-300 hover:text-yellow-300'}
+                aria-label="Prev message"
+              >
+                <ArrowLeftIcon className="h-5 w-5" />
+              </button>
+            )}
+
+            {!isEditing && !showRejected && greetings.length > 1 && (
+              <button
+                disabled={!nextGreeting.exists}
+                onClick={() => handleSetGreeting(nextGreeting.index)}
+                className={!nextGreeting.exists ? 'text-grey-700' : 'text-grey-300 hover:text-yellow-300'}
+                aria-label="Next message"
+              >
+                <ArrowRightIcon className="h-5 w-5" />
+              </button>
+            )}
+
             {!isEditing && (
               <button
                 onClick={handleEdit}
@@ -263,7 +343,6 @@ const MessageItem = ({
             style={{ whiteSpace: 'pre-wrap' }}
             onInput={(e) => {
               const updatedText = e.currentTarget.innerText.trim();
-              console.log(updatedText);
 
               if (!editRejected && updatedText !== newContent) {
                 setNewContent(updatedText);

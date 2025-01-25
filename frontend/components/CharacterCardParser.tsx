@@ -41,25 +41,27 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
       return;
     }
 
+    function decodeBase64(base64) {
+      const binaryString = atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const decoder = new TextDecoder("utf-8");
+      return decoder.decode(bytes);
+    }
+
     try {
       const arrayBuffer = await file.arrayBuffer();
       const tags = ExifReader.load(arrayBuffer, { expanded: true });
 
-      if (tags["ccv3/character_data"] || tags["CharacterCardV3"]) {
-        const characterData = tags["ccv3/character_data"]?.description || tags["CharacterCardV3"].description;
-        const parsedCharacter: Character = {
-          ...JSON.parse(characterData),
-          version: "v3",
-        };
-        setCharacter(parsedCharacter);
-      } else if (tags["png"]["chara"]?.description || tags["png"]["chara"]?.value) {
+      if (tags["png"]["chara"]?.description || tags["png"]["chara"]?.value) {
         const characterData = tags["png"]["chara"].description || tags["png"]["chara"].value;
-        const decodedData = atob(characterData as string);
+        const decodedData = decodeBase64(characterData as string);
         const parsedCharacter: Character = {
           ...JSON.parse(decodedData),
           version: "v2",
         };
-        console.log(parsedCharacter.data);
         setCharacter(parsedCharacter.data);
       } else {
         setError("No compatible character card metadata found. Ensure the file contains valid CCv2 or CCv3 data.");
@@ -90,12 +92,17 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
     try {
       const response = await apiClient.post("/characters", {
         name: character.name,
+        creator: character.creator || null,
+        creator_notes: character.creator_notes || null,
+        character_version: character.character_version || null,
         age: character.age || null,
         scenario: character.scenario || "",
         personality: character.personality || "",
         description: character.description || "",
         first_message: character.first_mes || "",
         example_messages: character.mes_example || "",
+        alternate_greetings: character.alternate_greetings || null,
+        system_prompt: character.system_prompt || null,
         post_history_instructions: character.post_history_instructions || "",
       });
 
@@ -103,10 +110,22 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
         throw new Error(`API error: ${response.statusText}`);
       }
 
-      setCharacterId(response.data.id); // Save character ID for image upload
+      const characterId = response.data.id;
+
+      if (character.tags) {
+        for (const tag of character.tags) {
+          const tagResponse = await apiClient.post(`/characters/${characterId}/tags/${tag}`);
+
+          if (tagResponse.status !== 200) {
+            throw new Error(`API error: ${tagResponse.statusText}`)
+          }
+        }
+      }
+
+      setCharacterId(characterId); // Save character ID for image upload
       toast.success('Successfully saved character.');
     } catch (error) {
-      toast.error("Failed to save character.");
+      toast.error("Failed to save character and/or assign tags.");
     }
   };
 
@@ -159,6 +178,24 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
             <h3 className="text-lg font-semibold">Name:</h3>
             <p><FormattedText t={character.name} /></p>
           </div>
+          {character.creator && (
+            <div>
+              <h3 className="text-lg font-semibold">Creator:</h3>
+              <p>{character.creator}</p>
+            </div>
+          )}
+          {character.creator_notes && (
+            <div>
+              <h3 className="text-lg font-semibold">Creator Notes:</h3>
+              <p>{character.creator_notes}</p>
+            </div>
+          )}
+          {character.character_version && (
+            <div>
+              <h3 className="text-lg font-semibold">Character Version:</h3>
+              <p>{character.character_version}</p>
+            </div>
+          )}
           {character.age && (
             <div>
               <h3 className="text-lg font-semibold">Age:</h3>
@@ -193,10 +230,32 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
               <p><FormattedText t={character.mes_example} /></p>
             </div>
           )}
+          {character.system_prompt && (
+            <div>
+              <h3 className="text-lg font-semibold">System Prompt:</h3>
+              <p><FormattedText t={character.system_prompt} /></p>
+            </div>
+          )}
           {character.post_history_instructions && (
             <div>
               <h3 className="text-lg font-semibold">Post History Instructions:</h3>
               <p><FormattedText t={character.post_history_instructions} /></p>
+            </div>
+          )}
+          {character.alternate_greetings && (
+            <div>
+              <h3 className="text-lg font-semibold">Alternate Greetings:</h3>
+              {character.alternate_greetings.map((greeting: string) =>
+                <p><FormattedText t={greeting} /></p>
+              )}
+            </div>
+          )}
+          {character.tags && (
+            <div>
+              <h3 className="text-lg font-semibold">Tags:</h3>
+              {character.tags.map((tag: string) =>
+                <p><FormattedText t={`- ${tag}`} /></p>
+              )}
             </div>
           )}
           {character.assets && (
