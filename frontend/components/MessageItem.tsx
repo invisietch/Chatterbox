@@ -144,7 +144,9 @@ const MessageItem = ({
   }, [greetings, message.content]);
 
   useEffect(() => {
-    const { processedText, codeBlocks } = extractAndHighlightCodeBlocks(message.full_content || '');
+    const { processedText, codeBlocks } = extractAndHighlightCodeBlocks(
+      message.full_content.replaceAll('\r', '')
+    );
 
     const { highlightedText, count } = highlightSlop(
       highlightPlaceholders(
@@ -164,7 +166,7 @@ const MessageItem = ({
 
     if (message.rejected) {
       const { processedText: rejectedProcessed, codeBlocks: rejectedCodeBlocks } =
-        extractAndHighlightCodeBlocks(message.full_rejected);
+        extractAndHighlightCodeBlocks(message.full_rejected.replaceAll('\r', ''));
 
       const { highlightedText: highlightedRejected, count: rejectedCount } = highlightSlop(
         highlightPlaceholders(
