@@ -163,9 +163,9 @@ const SettingsBox = () => {
               </div>
               <div>Process text in real time</div>
             </label>
-            <div className="text-sm">(This can crash Chrome-based browsers)</div>
+            <div className="text-sm text-grey-300">(This can crash Chrome-based browsers)</div>
 
-            <h2 className="text-lg font-bold mb-2">Author's Note</h2>
+            <h2 className="text-lg font-bold mt-2 mb-2">Author's Note</h2>
             <ExpandableTextarea
               value={authorsNote || ''}
               label="Content"
