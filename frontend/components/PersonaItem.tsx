@@ -1,17 +1,17 @@
-import { useEffect, useState } from "react";
-import Accordion from "./Accordion";
-import FormattedText from "./FormattedText";
-import ExpandableTextarea from "./ExpandableTextarea";
-import apiClient from "../lib/api";
-import { toast } from "react-toastify";
-import ReactDOM from "react-dom";
-import { PencilIcon, TrashIcon } from "@heroicons/react/outline";
+import { useEffect, useState } from 'react';
+import Accordion from './Accordion';
+import FormattedText from './FormattedText';
+import ExpandableTextarea from './ExpandableTextarea';
+import apiClient from '../lib/api';
+import { toast } from 'react-toastify';
+import ReactDOM from 'react-dom';
+import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
 
-const PersonaItem = ({ persona, fetchPersonas }: { persona: any, fetchPersonas: () => void }) => {
+const PersonaItem = ({ persona, fetchPersonas }: { persona: any; fetchPersonas: () => void }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [name, setName] = useState("");
-  const [content, setContent] = useState("");
+  const [name, setName] = useState('');
+  const [content, setContent] = useState('');
 
   const handleCancel = () => setIsEditing(false);
 
@@ -25,13 +25,13 @@ const PersonaItem = ({ persona, fetchPersonas }: { persona: any, fetchPersonas: 
       await apiClient.put(`/personas/${persona.id}`, { name, content });
 
       toast.success('Persona updated successfully.');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to save persona.');
     }
 
     fetchPersonas();
     setIsEditing(false);
-  }
+  };
 
   const handleDelete = async () => {
     try {
@@ -40,7 +40,7 @@ const PersonaItem = ({ persona, fetchPersonas }: { persona: any, fetchPersonas: 
       toast.success('Persona deleted successfully.');
       setIsDeleting(false);
       fetchPersonas();
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to delete persona.');
     }
   };
@@ -57,7 +57,7 @@ const PersonaItem = ({ persona, fetchPersonas }: { persona: any, fetchPersonas: 
           className="w-full p-2 border rounded bg-dark text-gray-200 mb-2"
         />
       </div>
-      <ExpandableTextarea value={content} onChange={setContent} label='Content' />
+      <ExpandableTextarea value={content} onChange={setContent} label="Content" />
       <div className="mt-2 flex justify-end space-x-2">
         <button
           onClick={handleCancel}
@@ -74,7 +74,7 @@ const PersonaItem = ({ persona, fetchPersonas }: { persona: any, fetchPersonas: 
       </div>
     </div>
   ) : (
-    <Accordion key={persona.id} title={name} id={persona.id} name={persona.name} type='persona'>
+    <Accordion key={persona.id} title={name} id={persona.id} name={persona.name} type="persona">
       <div className="pb-4 mb-4 relative">
         <div className="flex justify-between items-center">
           <div className="flex space-x-2 absolute top-1 right-1">
@@ -93,7 +93,9 @@ const PersonaItem = ({ persona, fetchPersonas }: { persona: any, fetchPersonas: 
             </button>
           </div>
           <div className="text-sm text-gray-300 w-11/12">
-            <p><strong>Content:</strong> <FormattedText t={content} /></p>
+            <p>
+              <strong>Content:</strong> <FormattedText t={content} />
+            </p>
           </div>
         </div>
       </div>
@@ -121,10 +123,9 @@ const PersonaItem = ({ persona, fetchPersonas }: { persona: any, fetchPersonas: 
             </div>
           </div>,
           document.body
-        )
-      }
-    </Accordion >
+        )}
+    </Accordion>
   );
-}
+};
 
 export default PersonaItem;

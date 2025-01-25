@@ -11,11 +11,11 @@ export default function CharactersPage() {
   const [isAddingCharacter, setIsAddingCharacter] = useState(false);
   const [isManuallyAddingCharacter, setIsManuallyAddingCharacter] = useState(false);
   const [characters, setCharacters] = useState([]);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const handleOnSave = () => {
     setIsAddingCharacter(false);
-  }
+  };
 
   const handleManualSaveCharacter = async (
     name: string,
@@ -30,10 +30,10 @@ export default function CharactersPage() {
     characterVersion: string | null,
     systemPrompt: string | null,
     alternateGreetings: string[],
-    tags: any[],
+    tags: any[]
   ) => {
     try {
-      const response = await apiClient.post("/characters", {
+      const response = await apiClient.post('/characters', {
         name,
         description,
         scenario,
@@ -55,7 +55,7 @@ export default function CharactersPage() {
           const tagResponse = await apiClient.post(`/characters/${characterId}/tags/${tag.name}`);
 
           if (tagResponse.status !== 200) {
-            throw new Error(`API error: ${tagResponse.statusText}`)
+            throw new Error(`API error: ${tagResponse.statusText}`);
           }
         }
 
@@ -66,27 +66,26 @@ export default function CharactersPage() {
       } else {
         toast.error('Failed to save character and/or tags.');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to save character and/or tags.');
     }
   };
 
   const handleManualCancel = () => {
     setIsManuallyAddingCharacter(false);
-  }
+  };
 
   const fetchCharacters = async () => {
     try {
-      const response = await apiClient.get("/characters");
+      const response = await apiClient.get('/characters');
       if (!response.data) {
         throw new Error(`Failed to fetch characters: ${response.statusText}`);
       }
       const data = response.data;
       const sortedCharacters = data.sort((a, b) => a.name.localeCompare(b.name));
       setCharacters(sortedCharacters);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to fetch character list.");
+    } catch (_error) {
+      setError('Failed to fetch character list.');
     }
   };
 
@@ -98,9 +97,7 @@ export default function CharactersPage() {
     <Layout>
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">
-            Characters
-          </h1>
+          <h1 className="text-2xl font-bold">Characters</h1>
           <div>
             <button
               className="bg-fadedYellow text-white px-4 py-2 rounded hover:bg-brightYellow"
@@ -116,7 +113,9 @@ export default function CharactersPage() {
             </button>
           </div>
         </div>
-        {isManuallyAddingCharacter && <AddCharacterForm onCancel={handleManualCancel} onSave={handleManualSaveCharacter} />}
+        {isManuallyAddingCharacter && (
+          <AddCharacterForm onCancel={handleManualCancel} onSave={handleManualSaveCharacter} />
+        )}
         {isAddingCharacter && <CharacterCardParser onSave={handleOnSave} />}
         <CharacterList error={error} characters={characters} fetchCharacters={fetchCharacters} />
       </div>

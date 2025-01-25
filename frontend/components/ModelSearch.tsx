@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { PencilIcon } from '@heroicons/react/outline';
+import { toast } from 'react-toastify';
 
-export const ModelSearch = ({ model, onModelSelect }: { model?: string, onModelSelect: (model: string) => void }) => {
+export const ModelSearch = ({
+  model,
+  onModelSelect,
+}: {
+  model?: string;
+  onModelSelect: (model: string) => void;
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [isEditing, setIsEditing] = useState(true);
@@ -23,8 +30,8 @@ export const ModelSearch = ({ model, onModelSelect }: { model?: string, onModelS
           `https://huggingface.co/api/models?search=${searchTerm}&limit=5`
         );
         setResults(response.data);
-      } catch (error) {
-        console.error('Error fetching models:', error);
+      } catch (_error) {
+        toast.error('Error fetching models.');
       } finally {
         setIsSearching(false);
       }
@@ -71,10 +78,7 @@ export const ModelSearch = ({ model, onModelSelect }: { model?: string, onModelS
               ? `${selectedModel.substring(0, 55)}...`
               : selectedModel || 'Select a model'}
           </span>
-          <button
-            onClick={changeModel}
-            className="text-grey-300 hover:text-yellow-300"
-          >
+          <button onClick={changeModel} className="text-grey-300 hover:text-yellow-300">
             <PencilIcon className="h-5 w-5" />
           </button>
         </div>

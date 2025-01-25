@@ -1,6 +1,8 @@
 import hljs from 'highlight.js';
 
-export const extractAndHighlightCodeBlocks = (text: string): {
+export const extractAndHighlightCodeBlocks = (
+  text: string
+): {
   processedText: string;
   codeBlocks: Record<string, string>;
 } => {
@@ -9,26 +11,27 @@ export const extractAndHighlightCodeBlocks = (text: string): {
   const codeBlocks: Record<string, string> = {};
   let placeholderIndex = 0;
 
-  let processedText = text.replace(codeBlockRegex, (match, lang, code) => {
+  let processedText = text.replace(codeBlockRegex, (_match, lang, code) => {
     const placeholder = `{CODE_BLOCK_${placeholderIndex++}}`;
 
     try {
       if (lang && hljs.getLanguage(lang)) {
         const highlighted = hljs.highlight(code, { language: lang }).value;
-        codeBlocks[placeholder] = `<pre><code class="hljs ${lang}">\`\`\`{lang}\n${highlighted}\n\`\`\`</code></pre>`;
+        codeBlocks[placeholder] =
+          `<pre><code class="hljs ${lang}">\`\`\`{lang}\n${highlighted}\n\`\`\`</code></pre>`;
       } else {
         const highlighted = hljs.highlightAuto(code).value;
-        codeBlocks[placeholder] = `<pre><code class="hljs">\`\`\`\n${highlighted}\n\`\`\`</code></pre>`;
+        codeBlocks[placeholder] =
+          `<pre><code class="hljs">\`\`\`\n${highlighted}\n\`\`\`</code></pre>`;
       }
-    } catch (error) {
-      console.error('Failed to highlight code block:', error);
+    } catch (_error) {
       codeBlocks[placeholder] = `<pre><code>\`\`\`\n${code}\n\`\`\`</code></pre>`;
     }
 
     return placeholder;
   });
 
-  processedText = processedText.replace(codeRegex, (match, code) => {
+  processedText = processedText.replace(codeRegex, (_match, code) => {
     const placeholder = `{CODE_BLOCK_${placeholderIndex++}}`;
     codeBlocks[placeholder] = `<span class="newCode">\`${code}\`</span>`;
 
@@ -52,13 +55,19 @@ export const highlightPlaceholders = (
 
   if (characterName) {
     if (highlights) {
-      highlightedText = highlightedText.replaceAll(characterName, `<span class="character">${characterName}</span>`);
+      highlightedText = highlightedText.replaceAll(
+        characterName,
+        `<span class="character">${characterName}</span>`
+      );
     }
   }
 
   if (personaName) {
     if (highlights) {
-      highlightedText = highlightedText.replaceAll(personaName, `<span class="persona">${personaName}</span>`);
+      highlightedText = highlightedText.replaceAll(
+        personaName,
+        `<span class="persona">${personaName}</span>`
+      );
     }
   }
 
@@ -69,7 +78,8 @@ export const highlightPlaceholders = (
 
 export const highlightText = (text: string): string => {
   const quoteRegex = /(?:^|[\s.,!?])(["“”])((?:[^\n"“”]+|'[^\s']+)+?)\1(?=[\s.,!?]|$)/g;
-  const apostropheRegex = /(?:^|[\s.,!?])['‘]((?:[^\n'‘’]*?(?:\b['‘’]\b|[^\n'‘’])+?))['’](?=[\s.,!?]|$)/g;
+  const apostropheRegex =
+    /(?:^|[\s.,!?])['‘]((?:[^\n'‘’]*?(?:\b['‘’]\b|[^\n'‘’])+?))['’](?=[\s.,!?]|$)/g;
   const doubleAsteriskRegex = /\*\*([^\n]+?)\*\*/g;
   const doubleUnderscoreRegex = /\_\_([^\n]+?)\_\_/g;
   const doubleTildeRegex = /\~\~([^\n]+?)\~\~/g;
@@ -105,7 +115,7 @@ export const highlightText = (text: string): string => {
       }
     }
 
-    lines.forEach(line => {
+    lines.forEach((line) => {
       const trimmed = line.trim();
       const indent = line.length - trimmed.length;
       const unorderedMatch = /^- (.+)$/.exec(trimmed);
@@ -149,8 +159,7 @@ export const highlightText = (text: string): string => {
         }
 
         result += `<li class="mb-1">${content}</li>`;
-      }
-      else if (orderedMatch) {
+      } else if (orderedMatch) {
         const content = orderedMatch[1];
 
         if (listStack.length === 0) {
@@ -187,14 +196,12 @@ export const highlightText = (text: string): string => {
         }
 
         result += `<li class="mb-1">${content}</li>`;
-      }
-      else if (!trimmed) {
+      } else if (!trimmed) {
         while (listStack.length) {
           closeList();
         }
         result += `\n`;
-      }
-      else {
+      } else {
         while (listStack.length) {
           closeList();
         }
@@ -227,7 +234,7 @@ export const highlightText = (text: string): string => {
       const matchStart = match.index;
       const matchEnd = regex.lastIndex;
 
-      if (matchPositions.some(pos => pos.start < matchEnd && pos.end > matchStart)) {
+      if (matchPositions.some((pos) => pos.start < matchEnd && pos.end > matchStart)) {
         continue;
       }
 
@@ -256,71 +263,75 @@ export const highlightText = (text: string): string => {
   }
 
   // Fix headings by processing them first
-  const headingResult = applyHighlighting(
-    highlightedText,
-    headingRegex,
-    'heading',
-    match => {
-      const headingLevel = match[1].length;
-      const heading = match[1].trim();
-      const content = match[2].trim();
+  const headingResult = applyHighlighting(highlightedText, headingRegex, 'heading', (match) => {
+    const headingLevel = match[1].length;
+    const heading = match[1].trim();
+    const content = match[2].trim();
 
-      const sizeClasses = {
-        1: 'text-3xl font-bold',
-        2: 'text-2xl font-bold',
-        3: 'text-xl font-bold',
-        4: 'text-lg font-semibold',
-        5: 'text-base font-semibold',
-        6: 'text-sm font-semibold',
-      };
-      const textSizeClass = sizeClasses[headingLevel] || 'text-base';
+    const sizeClasses = {
+      1: 'text-3xl font-bold',
+      2: 'text-2xl font-bold',
+      3: 'text-xl font-bold',
+      4: 'text-lg font-semibold',
+      5: 'text-base font-semibold',
+      6: 'text-sm font-semibold',
+    };
+    const textSizeClass = sizeClasses[headingLevel] || 'text-base';
 
-      return `<span class="${textSizeClass}">${heading} ${content}</span>`;
-    }
-  );
+    return `<span class="${textSizeClass}">${heading} ${content}</span>`;
+  });
   highlightedText = headingResult.highlighted;
 
   const lines = highlightedText.split('\n');
   highlightedText = processLists(lines);
 
   // Apply table highlighting
-  highlightedText = highlightedText.replace(tableRegex, (match, headerRow, dividerRow, bodyRows) => {
-    const headers = headerRow.split('|').map(header => header.trim());
-    const rows = bodyRows.trim().split('\n').map(row => row.split('|').map(cell => cell.trim()).filter(c => c !== ''));
-    console.log(headers);
-    console.log(rows);
+  highlightedText = highlightedText.replace(
+    tableRegex,
+    (_match, headerRow, _dividerRow, bodyRows) => {
+      const headers = headerRow.split('|').map((header) => header.trim());
+      const rows = bodyRows
+        .trim()
+        .split('\n')
+        .map((row) =>
+          row
+            .split('|')
+            .map((cell) => cell.trim())
+            .filter((c) => c !== '')
+        );
 
-    let tableHtml = '<table class="table-auto border-collapse border border-dark">';
-    tableHtml += '<thead><tr>';
-    headers.forEach(header => {
-      tableHtml += `<th class="border border-dark px-4 py-2 bg-dark1">${header}</th>`;
-    });
-    tableHtml += '</tr></thead>';
-
-    tableHtml += '<tbody>';
-    rows.forEach((row, rowIndex) => {
-      const bgClass = rowIndex % 2 === 0 ? 'bg-dark1' : 'bg-dark2';
-      tableHtml += `<tr class="${bgClass}">`;
-      row.forEach(cell => {
-        if (cell.trim !== '') {
-          tableHtml += `<td class="border border-dark px-4 py-2">${cell}</td>`;
-        }
+      let tableHtml = '<table class="table-auto border-collapse border border-dark">';
+      tableHtml += '<thead><tr>';
+      headers.forEach((header) => {
+        tableHtml += `<th class="border border-dark px-4 py-2 bg-dark1">${header}</th>`;
       });
-      tableHtml += '</tr>';
-    });
-    tableHtml += '</tbody>';
+      tableHtml += '</tr></thead>';
 
-    tableHtml += '</table>';
-    return tableHtml;
-  });
+      tableHtml += '<tbody>';
+      rows.forEach((row, rowIndex) => {
+        const bgClass = rowIndex % 2 === 0 ? 'bg-dark1' : 'bg-dark2';
+        tableHtml += `<tr class="${bgClass}">`;
+        row.forEach((cell) => {
+          if (cell.trim !== '') {
+            tableHtml += `<td class="border border-dark px-4 py-2">${cell}</td>`;
+          }
+        });
+        tableHtml += '</tr>';
+      });
+      tableHtml += '</tbody>';
+
+      tableHtml += '</table>';
+      return tableHtml;
+    }
+  );
 
   // Apply image highlighting
-  highlightedText = highlightedText.replace(imageRegex, (match, alt, url) => {
+  highlightedText = highlightedText.replace(imageRegex, (_match, alt, url) => {
     return `<img src="${url}" alt="${alt}" class="rounded shadow" />`;
   });
 
   // Apply URL highlighting
-  highlightedText = highlightedText.replace(urlRegex, (match, text, url) => {
+  highlightedText = highlightedText.replace(urlRegex, (_match, text, url) => {
     return `<a href="${url}" class="text-fadedYellow underline">${text}</a>`;
   });
 
@@ -334,7 +345,11 @@ export const highlightText = (text: string): string => {
   const doubleAsteriskResult = applyHighlighting(highlightedText, doubleAsteriskRegex, 'bolded');
   highlightedText = doubleAsteriskResult.highlighted;
 
-  const doubleUnderscoreResult = applyHighlighting(highlightedText, doubleUnderscoreRegex, 'underlined');
+  const doubleUnderscoreResult = applyHighlighting(
+    highlightedText,
+    doubleUnderscoreRegex,
+    'underlined'
+  );
   highlightedText = doubleUnderscoreResult.highlighted;
 
   const doubleTildeResult = applyHighlighting(highlightedText, doubleTildeRegex, 'strikethroughd');

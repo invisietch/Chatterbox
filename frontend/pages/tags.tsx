@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import Layout from "../components/Layout";
-import TagCategoryList from "../components/TagCategoryList";
-import AddTagCategoryForm from "../components/AddTagCategoryForm";
-import apiClient from "../lib/api";
-import { PlusIcon } from "@heroicons/react/outline";
-import { toast } from "react-toastify";
+import { useEffect, useState } from 'react';
+import Layout from '../components/Layout';
+import TagCategoryList from '../components/TagCategoryList';
+import AddTagCategoryForm from '../components/AddTagCategoryForm';
+import apiClient from '../lib/api';
+import { PlusIcon } from '@heroicons/react/outline';
+import { toast } from 'react-toastify';
 
 export default function TagCategoriesPage() {
   const [categories, setCategories] = useState([]);
@@ -13,11 +13,10 @@ export default function TagCategoriesPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await apiClient.get("/tag_categories");
+      const response = await apiClient.get('/tag_categories');
       setCategories(response.data);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to fetch categories.");
+    } catch (_error) {
+      setError('Failed to fetch categories.');
     }
   };
 
@@ -27,7 +26,7 @@ export default function TagCategoriesPage() {
 
   const handleSaveCategory = async (name: string, color: string, tags: any[]) => {
     try {
-      const response = await apiClient.post("/tag_categories", { name, color });
+      const response = await apiClient.post('/tag_categories', { name, color });
 
       if (response.status === 200) {
         for (const tag of tags) {
@@ -42,8 +41,8 @@ export default function TagCategoriesPage() {
           setIsAddingCategory(false);
         }
       }
-    } catch (error) {
-      toast.error("Failed to save category.");
+    } catch (_error) {
+      toast.error('Failed to save category.');
     }
   };
 
@@ -65,11 +64,7 @@ export default function TagCategoriesPage() {
             onCancel={() => setIsAddingCategory(false)}
           />
         )}
-        <TagCategoryList
-          categories={categories}
-          error={error}
-          fetchCategories={fetchCategories}
-        />
+        <TagCategoryList categories={categories} error={error} fetchCategories={fetchCategories} />
       </div>
     </Layout>
   );

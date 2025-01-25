@@ -1,5 +1,5 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 export const SortableItem = ({ id, label }: { id: string; label: string }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
@@ -7,7 +7,7 @@ export const SortableItem = ({ id, label }: { id: string; label: string }) => {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    cursor: "grab",
+    cursor: 'grab',
   };
 
   return (

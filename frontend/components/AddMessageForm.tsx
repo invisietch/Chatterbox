@@ -1,10 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import ExpandableTextarea from "./ExpandableTextarea";
-import apiClient from "../lib/api";
-import { highlightText, highlightPlaceholders, extractAndHighlightCodeBlocks } from '../lib/textUtils';
-import { highlightSlop } from '../lib/slop';
+import { useEffect, useRef, useState } from 'react';
+import apiClient from '../lib/api';
 import Avatar from './Avatar';
-import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
+import { toast } from 'react-toastify';
 
 const AddMessageForm = ({
   conversationId,
@@ -23,11 +20,11 @@ const AddMessageForm = ({
   onSave: (message: any) => void;
   onCancel: () => void;
 }) => {
-  const [author, setAuthor] = useState("system");
-  const [content, setContent] = useState("");
-  const [rejected, setRejected] = useState("");
-  const [newContent, setNewContent] = useState("");
-  const [newRejected, setNewRejected] = useState("");
+  const [author, setAuthor] = useState('system');
+  const [content, setContent] = useState('');
+  const [rejected, setRejected] = useState('');
+  const [newContent, setNewContent] = useState('');
+  const [newRejected, setNewRejected] = useState('');
   const [contentTokenCount, setContentTokenCount] = useState(0);
   const [rejectedTokenCount, setRejectedTokenCount] = useState(0);
   const [editRejected, setEditRejected] = useState(false);
@@ -43,12 +40,12 @@ const AddMessageForm = ({
   useEffect(() => {
     if (mostRecentMessage) {
       setAuthor(
-        mostRecentMessage.author === "user" || mostRecentMessage.author === "system"
-          ? "assistant"
-          : "user"
+        mostRecentMessage.author === 'user' || mostRecentMessage.author === 'system'
+          ? 'assistant'
+          : 'user'
       );
     } else {
-      setAuthor("system");
+      setAuthor('system');
     }
   }, [mostRecentMessage]);
 
@@ -59,7 +56,7 @@ const AddMessageForm = ({
         {
           author,
           content: newContent,
-          rejected: author === "assistant" ? newRejected : null,
+          rejected: author === 'assistant' ? newRejected : null,
           conversation_id: conversationId,
         }
       );
@@ -69,8 +66,8 @@ const AddMessageForm = ({
         setContentTokenCount(token_count);
         setRejectedTokenCount(rejected_token_count || 0);
       }
-    } catch (error) {
-      console.error("Error fetching token count:", error);
+    } catch (_error) {
+      toast.error('Error fetching token count.');
     }
   };
 
@@ -92,11 +89,11 @@ const AddMessageForm = ({
     let newC = c;
 
     if (newC && character && character.name) {
-      newC = newC.replaceAll(character.name, "{{char}}");
+      newC = newC.replaceAll(character.name, '{{char}}');
     }
 
     if (newC && persona && persona.name) {
-      newC = newC.replaceAll(persona.name, "{{user}}");
+      newC = newC.replaceAll(persona.name, '{{user}}');
     }
 
     return newC;
@@ -108,32 +105,34 @@ const AddMessageForm = ({
         conversationId,
         author,
         content: replaceCharAndUser(newContent),
-        rejected: author === "assistant" && newRejected ? replaceCharAndUser(newRejected) : null,
+        rejected: author === 'assistant' && newRejected ? replaceCharAndUser(newRejected) : null,
       });
 
-      setContent("");
-      setRejected("");
+      setContent('');
+      setRejected('');
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSave();
     }
   };
 
-  const avatarData = author === "user" ? persona : author === "assistant" ? character : null;
-  const border = editRejected ? "border-fadedOrange" : "border-fadedAqua";
+  const avatarData = author === 'user' ? persona : author === 'assistant' ? character : null;
+  const border = editRejected ? 'border-fadedOrange' : 'border-fadedAqua';
 
   return (
-    <div className={`border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg ${border} border-dotted`}>
+    <div
+      className={`border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg ${border} border-dotted`}
+    >
       <div className="flex-shrink-0 p-4 mr-4">
         {avatarData ? (
           <Avatar
             id={avatarData.id}
             name={avatarData.name}
-            type={author === "user" ? "persona" : "character"}
+            type={author === 'user' ? 'persona' : 'character'}
             size={120}
           />
         ) : (
@@ -149,12 +148,14 @@ const AddMessageForm = ({
             <option value="user">User</option>
             <option value="assistant">Assistant</option>
           </select>
-          <div className="mt-2">[{editRejected ? rejectedTokenCount ?? '...' : contentTokenCount ?? '...'} tokens]</div>
+          <div className="mt-2">
+            [{editRejected ? (rejectedTokenCount ?? '...') : (contentTokenCount ?? '...')} tokens]
+          </div>
         </div>
       </div>
 
       <div className="flex-grow relative">
-        {author === "assistant" && (
+        {author === 'assistant' && (
           <div className="absolute top-2 right-2">
             <label className="flex items-center space-x-2">
               <div
@@ -170,7 +171,7 @@ const AddMessageForm = ({
                       } else {
                         setContent(newContent);
                       }
-                      setEditRejected(!editRejected)
+                      setEditRejected(!editRejected);
                     }}
                     className="toggle-checkbox absolute opacity-0 w-0 h-0"
                   />

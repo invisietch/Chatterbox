@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import apiClient from '../lib/api';
 import { DownloadIcon } from '@heroicons/react/outline';
+import { toast } from 'react-toastify';
 
 export default function ImportExport() {
   const [loading, setLoading] = useState(false);
@@ -13,8 +14,8 @@ export default function ImportExport() {
       const response = await apiClient.get('/conversations');
       const sortedConversations = response.data.sort((a: any, b: any) => b.id - a.id); // Newest first
       setConversations(sortedConversations);
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
+    } catch (_error) {
+      toast.error('Failed loading conversations.');
     } finally {
       setLoading(false);
     }
@@ -29,20 +30,26 @@ export default function ImportExport() {
         : []; // Modify to allow specific conversations if needed
 
       // Call the backend API with POST request to export JSONL
-      const response = await apiClient.post('/conversations_jsonl', { conversation_ids: conversationIds }, {
-        responseType: 'blob', // Get the response as a Blob to handle the file
-      });
+      const response = await apiClient.post(
+        '/conversations_jsonl',
+        { conversation_ids: conversationIds },
+        {
+          responseType: 'blob', // Get the response as a Blob to handle the file
+        }
+      );
 
       // Create a link element to trigger the download
-      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/jsonlines' }));
+      const url = window.URL.createObjectURL(
+        new Blob([response.data], { type: 'application/jsonlines' })
+      );
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'conversations.jsonl'); // Set the default file name
       document.body.appendChild(link);
       link.click(); // Programmatically click the link to trigger the download
       document.body.removeChild(link);
-    } catch (error) {
-      console.error('Error exporting JSONL:', error);
+    } catch (_error) {
+      toast.error('Error exporting JSONL.');
     } finally {
       setLoading(false);
     }

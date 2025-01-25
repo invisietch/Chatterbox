@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import {
   DndContext,
   closestCenter,
@@ -7,22 +7,33 @@ import {
   useSensors,
   PointerSensor,
   KeyboardSensor,
-} from "@dnd-kit/core";
+} from '@dnd-kit/core';
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { SortableItem } from "./SortableItem"; // Custom component for sortable items
-import { ModelSearch } from "./ModelSearch";
+} from '@dnd-kit/sortable';
+import { SortableItem } from './SortableItem'; // Custom component for sortable items
+import { ModelSearch } from './ModelSearch';
 
-const AddPresetForm = ({ onSave, onCancel, initialValues }: {
-  onSave: (presetName: string, samplers: Record<string, any>, samplerOrder: number[], model: string, llmUrl: string, maxContext: number) => void;
+const AddPresetForm = ({
+  onSave,
+  onCancel,
+  initialValues,
+}: {
+  onSave: (
+    presetName: string,
+    samplers: Record<string, any>,
+    samplerOrder: number[],
+    model: string,
+    llmUrl: string,
+    maxContext: number
+  ) => void;
   onCancel: () => void;
   initialValues?: Record<string, any>;
 }) => {
-  const [presetName, setPresetName] = useState("");
+  const [presetName, setPresetName] = useState('');
   const [samplers, setSamplers] = useState({
     max_tokens: 300,
     temperature: 1,
@@ -36,29 +47,29 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
     xtc_probability: 0,
     xtc_threshold: 0,
   });
-  const [model, setModel] = useState("");
-  const [llmUrl, setLlmUrl] = useState("");
+  const [model, setModel] = useState('');
+  const [llmUrl, setLlmUrl] = useState('');
   const [maxContext, setMaxContext] = useState(32768);
   const [error, setError] = useState('');
 
   const [samplerOrder, setSamplerOrder] = useState([
-    { id: "6", label: "Repetition Penalty", value: 6 },
-    { id: "0", label: "Top K", value: 0 },
-    { id: "1", label: "Top A", value: 1 },
-    { id: "3", label: "Tail Free Sampling", value: 3 },
-    { id: "4", label: "Typical P", value: 4 },
-    { id: "2", label: "Top P & Min P", value: 2 },
-    { id: "5", label: "Temperature", value: 5 },
+    { id: '6', label: 'Repetition Penalty', value: 6 },
+    { id: '0', label: 'Top K', value: 0 },
+    { id: '1', label: 'Top A', value: 1 },
+    { id: '3', label: 'Tail Free Sampling', value: 3 },
+    { id: '4', label: 'Typical P', value: 4 },
+    { id: '2', label: 'Top P & Min P', value: 2 },
+    { id: '5', label: 'Temperature', value: 5 },
   ]);
 
   const samplerOrderLookup: Record<number, string> = {
-    0: "Top K",
-    1: "Top A",
-    2: "Top P & Min P",
-    3: "Tail Free Sampling",
-    4: "Typical P",
-    5: "Temperature",
-    6: "Repetition Penalty",
+    0: 'Top K',
+    1: 'Top A',
+    2: 'Top P & Min P',
+    3: 'Tail Free Sampling',
+    4: 'Typical P',
+    5: 'Temperature',
+    6: 'Repetition Penalty',
   };
 
   const sensors = useSensors(
@@ -85,7 +96,7 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
       const orderValues = samplerOrder.map((item) => item.value);
       onSave(presetName, samplers, orderValues, model, llmUrl, maxContext);
     } else {
-      toast.error("Please fill in the entire form.");
+      toast.error('Please fill in the entire form.');
     }
   };
 
@@ -98,18 +109,20 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
 
       setPresetName(initialValues.name);
       setSamplers(newSamplers);
-      setSamplerOrder(initialValues.samplerOrder.map(samplerId => {
-        const sampler = samplerOrderLookup[samplerId];
+      setSamplerOrder(
+        initialValues.samplerOrder.map((samplerId) => {
+          const sampler = samplerOrderLookup[samplerId];
 
-        return {
-          id: `${samplerId}`,
-          value: samplerId,
-          label: sampler,
-        }
-      }));
+          return {
+            id: `${samplerId}`,
+            value: samplerId,
+            label: sampler,
+          };
+        })
+      );
       setModel(initialValues.modelName);
       setLlmUrl(initialValues.llmUrl);
-      setMaxContext(initialValues.maxContext)
+      setMaxContext(initialValues.maxContext);
     }
   }, [initialValues]);
 
@@ -133,12 +146,16 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
       )}
 
       <div className="space-y-6">
-        <label className="text-gray-300 text-lg">Select Model (choose the same model you're running locally)</label>
+        <label className="text-gray-300 text-lg">
+          Select Model (choose the same model you're running locally)
+        </label>
         <ModelSearch model={model} onModelSelect={setModel} />
       </div>
 
       <div className="space-y-6">
-        <label className="text-gray-300 text-lg">Koboldcpp URL (do not add the trailing slash)</label>
+        <label className="text-gray-300 text-lg">
+          Koboldcpp URL (do not add the trailing slash)
+        </label>
         <input
           value={llmUrl}
           onChange={(e) => setLlmUrl(e.target.value)}
@@ -150,7 +167,7 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
       <div className="space-y-6">
         <label className="text-gray-300 text-lg">Max Context (integer)</label>
         <input
-          type='number'
+          type="number"
           value={maxContext}
           onChange={(e) => {
             if (parseInt(e.target.value)) {
@@ -176,21 +193,46 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
               <label className="text-gray-200 text-sm font-medium">{key}</label>
               <input
                 type="range"
-                min={key === "max_tokens" || key === "top_k" || key === "top_p" || key === "min_p" || key === "temperature" || key === "typical_p" || key === "tfs" || key === "xtc_probability" || key === "xtc_threshold" ? 0 : 1}
+                min={
+                  key === 'max_tokens' ||
+                  key === 'top_k' ||
+                  key === 'top_p' ||
+                  key === 'min_p' ||
+                  key === 'temperature' ||
+                  key === 'typical_p' ||
+                  key === 'tfs' ||
+                  key === 'xtc_probability' ||
+                  key === 'xtc_threshold'
+                    ? 0
+                    : 1
+                }
                 max={
-                  key === "max_tokens"
+                  key === 'max_tokens'
                     ? 2048
-                    : key === "top_k"
+                    : key === 'top_k'
                       ? 200
-                      : key === "repetition_penalty_range"
+                      : key === 'repetition_penalty_range'
                         ? 8192
-                        : key === "temperature"
+                        : key === 'temperature'
                           ? 5
-                          : key === "top_p" || key === "min_p" || key === "typical_p" || key === "tfs" || key === "xtc_threshold" || key === "xtc_probability"
+                          : key === 'top_p' ||
+                              key === 'min_p' ||
+                              key === 'typical_p' ||
+                              key === 'tfs' ||
+                              key === 'xtc_threshold' ||
+                              key === 'xtc_probability'
                             ? 1
                             : 2
                 }
-                step={key === "max_tokens" ? 1 : key === "repetition_penalty_range" ? 1 : key === "top_k" ? 1 : 0.01}
+                step={
+                  key === 'max_tokens'
+                    ? 1
+                    : key === 'repetition_penalty_range'
+                      ? 1
+                      : key === 'top_k'
+                        ? 1
+                        : 0.01
+                }
                 value={samplers[key]}
                 onChange={(e) =>
                   setSamplers((prev) => ({
@@ -212,11 +254,7 @@ const AddPresetForm = ({ onSave, onCancel, initialValues }: {
           <h3>SamplerOrder</h3>
         </div>
         <p className="text-gray-400 text-sm mb-2">Reorder the samplers by dragging.</p>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext
             items={samplerOrder.map((item) => item.id)}
             strategy={verticalListSortingStrategy}

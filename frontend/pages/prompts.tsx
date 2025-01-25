@@ -17,22 +17,21 @@ export default function PromptsPage() {
 
   const fetchPrompts = async () => {
     try {
-      const response = await apiClient.get("/prompts");
+      const response = await apiClient.get('/prompts');
       if (!response.data) {
         throw new Error(`Failed to fetch prompts: ${response.statusText}`);
       }
       const data = response.data;
       const sortedPrompts = data.sort((a, b) => a.name.localeCompare(b.name));
       setPrompts(sortedPrompts);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to fetch prompt list.");
+    } catch (_error) {
+      setError('Failed to fetch prompt list.');
     }
   };
 
   const handleSavePrompt = async (name: string, content: string) => {
     try {
-      const response = await apiClient.post("/prompts", { name, content });
+      const response = await apiClient.post('/prompts', { name, content });
 
       if (response.status === 200) {
         toast.success('Successfully saved prompt.');
@@ -41,14 +40,14 @@ export default function PromptsPage() {
 
         setIsAddingPrompt(false);
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to save prompt.');
     }
-  }
+  };
 
   const handleOnCancel = () => {
     setIsAddingPrompt(false);
-  }
+  };
 
   useEffect(() => {
     fetchPrompts();

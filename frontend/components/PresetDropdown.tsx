@@ -16,7 +16,7 @@ const PresetDropdown = () => {
       try {
         const response = await apiClient.get('/presets');
         setPresets(response.data);
-      } catch (error) {
+      } catch (_error) {
         toast.error('Failed to fetch presets.');
       }
     };

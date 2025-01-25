@@ -15,13 +15,13 @@ const ConversationItem = ({
   fetchConversations,
   modelIdentifier,
   expandedConversation,
-  setExpandedConversation
+  setExpandedConversation,
 }: {
-  conversation: any,
-  fetchConversations: () => void,
-  modelIdentifier: string,
-  expandedConversation: boolean,
-  setExpandedConversation: (t: boolean) => void,
+  conversation: any;
+  fetchConversations: () => void;
+  modelIdentifier: string;
+  expandedConversation: boolean;
+  setExpandedConversation: (t: boolean) => void;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -49,13 +49,15 @@ const ConversationItem = ({
       try {
         const [tagsResponse, tokenResponse] = await Promise.all([
           apiClient.get(`/conversations/${conversation.id}/tags`),
-          apiClient.get(`/conversations/${conversation.id}/token_count?model_identifier=${modelIdentifier}`),
+          apiClient.get(
+            `/conversations/${conversation.id}/token_count?model_identifier=${modelIdentifier}`
+          ),
         ]);
         setTags(tagsResponse.data);
         setTokenCount(tokenResponse.data.token_count);
         setNeedsTokenRecount(false);
-      } catch (error) {
-        console.error('Error fetching tags or token count:', error);
+      } catch (_error) {
+        toast.error('Error fetching tags or token count.');
       }
     };
 
@@ -69,8 +71,8 @@ const ConversationItem = ({
         a.name.localeCompare(b.name)
       );
       setCharacters(sortedCharacters);
-    } catch (error) {
-      console.error('Error fetching characters:', error);
+    } catch (_error) {
+      toast.error('Error fetching characters.');
     }
   };
 
@@ -81,8 +83,8 @@ const ConversationItem = ({
         a.name.localeCompare(b.name)
       );
       setPersonas(sortedPersonas);
-    } catch (error) {
-      console.error('Error fetching personas:', error);
+    } catch (_error) {
+      toast.error('Error fetching personas.');
     }
   };
 
@@ -93,8 +95,8 @@ const ConversationItem = ({
         a.name.localeCompare(b.name)
       );
       setPrompts(sortedPrompts);
-    } catch (error) {
-      console.error('Error fetching prompts:', error);
+    } catch (_error) {
+      toast.error('Error fetching prompts.');
     }
   };
 
@@ -105,7 +107,7 @@ const ConversationItem = ({
       setIsDeleting(false);
       toast.success('Conversation deleted successfully.');
       fetchConversations();
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to delete conversation.');
     }
   };
@@ -123,8 +125,8 @@ const ConversationItem = ({
           const response = await apiClient.get(`/characters/${conversation.character_id}`);
           setCharacter(response.data);
           setCharacterId(response.data.id);
-        } catch (error) {
-          console.error('Error fetching character:', error);
+        } catch (_error) {
+          toast.error('Error fetching character.');
         }
       };
 
@@ -139,8 +141,8 @@ const ConversationItem = ({
           const response = await apiClient.get(`/prompts/${conversation.prompt_id}`);
           setPrompt(response.data);
           setPromptId(response.data.id);
-        } catch (error) {
-          console.error('Error fetching prompt:', error);
+        } catch (_error) {
+          toast.error('Error fetching prompt.');
         }
       };
 
@@ -155,8 +157,8 @@ const ConversationItem = ({
           const response = await apiClient.get(`/personas/${conversation.persona_id}`);
           setPersona(response.data);
           setPersonaId(response.data.id);
-        } catch (error) {
-          console.error('Error fetching persona:', error);
+        } catch (_error) {
+          toast.error('Error fetching persona.');
         }
       };
 
@@ -169,24 +171,37 @@ const ConversationItem = ({
     const hasChanges =
       name !== conversation.name ||
       description !== conversation.description ||
-      !character && characterId ||
-      character && characterId !== character.id ||
-      !persona && personaId ||
-      persona && personaId !== persona.id ||
-      !prompt && promptId ||
-      prompt && promptId !== prompt.id ||
+      (!character && characterId) ||
+      (character && characterId !== character.id) ||
+      (!persona && personaId) ||
+      (persona && personaId !== persona.id) ||
+      (!prompt && promptId) ||
+      (prompt && promptId !== prompt.id) ||
       removedTags.length > 0 ||
       newTags.length > 0;
     setUnsavedChanges(hasChanges);
-  }, [name, description, tags, removedTags, newTags, conversation, characterId, personaId, promptId]);
+  }, [
+    name,
+    description,
+    tags,
+    removedTags,
+    newTags,
+    conversation,
+    characterId,
+    personaId,
+    promptId,
+  ]);
 
   // Save changes
   const handleSave = async () => {
     try {
-      await apiClient.put(
-        `/conversations/${conversation.id}`,
-        { name, description, character_id: characterId, persona_id: personaId, prompt_id: promptId }
-      );
+      await apiClient.put(`/conversations/${conversation.id}`, {
+        name,
+        description,
+        character_id: characterId,
+        persona_id: personaId,
+        prompt_id: promptId,
+      });
 
       if (character && !characterId) {
         await apiClient.delete(`/conversations/${conversation.id}/character`);
@@ -212,10 +227,9 @@ const ConversationItem = ({
       setIsEditing(false);
       setNewTags([]);
       setRemovedTags([]);
-      toast.success('Conversation updated successfully.')
-    } catch (error) {
+      toast.success('Conversation updated successfully.');
+    } catch (_error) {
       toast.error('Failed to update conversation.');
-      console.error('Error saving conversation:', error);
     }
   };
 
@@ -234,30 +248,33 @@ const ConversationItem = ({
   const handleTagChange = (handleTags: any[]) => {
     for (const tag of handleTags) {
       // Handle adding tags that haven't been added.
-      if (!newTags.some(t => t.name === tag.name) && !tags.some(t => t.name === tag.name)) {
+      if (!newTags.some((t) => t.name === tag.name) && !tags.some((t) => t.name === tag.name)) {
         setNewTags([...newTags, tag]);
       }
 
       // Remove re-added tags from removedTags.
-      if (removedTags.some(t => t.name === tag.name)) {
-        setRemovedTags(removedTags.filter(t => t.name !== tag.name));
+      if (removedTags.some((t) => t.name === tag.name)) {
+        setRemovedTags(removedTags.filter((t) => t.name !== tag.name));
       }
     }
 
     // Remove tags that aren't in the newly handled tags array.
     for (const tag of tags) {
-      if (!handleTags.some(t => t.name === tag.name) && !removedTags.some(t => t.name === tag.name)) {
+      if (
+        !handleTags.some((t) => t.name === tag.name) &&
+        !removedTags.some((t) => t.name === tag.name)
+      ) {
         setRemovedTags([...removedTags, tag]);
       }
     }
 
     // Remove newly deleted tags from newTags.
     for (const tag of newTags) {
-      if (!handleTags.some(t => t.name === tag.name)) {
-        setNewTags(newTags.filter(t => t.name !== tag.name));
+      if (!handleTags.some((t) => t.name === tag.name)) {
+        setNewTags(newTags.filter((t) => t.name !== tag.name));
       }
     }
-  }
+  };
 
   return (
     <div className="pb-4 mb-4">
@@ -274,14 +291,16 @@ const ConversationItem = ({
               className="w-full p-2 border rounded bg-dark text-gray-200 mb-2"
             />
           </div>
-          <ExpandableTextarea value={description} onChange={setDescription} label='Description' />
+          <ExpandableTextarea value={description} onChange={setDescription} label="Description" />
           <div className="pb-1 relative">
             <h3>Tags</h3>
           </div>
           <TagSelector
-            selectedTags={[...tags, ...newTags].filter(t => !removedTags.some(tag => t.name === tag.name))}
+            selectedTags={[...tags, ...newTags].filter(
+              (t) => !removedTags.some((tag) => t.name === tag.name)
+            )}
             onTagChange={handleTagChange}
-            defaultColor='#3C3836'
+            defaultColor="#3C3836"
           />
           <div className="mb-2">
             <div className="pb-1 relative">
@@ -290,9 +309,7 @@ const ConversationItem = ({
             <div className="flex flex-col items-center p-4">
               <select
                 value={characterId}
-                onChange={(e) =>
-                  setCharacterId(e.target.value ? parseInt(e.target.value) : null)
-                }
+                onChange={(e) => setCharacterId(e.target.value ? parseInt(e.target.value) : null)}
                 className="w-full p-2 border rounded bg-dark text-gray-200 overflow-y-auto"
               >
                 <option value="">No character</option>
@@ -311,9 +328,7 @@ const ConversationItem = ({
             <div className="flex flex-col items-center p-4">
               <select
                 value={promptId}
-                onChange={(e) =>
-                  setPromptId(e.target.value ? parseInt(e.target.value) : null)
-                }
+                onChange={(e) => setPromptId(e.target.value ? parseInt(e.target.value) : null)}
                 className="w-full p-2 border rounded bg-dark text-gray-200 overflow-y-auto"
               >
                 <option value="">No prompt</option>
@@ -332,9 +347,7 @@ const ConversationItem = ({
             <div className="flex flex-col items-center p-4">
               <select
                 value={personaId}
-                onChange={(e) =>
-                  setPersonaId(e.target.value ? parseInt(e.target.value) : null)
-                }
+                onChange={(e) => setPersonaId(e.target.value ? parseInt(e.target.value) : null)}
                 className="w-full p-2 border rounded bg-dark text-gray-200 overflow-y-auto"
               >
                 <option value="">No persona</option>
@@ -355,8 +368,11 @@ const ConversationItem = ({
             </button>
             <button
               onClick={handleSave}
-              className={`px-4 py-2 ${unsavedChanges ? 'bg-fadedGreen hover:bg-brightGreen text-white' : 'bg-dark border border-fadedGreen text-gray-300 cursor-not-allowed'
-                } rounded`}
+              className={`px-4 py-2 ${
+                unsavedChanges
+                  ? 'bg-fadedGreen hover:bg-brightGreen text-white'
+                  : 'bg-dark border border-fadedGreen text-gray-300 cursor-not-allowed'
+              } rounded`}
               disabled={!unsavedChanges}
             >
               Save
@@ -367,22 +383,36 @@ const ConversationItem = ({
         <div className="pb-4 mb-4 relative">
           <div className="flex items-center">
             {character && (
-              <Avatar
-                id={character.id}
-                name={character.name}
-                type="character"
-                size={120}
-              />
+              <Avatar id={character.id} name={character.name} type="character" size={120} />
             )}
             <div className="ml-4">
               <h2 className="text-lg font-bold">{conversation.name}</h2>
               <div className="text-sm text-gray-400">
-                {tokenCount !== null ? `${tokenCount} tokens with chat template applied` : 'Loading tokens...'}
+                {tokenCount !== null
+                  ? `${tokenCount} tokens with chat template applied`
+                  : 'Loading tokens...'}
               </div>
-              <p className="text-gray-300 mt-2"><FormattedText t={conversation.description} /></p>
-              {character && <p className="text-gray-100 mt-2"><strong>Character: </strong><FormattedText t={character.name} /></p>}
-              {prompt && <p className="text-gray-100"><strong>Prompt: </strong><FormattedText t={prompt.name} /></p>}
-              {persona && <p className="text-gray-100"><strong>Persona: </strong><FormattedText t={persona.name} /></p>}
+              <p className="text-gray-300 mt-2">
+                <FormattedText t={conversation.description} />
+              </p>
+              {character && (
+                <p className="text-gray-100 mt-2">
+                  <strong>Character: </strong>
+                  <FormattedText t={character.name} />
+                </p>
+              )}
+              {prompt && (
+                <p className="text-gray-100">
+                  <strong>Prompt: </strong>
+                  <FormattedText t={prompt.name} />
+                </p>
+              )}
+              {persona && (
+                <p className="text-gray-100">
+                  <strong>Persona: </strong>
+                  <FormattedText t={persona.name} />
+                </p>
+              )}
               <SortedTags tags={tags} />
             </div>
             <div className="flex space-x-2 absolute top-1 right-1">
@@ -440,8 +470,7 @@ const ConversationItem = ({
             </div>
           </div>,
           document.body
-        )
-      }
+        )}
     </div>
   );
 };

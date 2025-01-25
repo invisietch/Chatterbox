@@ -1,5 +1,5 @@
-import React from "react";
-import PromptItem from "./PromptItem";
+import React from 'react';
+import PromptItem from './PromptItem';
 
 interface Prompt {
   id: number;
@@ -12,9 +12,9 @@ const PromptList = ({
   error,
   fetchPrompts,
 }: {
-  prompts: Prompt[],
-  error: string,
-  fetchPrompts: () => void,
+  prompts: Prompt[];
+  error: string;
+  fetchPrompts: () => void;
 }) => {
   return (
     <>

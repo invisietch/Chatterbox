@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import TagPill from './TagPill';
 import apiClient from '../lib/api';
 import ExpandableTextarea from './ExpandableTextarea';
 import { toast } from 'react-toastify';
@@ -32,8 +31,8 @@ const AddConversationForm = ({
         a.name.localeCompare(b.name)
       );
       setCharacters(sortedCharacters);
-    } catch (error) {
-      console.error('Error fetching characters:', error);
+    } catch (_error) {
+      toast.error('Failed to fetch characters.');
     }
   };
 
@@ -44,8 +43,8 @@ const AddConversationForm = ({
         a.name.localeCompare(b.name)
       );
       setPersonas(sortedPersonas);
-    } catch (error) {
-      console.error('Error fetching personas:', error);
+    } catch (_error) {
+      toast.error('Error fetching personas.');
     }
   };
 
@@ -56,8 +55,8 @@ const AddConversationForm = ({
         a.name.localeCompare(b.name)
       );
       setPrompts(sortedPrompts);
-    } catch (error) {
-      console.error('Error fetching prompts:', error);
+    } catch (_error) {
+      toast.error('Error fetching prompts.');
     }
   };
 
@@ -88,18 +87,25 @@ const AddConversationForm = ({
           className="w-full p-2 border rounded bg-dark text-gray-200 mb-2"
         />
       </div>
-      <ExpandableTextarea value={newConversation.description} onChange={(e) =>
-        setNewConversation({
-          ...newConversation,
-          description: e,
-        })} label='Description' />
+      <ExpandableTextarea
+        value={newConversation.description}
+        onChange={(e) =>
+          setNewConversation({
+            ...newConversation,
+            description: e,
+          })
+        }
+        label="Description"
+      />
       <TagSelector
         selectedTags={newConversation.tags}
-        onTagChange={(tags: any[]) => setNewConversation({
-          ...newConversation,
-          tags,
-        })}
-        defaultColor='#3C3836'
+        onTagChange={(tags: any[]) =>
+          setNewConversation({
+            ...newConversation,
+            tags,
+          })
+        }
+        defaultColor="#3C3836"
       />
       <div className="mb-2">
         <div className="border-gray-600 pb-1 relative">
@@ -174,10 +180,7 @@ const AddConversationForm = ({
         </div>
       </div>
       <div className="flex justify-end space-x-2 mt-4">
-        <button
-          className="px-4 py-2 bg-dark1 text-white rounded hover:bg-dark2"
-          onClick={onCancel}
-        >
+        <button className="px-4 py-2 bg-dark1 text-white rounded hover:bg-dark2" onClick={onCancel}>
           Cancel
         </button>
         <button

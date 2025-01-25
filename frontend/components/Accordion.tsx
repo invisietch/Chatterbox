@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { ChevronUpIcon } from "@heroicons/react/solid";
-import Avatar from "./Avatar";
+import { useState } from 'react';
+import { ChevronUpIcon } from '@heroicons/react/solid';
+import Avatar from './Avatar';
 
 interface AccordionProps {
   title: string;
   children: React.ReactNode;
   id?: number;
   name?: string;
-  type?: "character" | "persona";
+  type?: 'character' | 'persona';
   isOpen?: boolean; // Optional external control
   defaultOpen?: boolean; // Optional default open state
   onToggle?: (isOpen: boolean) => void; // Callback for state changes
@@ -54,7 +54,7 @@ const Accordion = ({
             <h2>{title}</h2>
           </div>
           <ChevronUpIcon
-            className={`w-5 h-5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+            className={`w-5 h-5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           />
         </button>
       </div>

@@ -1,12 +1,5 @@
 self.onmessage = async (e) => {
-  const {
-    prompt,
-    eosTokens,
-    samplers,
-    samplerOrder,
-    llmUrl,
-    maxContext,
-  } = e.data;
+  const { prompt, eosTokens, samplers, samplerOrder, llmUrl, maxContext } = e.data;
 
   try {
     let lastTime = 0;
@@ -15,22 +8,22 @@ self.onmessage = async (e) => {
 
     const promptData = {
       prompt,
-      temperature: samplers["temperature"],
-      min_p: samplers["min_p"],
-      top_p: samplers["top_p"],
-      top_k: samplers["top_k"],
-      xtc_probability: samplers["xtc_probability"],
-      xtc_threshold: samplers["xtc_threshold"],
-      max_length: samplers["max_tokens"],
+      temperature: samplers['temperature'],
+      min_p: samplers['min_p'],
+      top_p: samplers['top_p'],
+      top_k: samplers['top_k'],
+      xtc_probability: samplers['xtc_probability'],
+      xtc_threshold: samplers['xtc_threshold'],
+      max_length: samplers['max_tokens'],
       max_context_length: maxContext,
-      rep_pen: samplers["repetition_penalty"],
-      rep_pen_range: samplers["repetition_penalty_range"],
+      rep_pen: samplers['repetition_penalty'],
+      rep_pen_range: samplers['repetition_penalty_range'],
       stopping_strings: eosTokens,
       sampler_order: samplerOrder,
       skip_special_tokens: true,
       ignore_eos: false,
-      typical: samplers["typical_p"],
-      tfs: samplers["tfs"],
+      typical: samplers['typical_p'],
+      tfs: samplers['tfs'],
       sampler_seed: -1,
       stream: true,
     };

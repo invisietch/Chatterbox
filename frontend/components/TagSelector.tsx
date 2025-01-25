@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import apiClient from '../lib/api'; // Adjust import for your API client
 import TagPill from './TagPill';
+import { toast } from 'react-toastify';
 
 interface Tag {
   name: string;
@@ -32,8 +33,8 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onTagChange, de
         params: { search: query },
       });
       setTagSuggestions(response.data); // Expecting API to return [{ name, category }]
-    } catch (error) {
-      console.error('Error fetching tag suggestions:', error);
+    } catch (_error) {
+      toast.error('Error fetching tag suggestions.');
     }
   };
 
@@ -80,7 +81,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onTagChange, de
           {selectedTags.map((tag) => (
             <TagPill
               tag={tag}
-              onRemove={(tag: any) => onTagChange(selectedTags.filter(t => t.name !== tag.name))}
+              onRemove={(tag: any) => onTagChange(selectedTags.filter((t) => t.name !== tag.name))}
               defaultColor={'#3C3836'}
             />
           ))}

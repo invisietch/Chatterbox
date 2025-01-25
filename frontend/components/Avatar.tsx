@@ -33,7 +33,7 @@ const Avatar: React.FC<AvatarProps> = ({ id, name, type, seed, size = 120 }) => 
           const objectUrl = URL.createObjectURL(blob);
           setPreviewUrl(objectUrl);
         }
-      } catch (error) {
+      } catch (_error) {
         setPreviewUrl(null); // Fallback to placeholder if no image found
       }
     }
@@ -54,7 +54,7 @@ const Avatar: React.FC<AvatarProps> = ({ id, name, type, seed, size = 120 }) => 
     }
   };
 
-  const handleCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
+  const handleCropComplete = (_croppedArea: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
   };
 
@@ -75,7 +75,7 @@ const Avatar: React.FC<AvatarProps> = ({ id, name, type, seed, size = 120 }) => 
       fetchImage();
       toast.success('Successfully uploaded avatar.');
       setIsModalOpen(false);
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to upload avatar.');
     }
   };

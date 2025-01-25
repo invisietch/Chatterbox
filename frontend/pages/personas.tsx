@@ -17,26 +17,25 @@ export default function PersonasPage() {
 
   const fetchPersonas = async () => {
     try {
-      const response = await apiClient.get("/personas");
+      const response = await apiClient.get('/personas');
       if (!response.data) {
         throw new Error(`Failed to fetch personas: ${response.statusText}`);
       }
       const data = response.data;
       const sortedPersonas = data.sort((a, b) => a.name.localeCompare(b.name));
       setPersonas(sortedPersonas);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to fetch persona list.");
+    } catch (_error) {
+      setError('Failed to fetch persona list.');
     }
   };
 
   const handleOnCancel = () => {
     setIsAddingPersona(false);
-  }
+  };
 
   const handleSavePersona = async (name: string, content: string) => {
     try {
-      const response = await apiClient.post("/personas", { name, content });
+      const response = await apiClient.post('/personas', { name, content });
 
       if (response.status === 200) {
         toast.success('Successfully saved persona.');
@@ -45,10 +44,10 @@ export default function PersonasPage() {
 
         setIsAddingPersona(false);
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to save persona.');
     }
-  }
+  };
 
   return (
     <Layout>

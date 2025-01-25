@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 interface FormattedTextProps {
   t: string;
@@ -7,12 +7,13 @@ interface FormattedTextProps {
 const FormattedText: React.FC<FormattedTextProps> = ({ t }) => {
   return (
     <>
-      {t && t.split(/\n/).map((line, index) => (
-        <React.Fragment key={index}>
-          {line}
-          {index < t.split(/\n/).length - 1 && <br />}
-        </React.Fragment>
-      ))}
+      {t &&
+        t.split(/\n/).map((line, index) => (
+          <React.Fragment key={index}>
+            {line}
+            {index < t.split(/\n/).length - 1 && <br />}
+          </React.Fragment>
+        ))}
     </>
   );
 };

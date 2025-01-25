@@ -9,11 +9,11 @@ const VariantModal = ({
   onClose,
   onSave,
 }: {
-  vs: string[],
-  isAssistant: boolean,
-  avatarData: any,
-  onClose: () => void,
-  onSave: (ci: number, ri: number) => void,
+  vs: string[];
+  isAssistant: boolean;
+  avatarData: any;
+  onClose: () => void;
+  onSave: (ci: number, ri: number) => void;
 }) => {
   const [variants, setVariants] = useState<string[]>([]);
   const [selectedContentIdx, setSelectedContentIdx] = useState(null);
@@ -22,7 +22,6 @@ const VariantModal = ({
   const [selectedRejected, setSelectedRejected] = useState(null);
 
   useEffect(() => {
-    console.log(vs);
     setVariants(vs);
   }, [vs]);
 
@@ -95,13 +94,11 @@ const VariantModal = ({
             Cancel
           </button>
           <button
-            onClick={() => onSave(
-              selectedContentIdx,
-              selectedRejectedIdx,
-            )}
+            onClick={() => onSave(selectedContentIdx, selectedRejectedIdx)}
             disabled={!selectedContent}
-            className={`px-4 py-2 bg-fadedGreen text-white rounded ${selectedContent ? 'hover:bg-brightGreen' : 'opacity-50 cursor-not-allowed'
-              }`}
+            className={`px-4 py-2 bg-fadedGreen text-white rounded ${
+              selectedContent ? 'hover:bg-brightGreen' : 'opacity-50 cursor-not-allowed'
+            }`}
           >
             Save
           </button>

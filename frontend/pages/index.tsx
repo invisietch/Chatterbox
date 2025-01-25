@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import apiClient from '../lib/api';
 import AddConversationForm from '../components/AddConversationForm';
@@ -13,7 +13,12 @@ const Conversations = () => {
   const [conversations, setConversations] = useState<any[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [expandedConversationId, setExpandedConversationId] = useState(null);
-  const [filters, setFilters] = useState({ tags: [], characterIds: [], personaIds: [], promptIds: [] });
+  const [filters, setFilters] = useState({
+    tags: [],
+    characterIds: [],
+    personaIds: [],
+    promptIds: [],
+  });
 
   const selectedModel = useSelector((state: RootState) => state.model.selectedModel);
 
@@ -48,7 +53,7 @@ const Conversations = () => {
       // Make the API call
       const response = await apiClient.get(url);
       setConversations(response.data);
-    } catch (error) {
+    } catch (_error) {
       toast.error('Error fetching conversations.');
     }
   };
@@ -74,7 +79,7 @@ const Conversations = () => {
       // Reload conversations and close the form
       await fetchConversations(filters);
       setIsAdding(false);
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to save conversation.');
     }
   };
@@ -112,7 +117,9 @@ const Conversations = () => {
             fetchConversations={() => fetchConversations(filters)}
             modelIdentifier={selectedModel}
             expandedConversation={expandedConversationId === conversation.id}
-            setExpandedConversation={(t: boolean) => setExpandedConversationId(t ? conversation.id : null)}
+            setExpandedConversation={(t: boolean) =>
+              setExpandedConversationId(t ? conversation.id : null)
+            }
           />
         ))}
       </div>

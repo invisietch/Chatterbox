@@ -9,7 +9,7 @@ import PresetList from '../components/PresetList';
 export default function PresetsPage() {
   const [isAddingPreset, setIsAddingPreset] = useState(false);
   const [presets, setPresets] = useState([]);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPresets();
@@ -17,21 +17,21 @@ export default function PresetsPage() {
 
   const fetchPresets = async () => {
     try {
-      const response = await apiClient.get("/presets");
+      const response = await apiClient.get('/presets');
       if (!response.data) {
         throw new Error(`Failed to fetch presets: ${response.statusText}`);
       }
       const data = response.data;
       const sortedPresets = data.sort((a, b) => a.name.localeCompare(b.name));
       setPresets(sortedPresets);
-    } catch (err) {
-      toast.error("Failed to fetch preset list.");
+    } catch (_error) {
+      toast.error('Failed to fetch preset list.');
     }
   };
 
   const handleOnCancel = () => {
     setIsAddingPreset(false);
-  }
+  };
 
   const handleSavePreset = async (
     name: string,
@@ -39,10 +39,10 @@ export default function PresetsPage() {
     samplerOrder: number[],
     model: string,
     llmUrl: string,
-    maxContext: number,
+    maxContext: number
   ) => {
     try {
-      const response = await apiClient.post("/presets", {
+      const response = await apiClient.post('/presets', {
         name,
         samplers,
         sampler_order: samplerOrder,
@@ -52,14 +52,14 @@ export default function PresetsPage() {
       });
 
       if (response.status === 200 || response.status === 201) {
-        toast.success("Preset saved successfully.");
+        toast.success('Preset saved successfully.');
         setIsAddingPreset(false);
         fetchPresets();
       } else {
         throw new Error(`Failed to save preset: ${response.statusText}`);
       }
-    } catch (error) {
-      toast.error("Failed to save preset.");
+    } catch (_error) {
+      toast.error('Failed to save preset.');
     }
   };
 

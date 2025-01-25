@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef } from 'react';
 
 const useAiWorker = () => {
   const workerRef = useRef(null);

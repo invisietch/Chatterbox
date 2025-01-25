@@ -15,17 +15,23 @@ const SettingsBox = () => {
 
   const rpModeInitial = useSelector((state: RootState) => state.quickSettings.rpMode);
   const authorsNoteInitial = useSelector((state: RootState) => state.quickSettings.authorsNote);
-  const authorsNoteLocInitial = useSelector((state: RootState) => state.quickSettings.authorsNoteLoc);
-  const realTimeProcessTextInitial = useSelector((state: RootState) => state.quickSettings.realTimeProcessText);
+  const authorsNoteLocInitial = useSelector(
+    (state: RootState) => state.quickSettings.authorsNoteLoc
+  );
+  const realTimeProcessTextInitial = useSelector(
+    (state: RootState) => state.quickSettings.realTimeProcessText
+  );
 
   const dispatch = useDispatch();
 
-  const [realTimeProcessText, setRealTimeProcessText] = useState(realTimeProcessTextInitial)
+  const [realTimeProcessText, setRealTimeProcessText] = useState(realTimeProcessTextInitial);
   const [rpMode, setRpMode] = useState(rpModeInitial || false);
   const [authorsNote, setAuthorsNote] = useState(authorsNoteInitial || '');
   const [authorsNoteLoc, setAuthorsNoteLoc] = useState(authorsNoteLocInitial ?? undefined);
 
-  const [customDepth, setCustomDepth] = useState(authorsNoteLocInitial < 0 ? authorsNoteLocInitial : '');
+  const [customDepth, setCustomDepth] = useState(
+    authorsNoteLocInitial < 0 ? authorsNoteLocInitial : ''
+  );
   const [isCustomDepth, setIsCustomDepth] = useState(authorsNoteLocInitial < 0);
   const [isSubModalOpen, setIsSubModalOpen] = useState(false);
 
@@ -130,12 +136,14 @@ const SettingsBox = () => {
                     className="toggle-checkbox absolute opacity-0 w-0 h-0"
                   />
                   <span
-                    className={`toggle-label block w-full h-full rounded-full cursor-pointer transition-colors duration-300 ${!rpMode ? 'bg-fadedRed' : 'bg-fadedGreen'
-                      }`}
+                    className={`toggle-label block w-full h-full rounded-full cursor-pointer transition-colors duration-300 ${
+                      !rpMode ? 'bg-fadedRed' : 'bg-fadedGreen'
+                    }`}
                   ></span>
                   <span
-                    className={`toggle-indicator absolute top-0 left-0 w-5 h-5 rounded-full bg-white border-4 transform transition-transform duration-300 ${!rpMode ? 'translate-x-8' : 'translate-x-0'
-                      }`}
+                    className={`toggle-indicator absolute top-0 left-0 w-5 h-5 rounded-full bg-white border-4 transform transition-transform duration-300 ${
+                      !rpMode ? 'translate-x-8' : 'translate-x-0'
+                    }`}
                   ></span>
                 </div>
               </div>
@@ -152,12 +160,14 @@ const SettingsBox = () => {
                     className="toggle-checkbox absolute opacity-0 w-0 h-0"
                   />
                   <span
-                    className={`toggle-label block w-full h-full rounded-full cursor-pointer transition-colors duration-300 ${!realTimeProcessText ? 'bg-fadedRed' : 'bg-fadedGreen'
-                      }`}
+                    className={`toggle-label block w-full h-full rounded-full cursor-pointer transition-colors duration-300 ${
+                      !realTimeProcessText ? 'bg-fadedRed' : 'bg-fadedGreen'
+                    }`}
                   ></span>
                   <span
-                    className={`toggle-indicator absolute top-0 left-0 w-5 h-5 rounded-full bg-white border-4 transform transition-transform duration-300 ${!realTimeProcessText ? 'translate-x-8' : 'translate-x-0'
-                      }`}
+                    className={`toggle-indicator absolute top-0 left-0 w-5 h-5 rounded-full bg-white border-4 transform transition-transform duration-300 ${
+                      !realTimeProcessText ? 'translate-x-8' : 'translate-x-0'
+                    }`}
                   ></span>
                 </div>
               </div>

@@ -20,7 +20,7 @@ const quickSettingsSlice = createSlice({
   reducers: {
     setQuickSettings(state, action: PayloadAction<QuickSettingsState>) {
       return { ...state, ...action.payload };
-    }
+    },
   },
 });
 

@@ -1,16 +1,26 @@
-import { useEffect, useState } from "react";
-import Accordion from "./Accordion";
-import TagSelector from "./TagSelector";
-import apiClient from "../lib/api";
-import { toast } from "react-toastify";
-import { ColorSwatchIcon } from "@heroicons/react/outline";
-import ReactDOM from "react-dom";
-import { PencilIcon, TrashIcon } from "@heroicons/react/outline";
-import { SortedTags } from "./SortedTags";
+import { useEffect, useState } from 'react';
+import Accordion from './Accordion';
+import TagSelector from './TagSelector';
+import apiClient from '../lib/api';
+import { toast } from 'react-toastify';
+import { ColorSwatchIcon } from '@heroicons/react/outline';
+import ReactDOM from 'react-dom';
+import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
+import { SortedTags } from './SortedTags';
 
 const suggestedColors = [
-  "#b57614", "#076678", "#8f3f71", "#427b58", "#af3a03", "#cc241d",
-  "#98971a", "#d79921", "#458588", "#b16286", "#689d6a", "#d65d0e",
+  '#b57614',
+  '#076678',
+  '#8f3f71',
+  '#427b58',
+  '#af3a03',
+  '#cc241d',
+  '#98971a',
+  '#d79921',
+  '#458588',
+  '#b16286',
+  '#689d6a',
+  '#d65d0e',
 ];
 
 const TagCategoryItem = ({ category, fetchCategories }: any) => {
@@ -26,7 +36,7 @@ const TagCategoryItem = ({ category, fetchCategories }: any) => {
     setName(category.name);
     setTags(category.tags);
     setColor(category.color);
-  }, [category])
+  }, [category]);
 
   const handleSave = async () => {
     try {
@@ -40,11 +50,11 @@ const TagCategoryItem = ({ category, fetchCategories }: any) => {
         await apiClient.post(`/tag_categories/${name}/tag/${tag.name}`);
       }
 
-      toast.success("Category updated successfully.");
+      toast.success('Category updated successfully.');
       fetchCategories();
       setIsEditing(false);
-    } catch (error) {
-      toast.error("Failed to save category.");
+    } catch (_error) {
+      toast.error('Failed to save category.');
     }
   };
 
@@ -55,20 +65,20 @@ const TagCategoryItem = ({ category, fetchCategories }: any) => {
       }
 
       await apiClient.delete(`/tag_categories/${name}`);
-      toast.success("Category deleted successfully.");
+      toast.success('Category deleted successfully.');
       fetchCategories();
-    } catch (error) {
-      toast.error("Failed to delete category.");
+    } catch (_error) {
+      toast.error('Failed to delete category.');
     }
   };
 
   const handleCancel = async () => {
     setIsEditing(false);
     fetchCategories(); // Reset accordion color.
-  }
+  };
 
   const triggerColorPicker = () => {
-    const colorPicker = document.getElementById("color-picker");
+    const colorPicker = document.getElementById('color-picker');
     if (colorPicker) {
       colorPicker.click(); // Programmatically open the color picker
     }
@@ -77,30 +87,33 @@ const TagCategoryItem = ({ category, fetchCategories }: any) => {
   const handleTagChange = (handleTags: any[]) => {
     for (const tag of handleTags) {
       // Handle adding tags that haven't been added.
-      if (!newTags.some(t => t.name === tag.name) && !tags.some(t => t.name === tag.name)) {
+      if (!newTags.some((t) => t.name === tag.name) && !tags.some((t) => t.name === tag.name)) {
         setNewTags([...newTags, tag]);
       }
 
       // Remove re-added tags from removedTags.
-      if (removedTags.some(t => t.name === tag.name)) {
-        setRemovedTags(removedTags.filter(t => t.name !== tag.name));
+      if (removedTags.some((t) => t.name === tag.name)) {
+        setRemovedTags(removedTags.filter((t) => t.name !== tag.name));
       }
     }
 
     // Remove tags that aren't in the newly handled tags array.
     for (const tag of tags) {
-      if (!handleTags.some(t => t.name === tag.name) && !removedTags.some(t => t.name === tag.name)) {
+      if (
+        !handleTags.some((t) => t.name === tag.name) &&
+        !removedTags.some((t) => t.name === tag.name)
+      ) {
         setRemovedTags([...removedTags, tag]);
       }
     }
 
     // Remove newly deleted tags from newTags.
     for (const tag of newTags) {
-      if (!handleTags.some(t => t.name === tag.name)) {
-        setNewTags(newTags.filter(t => t.name !== tag.name));
+      if (!handleTags.some((t) => t.name === tag.name)) {
+        setNewTags(newTags.filter((t) => t.name !== tag.name));
       }
     }
-  }
+  };
 
   return (
     <>
@@ -126,8 +139,9 @@ const TagCategoryItem = ({ category, fetchCategories }: any) => {
                 <button
                   key={suggestedColor}
                   type="button"
-                  className={`w-8 h-8 rounded-full border-2 ${color === suggestedColor ? "border-white" : "border-transparent"
-                    }`}
+                  className={`w-8 h-8 rounded-full border-2 ${
+                    color === suggestedColor ? 'border-white' : 'border-transparent'
+                  }`}
                   style={{ backgroundColor: suggestedColor }}
                   onClick={() => setColor(suggestedColor)}
                 />
@@ -137,8 +151,12 @@ const TagCategoryItem = ({ category, fetchCategories }: any) => {
                 <button
                   type="button"
                   onClick={triggerColorPicker}
-                  className={`w-8 h-8 rounded-full border-2 ${!suggestedColors.some(col => col === color) ? "border-white" : "border-transparent"} flex justify-center items-center bg-gray-700 hover:bg-gray-600`}
-                  style={{ backgroundColor: !suggestedColors.some(col => col === color) ? color : "#ffffff" }}
+                  className={`w-8 h-8 rounded-full border-2 ${!suggestedColors.some((col) => col === color) ? 'border-white' : 'border-transparent'} flex justify-center items-center bg-gray-700 hover:bg-gray-600`}
+                  style={{
+                    backgroundColor: !suggestedColors.some((col) => col === color)
+                      ? color
+                      : '#ffffff',
+                  }}
                 >
                   <ColorSwatchIcon className="w-6 h-6 text-gray-200" />
                 </button>
@@ -154,7 +172,9 @@ const TagCategoryItem = ({ category, fetchCategories }: any) => {
             </div>
 
             <TagSelector
-              selectedTags={[...tags, ...newTags].filter(t => !removedTags.some(tag => t.name === tag.name))}
+              selectedTags={[...tags, ...newTags].filter(
+                (t) => !removedTags.some((tag) => t.name === tag.name)
+              )}
               onTagChange={handleTagChange}
               defaultColor="#3c3c3c"
             />
@@ -191,11 +211,14 @@ const TagCategoryItem = ({ category, fetchCategories }: any) => {
                 <TrashIcon className="h-5 w-5" />
               </button>
             </div>
-            <SortedTags tags={tags.map(tag => { return { name: tag.name, category: { name, color } } })} />
+            <SortedTags
+              tags={tags.map((tag) => {
+                return { name: tag.name, category: { name, color } };
+              })}
+            />
           </div>
-        )
-        }
-      </Accordion >
+        )}
+      </Accordion>
       {isDeleting &&
         ReactDOM.createPortal(
           <div className="fixed inset-0 flex items-center justify-center bg-dark2 bg-opacity-50">
@@ -220,8 +243,7 @@ const TagCategoryItem = ({ category, fetchCategories }: any) => {
             </div>
           </div>,
           document.body
-        )
-      }
+        )}
     </>
   );
 };

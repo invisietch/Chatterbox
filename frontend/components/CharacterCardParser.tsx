@@ -1,16 +1,16 @@
-import React, { useState, useRef, useEffect } from "react";
-import ExifReader from "exifreader";
-import apiClient from "../lib/api";
-import FormattedText from "./FormattedText";
-import Cropper from "react-easy-crop";
-import { getCroppedImg } from "../lib/imageUtils";
-import { toast } from "react-toastify";
+import React, { useState, useEffect } from 'react';
+import ExifReader from 'exifreader';
+import apiClient from '../lib/api';
+import FormattedText from './FormattedText';
+import Cropper from 'react-easy-crop';
+import { getCroppedImg } from '../lib/imageUtils';
+import { toast } from 'react-toastify';
 
 interface Character {
   name: string;
   age?: number;
   description: string;
-  version: "v2" | "v3";
+  version: 'v2' | 'v3';
   assets?: Record<string, string>;
   personality?: string;
   firstMessage?: string;
@@ -37,7 +37,7 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
 
     const file = event.target.files?.[0];
     if (!file) {
-      setError("No file selected.");
+      setError('No file selected.');
       return;
     }
 
@@ -47,7 +47,7 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
-      const decoder = new TextDecoder("utf-8");
+      const decoder = new TextDecoder('utf-8');
       return decoder.decode(bytes);
     }
 
@@ -55,16 +55,18 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
       const arrayBuffer = await file.arrayBuffer();
       const tags = ExifReader.load(arrayBuffer, { expanded: true });
 
-      if (tags["png"]["chara"]?.description || tags["png"]["chara"]?.value) {
-        const characterData = tags["png"]["chara"].description || tags["png"]["chara"].value;
+      if (tags['png']['chara']?.description || tags['png']['chara']?.value) {
+        const characterData = tags['png']['chara'].description || tags['png']['chara'].value;
         const decodedData = decodeBase64(characterData as string);
         const parsedCharacter: Character = {
           ...JSON.parse(decodedData),
-          version: "v2",
+          version: 'v2',
         };
         setCharacter(parsedCharacter.data);
       } else {
-        setError("No compatible character card metadata found. Ensure the file contains valid CCv2 or CCv3 data.");
+        setError(
+          'No compatible character card metadata found. Ensure the file contains valid CCv2 or CCv3 data.'
+        );
         return;
       }
 
@@ -73,12 +75,12 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
       setUploadedImage(file);
       setPreviewUrl(objectUrl);
       setIsCropperOpen(true); // Open cropper modal
-    } catch (e) {
-      setError("Failed to parse character card. Ensure the file is a valid CCv2 or CCv3 image.");
+    } catch (_error) {
+      setError('Failed to parse character card. Ensure the file is a valid CCv2 or CCv3 image.');
     }
   };
 
-  const handleCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
+  const handleCropComplete = (_croppedArea: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
   };
 
@@ -90,20 +92,20 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
     if (!character) return;
 
     try {
-      const response = await apiClient.post("/characters", {
+      const response = await apiClient.post('/characters', {
         name: character.name,
         creator: character.creator || null,
         creator_notes: character.creator_notes || null,
         character_version: character.character_version || null,
         age: character.age || null,
-        scenario: character.scenario || "",
-        personality: character.personality || "",
-        description: character.description || "",
-        first_message: character.first_mes || "",
-        example_messages: character.mes_example || "",
+        scenario: character.scenario || '',
+        personality: character.personality || '',
+        description: character.description || '',
+        first_message: character.first_mes || '',
+        example_messages: character.mes_example || '',
         alternate_greetings: character.alternate_greetings || null,
         system_prompt: character.system_prompt || null,
-        post_history_instructions: character.post_history_instructions || "",
+        post_history_instructions: character.post_history_instructions || '',
       });
 
       if (response.status !== 200) {
@@ -117,15 +119,15 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
           const tagResponse = await apiClient.post(`/characters/${characterId}/tags/${tag}`);
 
           if (tagResponse.status !== 200) {
-            throw new Error(`API error: ${tagResponse.statusText}`)
+            throw new Error(`API error: ${tagResponse.statusText}`);
           }
         }
       }
 
       setCharacterId(characterId); // Save character ID for image upload
       toast.success('Successfully saved character.');
-    } catch (error) {
-      toast.error("Failed to save character and/or assign tags.");
+    } catch (_error) {
+      toast.error('Failed to save character and/or assign tags.');
     }
   };
 
@@ -136,22 +138,21 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
       const croppedImage = await getCroppedImg(previewUrl!, croppedAreaPixels, 200);
 
       const blob = await fetch(croppedImage).then((res) => res.blob());
-      const file = new File([blob], `${character?.name}.png`, { type: "image/png" });
+      const file = new File([blob], `${character?.name}.png`, { type: 'image/png' });
 
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append('image', file);
 
       if (characterId) {
         await apiClient.post(`/characters/${characterId}/image`, formData);
-        console.log("Avatar uploaded successfully.");
       }
-    }
+    };
 
     if (characterId) {
       uploadImage();
       onSave();
     }
-  }, [characterId])
+  }, [characterId]);
 
   const handleCancel = () => {
     setCharacter(null);
@@ -176,7 +177,9 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
           <h2 className="text-xl font-semibold">Character Details</h2>
           <div>
             <h3 className="text-lg font-semibold">Name:</h3>
-            <p><FormattedText t={character.name} /></p>
+            <p>
+              <FormattedText t={character.name} />
+            </p>
           </div>
           {character.creator && (
             <div>
@@ -204,58 +207,76 @@ const CharacterCardParser = ({ onSave }: { onSave: () => void }) => {
           )}
           <div>
             <h3 className="text-lg font-semibold">Description:</h3>
-            <p><FormattedText t={character.description} /></p>
+            <p>
+              <FormattedText t={character.description} />
+            </p>
           </div>
           {character.personality && (
             <div>
               <h3 className="text-lg font-semibold">Personality:</h3>
-              <p><FormattedText t={character.personality} /></p>
+              <p>
+                <FormattedText t={character.personality} />
+              </p>
             </div>
           )}
           {character.first_mes && (
             <div>
               <h3 className="text-lg font-semibold">First Message:</h3>
-              <p><FormattedText t={character.first_mes} /></p>
+              <p>
+                <FormattedText t={character.first_mes} />
+              </p>
             </div>
           )}
           {character.scenario && (
             <div>
               <h3 className="text-lg font-semibold">Scenario:</h3>
-              <p><FormattedText t={character.scenario} /></p>
+              <p>
+                <FormattedText t={character.scenario} />
+              </p>
             </div>
           )}
           {character.mes_example && (
             <div>
               <h3 className="text-lg font-semibold">Example Messages:</h3>
-              <p><FormattedText t={character.mes_example} /></p>
+              <p>
+                <FormattedText t={character.mes_example} />
+              </p>
             </div>
           )}
           {character.system_prompt && (
             <div>
               <h3 className="text-lg font-semibold">System Prompt:</h3>
-              <p><FormattedText t={character.system_prompt} /></p>
+              <p>
+                <FormattedText t={character.system_prompt} />
+              </p>
             </div>
           )}
           {character.post_history_instructions && (
             <div>
               <h3 className="text-lg font-semibold">Post History Instructions:</h3>
-              <p><FormattedText t={character.post_history_instructions} /></p>
+              <p>
+                <FormattedText t={character.post_history_instructions} />
+              </p>
             </div>
           )}
           {character.alternate_greetings && (
             <div>
               <h3 className="text-lg font-semibold">Alternate Greetings:</h3>
-              {character.alternate_greetings.map((greeting: string) =>
-                <p><FormattedText t={greeting} /></p>
-              )}
+              {character.alternate_greetings.map((greeting: string) => (
+                <p>
+                  <FormattedText t={greeting} />
+                </p>
+              ))}
             </div>
           )}
           {character.tags && (
             <div>
               <h3 className="text-lg font-semibold">Tags:</h3>
-              {character.tags.map((tag: string) =>
-                <p><FormattedText t={`- ${tag}`} /></p>
-              )}
+              {character.tags.map((tag: string) => (
+                <p>
+                  <FormattedText t={`- ${tag}`} />
+                </p>
+              ))}
             </div>
           )}
           {character.assets && (

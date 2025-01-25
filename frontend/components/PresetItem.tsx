@@ -1,21 +1,21 @@
-import { useEffect, useState } from "react";
-import Accordion from "./Accordion";
-import apiClient from "../lib/api";
-import { toast } from "react-toastify";
-import { PencilIcon, TrashIcon } from "@heroicons/react/outline";
-import ReactDOM from "react-dom";
-import AddPresetForm from "./AddPresetForm";
-import { useDispatch, useSelector } from "react-redux";
-import { setPreset } from "../context/modelSlice";
+import { useEffect, useState } from 'react';
+import Accordion from './Accordion';
+import apiClient from '../lib/api';
+import { toast } from 'react-toastify';
+import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
+import ReactDOM from 'react-dom';
+import AddPresetForm from './AddPresetForm';
+import { useDispatch, useSelector } from 'react-redux';
+import { setPreset } from '../context/modelSlice';
 
 const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
   const [samplers, setSamplers] = useState({});
   const [samplerOrder, setSamplerOrder] = useState([]);
-  const [modelName, setModelName] = useState("");
-  const [llmUrl, setLlmUrl] = useState("");
+  const [modelName, setModelName] = useState('');
+  const [llmUrl, setLlmUrl] = useState('');
   const [maxContext, setMaxContext] = useState(0);
   const selectedPresetId = useSelector((state: any) => state.model.selectedPresetId);
   const dispatch = useDispatch();
@@ -37,7 +37,7 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
     updatedSamplerOrder: number[],
     updatedModelName: string,
     updatedLlmUrl: string,
-    updatedMaxContext: number,
+    updatedMaxContext: number
   ) => {
     try {
       const response = await apiClient.put(`/presets/${preset.id}`, {
@@ -62,12 +62,11 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
         );
       }
 
-      toast.success("Preset updated successfully.");
+      toast.success('Preset updated successfully.');
       setIsEditing(false);
       onSave();
-    } catch (error) {
-      console.error("Error saving preset:", error);
-      toast.error("Failed to update preset.");
+    } catch (_error) {
+      toast.error('Failed to update preset.');
     }
   };
 
@@ -88,19 +87,32 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
         );
       }
 
-      toast.success("Preset deleted successfully.");
+      toast.success('Preset deleted successfully.');
       setIsDeleting(false);
       onSave();
-    } catch (error) {
-      console.error("Error deleting preset:", error);
-      toast.error("Failed to delete preset.");
+    } catch (_error) {
+      toast.error('Failed to delete preset.');
     }
   };
 
   return isEditing ? (
     <AddPresetForm
-      onSave={(updatedName, updatedSamplers, updatedOrder, updatedModel, updatedLlmUrl, updatedMaxContext) => {
-        handleSave(updatedName, updatedSamplers, updatedOrder, updatedModel, updatedLlmUrl, updatedMaxContext);
+      onSave={(
+        updatedName,
+        updatedSamplers,
+        updatedOrder,
+        updatedModel,
+        updatedLlmUrl,
+        updatedMaxContext
+      ) => {
+        handleSave(
+          updatedName,
+          updatedSamplers,
+          updatedOrder,
+          updatedModel,
+          updatedLlmUrl,
+          updatedMaxContext
+        );
       }}
       onCancel={handleCancel}
       initialValues={{
@@ -109,7 +121,7 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
         samplerOrder,
         modelName,
         llmUrl,
-        maxContext
+        maxContext,
       }}
     />
   ) : (
@@ -133,13 +145,13 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
           </div>
           <div className="text-sm text-gray-300 w-11/12">
             <p>
-              <strong>Samplers:</strong>{" "}
+              <strong>Samplers:</strong>{' '}
               {Object.entries(samplers)
                 .map(([key, value]) => `${key}: ${value}`)
-                .join(", ")}
+                .join(', ')}
             </p>
             <p>
-              <strong>Sampler Order:</strong> {samplerOrder.join(", ")}
+              <strong>Sampler Order:</strong> {samplerOrder.join(', ')}
             </p>
             <p>
               <strong>Model Name:</strong> {modelName}
@@ -183,4 +195,3 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
 };
 
 export default PresetItem;
-

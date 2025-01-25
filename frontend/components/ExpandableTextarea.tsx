@@ -1,6 +1,6 @@
-import { TrashIcon } from "@heroicons/react/outline";
-import React, { RefObject, useEffect, useRef, useState } from "react";
-import ReactDOM from "react-dom";
+import { TrashIcon } from '@heroicons/react/outline';
+import React, { RefObject, useEffect, useRef, useState } from 'react';
+import ReactDOM from 'react-dom';
 
 interface ExpandableTextareaProps {
   value: string;
@@ -37,11 +37,11 @@ const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({
     };
 
     if (isModalOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isModalOpen]);
 
@@ -95,7 +95,10 @@ const ExpandableTextarea: React.FC<ExpandableTextareaProps> = ({
         {isModalOpen &&
           ReactDOM.createPortal(
             <div className="fixed inset-0 flex items-center justify-center bg-dark1 bg-opacity-50 z-50">
-              <div className="bg-dark2 text-gray-200 p-6 rounded-lg shadow-lg w-11/12 max-w-3xl" ref={modalRef}>
+              <div
+                className="bg-dark2 text-gray-200 p-6 rounded-lg shadow-lg w-11/12 max-w-3xl"
+                ref={modalRef}
+              >
                 <h2 className="text-lg font-semibold mb-4">Editing {label}</h2>
 
                 <textarea

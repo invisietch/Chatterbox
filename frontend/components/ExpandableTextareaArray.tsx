@@ -1,6 +1,6 @@
-import { useState } from "react";
-import ExpandableTextarea from "./ExpandableTextarea";
-import { PlusIcon } from "@heroicons/react/outline";
+import { useState } from 'react';
+import ExpandableTextarea from './ExpandableTextarea';
+import { PlusIcon } from '@heroicons/react/outline';
 
 interface ExpandableTextareaArrayProps {
   label: string;
@@ -18,7 +18,7 @@ export const ExpandableTextareaArray: React.FC<ExpandableTextareaArrayProps> = (
   const [textareas, setTextareas] = useState<string[]>(initialArray);
 
   const handleAddTextarea = () => {
-    const newArray = [...textareas, ""];
+    const newArray = [...textareas, ''];
     setTextareas(newArray);
     onArrayChange(newArray);
   };

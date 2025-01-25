@@ -1,18 +1,24 @@
-import { useState } from "react"
-import ExpandableTextarea from "./ExpandableTextarea";
-import { toast } from "react-toastify";
+import { useState } from 'react';
+import ExpandableTextarea from './ExpandableTextarea';
+import { toast } from 'react-toastify';
 
-const AddPersonaForm = ({ onSave, onCancel }: { onSave: (name: string, content: string) => void, onCancel: () => void }) => {
-  const [name, setName] = useState("");
-  const [content, setContent] = useState("");
+const AddPersonaForm = ({
+  onSave,
+  onCancel,
+}: {
+  onSave: (name: string, content: string) => void;
+  onCancel: () => void;
+}) => {
+  const [name, setName] = useState('');
+  const [content, setContent] = useState('');
 
   const handleSubmit = () => {
     if (name && content) {
       onSave(name, content);
     } else {
-      toast.error("Please fill in all required fields.");
+      toast.error('Please fill in all required fields.');
     }
-  }
+  };
 
   return (
     <form className="mt-4 space-y-4 mb-4">
@@ -26,7 +32,7 @@ const AddPersonaForm = ({ onSave, onCancel }: { onSave: (name: string, content: 
           className="w-full p-2 border rounded bg-dark text-gray-200 mb-2"
         />
       </div>
-      <ExpandableTextarea label='Content' onChange={setContent} value={content} />
+      <ExpandableTextarea label="Content" onChange={setContent} value={content} />
 
       <div className="flex justify-end gap-2 mt-2">
         <button
@@ -46,6 +52,6 @@ const AddPersonaForm = ({ onSave, onCancel }: { onSave: (name: string, content: 
       </div>
     </form>
   );
-}
+};
 
 export default AddPersonaForm;

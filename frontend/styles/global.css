@@ -25,25 +25,25 @@ body {
 }
 
 .speech {
-  @apply font-bold text-speechHighlight
+  @apply font-bold text-speechHighlight;
 }
 
 .actions {
-  @apply italic text-actionsHighlight
+  @apply italic text-actionsHighlight;
 }
 
 .thoughts {
-  @apply italic text-thoughtsHighlight
+  @apply italic text-thoughtsHighlight;
 }
 
 .bolded {
-  @apply font-bold
+  @apply font-bold;
 }
 
 .underlined {
-  @apply underline
+  @apply underline;
 }
 
 .strikethroughd {
-  @apply line-through
+  @apply line-through;
 }

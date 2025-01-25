@@ -1,15 +1,15 @@
 export const cancelGeneration = async (llmUrl) => {
   try {
-    const response = await fetch(`${llmUrl}/api/extra/abort`, {
-      method: "POST",
+    await fetch(`${llmUrl}/api/extra/abort`, {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
-  } catch (error) {
-    console.error(error);
+  } catch (_error) {
+    throw new Error('Failed to abort generation.');
   }
-}
+};
 
 export const fetchResponse = async (
   prompt: string,
@@ -28,31 +28,31 @@ export const fetchResponse = async (
 
   const promptData = {
     prompt,
-    temperature: samplers["temperature"],
-    min_p: samplers["min_p"],
-    top_p: samplers["top_p"],
-    top_k: samplers["top_k"],
-    xtc_probability: samplers["xtc_probability"],
-    xtc_threshold: samplers["xtc_threshold"],
-    max_length: samplers["max_tokens"],
+    temperature: samplers['temperature'],
+    min_p: samplers['min_p'],
+    top_p: samplers['top_p'],
+    top_k: samplers['top_k'],
+    xtc_probability: samplers['xtc_probability'],
+    xtc_threshold: samplers['xtc_threshold'],
+    max_length: samplers['max_tokens'],
     max_context_length: maxContext,
-    rep_pen: samplers["repetition_penalty"],
-    rep_pen_range: samplers["repetition_penalty_range"],
+    rep_pen: samplers['repetition_penalty'],
+    rep_pen_range: samplers['repetition_penalty_range'],
     stopping_strings: eosTokens,
     sampler_order: samplerOrder,
     skip_special_tokens: true,
     ignore_eos: false,
-    typical: samplers["typical_p"],
-    tfs: samplers["tfs"],
+    typical: samplers['typical_p'],
+    tfs: samplers['tfs'],
     sampler_seed: -1,
     stream: true,
   };
 
   try {
     const response = await fetch(`${llmUrl}/api/extra/generate/stream`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(promptData),
     });
@@ -77,8 +77,8 @@ export const fetchResponse = async (
             localResponse += text;
             lastFinishReason = parsed.finish_reason;
             setResponse(localResponse);
-          } catch (e) {
-            console.error('Failed to parse chunk:', e);
+          } catch (_error) {
+            throw new Error('Failed parsing LLM response.');
           }
         }
       }

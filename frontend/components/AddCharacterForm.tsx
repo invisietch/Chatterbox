@@ -1,11 +1,15 @@
-import { useState } from "react"
-import ExpandableTextarea from "./ExpandableTextarea";
-import { toast } from "react-toastify";
-import TagSelector from "./TagSelector";
-import { ExpandableTextareaArray } from "./ExpandableTextareaArray";
+import { useState } from 'react';
+import ExpandableTextarea from './ExpandableTextarea';
+import { toast } from 'react-toastify';
+import TagSelector from './TagSelector';
+import { ExpandableTextareaArray } from './ExpandableTextareaArray';
 
-const AddCharacterForm = ({ onSave, onCancel }: {
-  onSave: (name: string,
+const AddCharacterForm = ({
+  onSave,
+  onCancel,
+}: {
+  onSave: (
+    name: string,
     description: string,
     scenario: string | null,
     personality: string | null,
@@ -17,21 +21,21 @@ const AddCharacterForm = ({ onSave, onCancel }: {
     characterVersion: string | null,
     systemPrompt: string | null,
     alternateGreetings: string[],
-    tags: any[],
-  ) => void,
-  onCancel: () => void
+    tags: any[]
+  ) => void;
+  onCancel: () => void;
 }) => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [scenario, setScenario] = useState("");
-  const [personality, setPersonality] = useState("");
-  const [firstMessage, setFirstMessage] = useState("");
-  const [exampleMessages, setExampleMessages] = useState("");
-  const [postHistoryInstructions, setPostHistoryInstructions] = useState("");
-  const [creator, setCreator] = useState("");
-  const [creatorNotes, setCreatorNotes] = useState("");
-  const [characterVersion, setCharacterVersion] = useState("");
-  const [systemPrompt, setSystemPrompt] = useState("");
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [scenario, setScenario] = useState('');
+  const [personality, setPersonality] = useState('');
+  const [firstMessage, setFirstMessage] = useState('');
+  const [exampleMessages, setExampleMessages] = useState('');
+  const [postHistoryInstructions, setPostHistoryInstructions] = useState('');
+  const [creator, setCreator] = useState('');
+  const [creatorNotes, setCreatorNotes] = useState('');
+  const [characterVersion, setCharacterVersion] = useState('');
+  const [systemPrompt, setSystemPrompt] = useState('');
   const [alternateGreetings, setAlternateGreetings] = useState([]);
   const [tags, setTags] = useState([]);
 
@@ -50,12 +54,12 @@ const AddCharacterForm = ({ onSave, onCancel }: {
         characterVersion || null,
         systemPrompt || null,
         alternateGreetings,
-        tags,
+        tags
       );
     } else {
       toast.error('Please fill in all required fields.');
     }
-  }
+  };
 
   return (
     <form className="mt-4 space-y-4 mb-4">
@@ -100,15 +104,31 @@ const AddCharacterForm = ({ onSave, onCancel }: {
         />
       </div>
 
-      <ExpandableTextarea value={description} onChange={setDescription} label='Description' />
-      <ExpandableTextarea value={scenario} onChange={setScenario} label='Scenario (optional)' />
-      <ExpandableTextarea value={personality} onChange={setPersonality} label='Personality (optional)' />
-      <ExpandableTextarea value={firstMessage} onChange={setFirstMessage} label='First Message' />
-      <ExpandableTextarea value={exampleMessages} onChange={setExampleMessages} label='Example Messages (optional)' />
-      <ExpandableTextarea value={systemPrompt} onChange={setSystemPrompt} label='System Prompt (optional)' />
-      <ExpandableTextarea value={postHistoryInstructions} onChange={setPostHistoryInstructions} label='Post History Instructions (optional)' />
+      <ExpandableTextarea value={description} onChange={setDescription} label="Description" />
+      <ExpandableTextarea value={scenario} onChange={setScenario} label="Scenario (optional)" />
+      <ExpandableTextarea
+        value={personality}
+        onChange={setPersonality}
+        label="Personality (optional)"
+      />
+      <ExpandableTextarea value={firstMessage} onChange={setFirstMessage} label="First Message" />
+      <ExpandableTextarea
+        value={exampleMessages}
+        onChange={setExampleMessages}
+        label="Example Messages (optional)"
+      />
+      <ExpandableTextarea
+        value={systemPrompt}
+        onChange={setSystemPrompt}
+        label="System Prompt (optional)"
+      />
+      <ExpandableTextarea
+        value={postHistoryInstructions}
+        onChange={setPostHistoryInstructions}
+        label="Post History Instructions (optional)"
+      />
       <ExpandableTextareaArray
-        label='Alternate Greetings (optional)'
+        label="Alternate Greetings (optional)"
         itemLabel="Greeting"
         onArrayChange={setAlternateGreetings}
         initialArray={alternateGreetings}
@@ -133,6 +153,6 @@ const AddCharacterForm = ({ onSave, onCancel }: {
       </div>
     </form>
   );
-}
+};
 
 export default AddCharacterForm;

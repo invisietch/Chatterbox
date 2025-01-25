@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../lib/api';
 import { toast } from 'react-toastify';
-import { extractAndHighlightCodeBlocks, highlightPlaceholders, highlightText } from '../lib/textUtils';
+import {
+  extractAndHighlightCodeBlocks,
+  highlightPlaceholders,
+  highlightText,
+} from '../lib/textUtils';
 import Avatar from './Avatar';
 import { highlightSlop } from '../lib/slop';
 import { CheckIcon, RefreshIcon, StopIcon, TrashIcon } from '@heroicons/react/outline';
@@ -66,8 +70,8 @@ const ProposedAiMessage = ({
           const { token_count } = response.data;
           setTokenCount(token_count);
         }
-      } catch (error) {
-        console.error("Error fetching token count:", error);
+      } catch (_error) {
+        toast.error('Error fetching token count.');
       }
     };
 
@@ -77,7 +81,7 @@ const ProposedAiMessage = ({
   }, [aiInferencing, message]);
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSave();
     }
@@ -85,12 +89,12 @@ const ProposedAiMessage = ({
 
   useEffect(() => {
     if (!aiInferencing) {
-      window.addEventListener("keydown", handleKeyDown);
+      window.addEventListener('keydown', handleKeyDown);
     } else {
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
     }
 
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [aiInferencing]);
 
   useEffect(() => {
@@ -127,14 +131,17 @@ const ProposedAiMessage = ({
   const handleAbort = async () => {
     await cancelGeneration(llmUrl);
     await cancelAuto();
-  }
+  };
 
   useEffect(() => {
     if (content) {
       setMessage({
-        author: mostRecentMessage.author == 'user' ? 'assistant' :
-          mostRecentMessage.author == 'assistant' ? 'user' :
-            'system',
+        author:
+          mostRecentMessage.author == 'user'
+            ? 'assistant'
+            : mostRecentMessage.author == 'assistant'
+              ? 'user'
+              : 'system',
         content: replaceCharAndUser(content),
         conversation_id: conversationId,
       });
@@ -163,7 +170,7 @@ const ProposedAiMessage = ({
 
   const handleTrash = async () => {
     await onCancel();
-  }
+  };
 
   const replaceCharAndUser = (c: string): string => {
     let newC = c;
@@ -177,11 +184,11 @@ const ProposedAiMessage = ({
     }
 
     return newC;
-  }
+  };
 
-  const avatarData = message.author === 'user' ? persona : message.author === 'assistant' ? character : null;
-  const wrapperClass =
-    `${errors ? "bg-warningHighlight" : ""} border-fadedYellow border-2 border-dotted bg-dark1 pb-4 mb-4 relative flex rounded-lg`;
+  const avatarData =
+    message.author === 'user' ? persona : message.author === 'assistant' ? character : null;
+  const wrapperClass = `${errors ? 'bg-warningHighlight' : ''} border-fadedYellow border-2 border-dotted bg-dark1 pb-4 mb-4 relative flex rounded-lg`;
 
   return (
     <div className={wrapperClass}>
@@ -215,7 +222,6 @@ const ProposedAiMessage = ({
       <div className="flex-grow">
         <div className="flex justify-between items-center">
           <div className="flex space-x-2 absolute top-2 right-2">
-
             {!aiInferencing && message && (
               <>
                 <button
@@ -223,7 +229,7 @@ const ProposedAiMessage = ({
                   className="text-fadedGreen hover:text-brightGreen"
                   aria-label="Save Message"
                 >
-                  <CheckIcon className='h-5 w-5' />
+                  <CheckIcon className="h-5 w-5" />
                 </button>
                 {message.author === 'assistant' && (
                   <button
@@ -231,7 +237,7 @@ const ProposedAiMessage = ({
                     className="text-fadedRed hover:text-brightRed"
                     aria-label="Reject Message"
                   >
-                    <CheckIcon className='h-5 w-5' />
+                    <CheckIcon className="h-5 w-5" />
                   </button>
                 )}
                 <button
@@ -239,14 +245,14 @@ const ProposedAiMessage = ({
                   className="text-fadedYellow hover:text-brightYellow"
                   aria-label="Regenerate message"
                 >
-                  <RefreshIcon className='h-5 w-5' />
+                  <RefreshIcon className="h-5 w-5" />
                 </button>
                 <button
                   onClick={handleTrash}
                   className="text-fadedRed hover:text-brightRed"
                   aria-label="Trash message"
                 >
-                  <TrashIcon className='h-5 w-5' />
+                  <TrashIcon className="h-5 w-5" />
                 </button>
               </>
             )}
@@ -256,7 +262,7 @@ const ProposedAiMessage = ({
                 className="text-fadedRed hover:text-brightRed"
                 aria-label="Stop Generating"
               >
-                <StopIcon className='h-5 w-5' />
+                <StopIcon className="h-5 w-5" />
               </button>
             )}
           </div>
@@ -268,12 +274,9 @@ const ProposedAiMessage = ({
             dangerouslySetInnerHTML={{ __html: messageText.trim() }}
           />
         ) : (
-          <div className="text-gray-300 w-10/12 mt-2">
-            Generating content...
-          </div>
+          <div className="text-gray-300 w-10/12 mt-2">Generating content...</div>
         )}
       </div>
-
     </div>
   );
 };

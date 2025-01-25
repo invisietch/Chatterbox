@@ -1,14 +1,14 @@
-import React from "react";
-import PresetItem from "./PresetItem";
+import React from 'react';
+import PresetItem from './PresetItem';
 
 const PresetList = ({
   presets,
   error,
   fetchPresets,
 }: {
-  presets: any[],
-  error: string,
-  fetchPresets: () => void,
+  presets: any[];
+  error: string;
+  fetchPresets: () => void;
 }) => {
   return (
     <>

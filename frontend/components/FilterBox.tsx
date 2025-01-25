@@ -4,6 +4,7 @@ import { FilterIcon } from '@heroicons/react/outline'; // Import the filter icon
 import apiClient from '../lib/api';
 import TagSelector from './TagSelector';
 import Avatar from './Avatar';
+import { toast } from 'react-toastify';
 
 const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void }) => {
   const [filters, setFilters] = useState({
@@ -49,8 +50,8 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
         setCharacters(charactersRes.data);
         setPersonas(personasRes.data);
         setPrompts(promptsRes.data);
-      } catch (error) {
-        console.error('Error fetching dropdown data:', error);
+      } catch (_error) {
+        toast.error('Error fetching dropdown data.');
       }
     };
 
@@ -109,7 +110,12 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
                 value: id,
                 label: (
                   <div className="flex items-center gap-2">
-                    <Avatar id={id} name={characters.find((char) => char.id === id)?.name} type="character" size={24} />
+                    <Avatar
+                      id={id}
+                      name={characters.find((char) => char.id === id)?.name}
+                      type="character"
+                      size={24}
+                    />
                     {characters.find((char) => char.id === id)?.name || id}
                   </div>
                 ),
@@ -157,7 +163,12 @@ const FilterBox = ({ onFilterChange }: { onFilterChange: (filters: any) => void 
                 value: id,
                 label: (
                   <div className="flex items-center gap-2">
-                    <Avatar id={id} name={personas.find((persona) => persona.id === id)?.name} type="persona" size={24} />
+                    <Avatar
+                      id={id}
+                      name={personas.find((persona) => persona.id === id)?.name}
+                      type="persona"
+                      size={24}
+                    />
                     {personas.find((persona) => persona.id === id)?.name || id}
                   </div>
                 ),

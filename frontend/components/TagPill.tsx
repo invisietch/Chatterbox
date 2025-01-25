@@ -13,13 +13,7 @@ const TagPill: React.FC<TagPillProps> = ({ tag, defaultColor, onRemove, isLink =
       className="inline-flex items-center bg-dark1 text-gray-200 text-sm px-2 py-1 rounded mr-2"
       style={{ backgroundColor: tag.category?.color || defaultColor }}
     >
-      {isLink ? (
-        <a href={`/tags/${tag.name}`} >
-          {tag.name}
-        </a>
-      ) : (
-        <span>{tag.name}</span>
-      )}
+      {isLink ? <a href={`/tags/${tag.name}`}>{tag.name}</a> : <span>{tag.name}</span>}
       {onRemove && (
         <button
           className="ml-2 text-fadedRed hover:text-brightRed  "

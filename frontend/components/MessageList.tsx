@@ -22,13 +22,13 @@ const MessageList = ({
   setExpanded,
 }: {
   conversationId: number;
-  modelIdentifier: string,
-  onMessagesChange: (t: boolean) => void,
-  character: any,
-  persona: any,
-  prompt: any,
-  expanded: boolean,
-  setExpanded: (t: boolean) => void,
+  modelIdentifier: string;
+  onMessagesChange: (t: boolean) => void;
+  character: any;
+  persona: any;
+  prompt: any;
+  expanded: boolean;
+  setExpanded: (t: boolean) => void;
 }) => {
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,8 +97,7 @@ const MessageList = ({
 
         if (newText) {
           const newMessage = {
-            author:
-              localMostRecent?.author === 'assistant' ? 'user' : 'assistant',
+            author: localMostRecent?.author === 'assistant' ? 'user' : 'assistant',
             content: newText,
             conversation_id: conversationId,
           };
@@ -114,7 +113,7 @@ const MessageList = ({
         } else {
           break;
         }
-      } catch (error) {
+      } catch (_error) {
         toast.error('Error during auto-generation.');
       } finally {
         setGenerationLock(false);
@@ -129,16 +128,12 @@ const MessageList = ({
   };
 
   const handleKeyPress = (e: KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       e.preventDefault();
 
       if (messages.length === 0 && (character || prompt)) {
         createSystemMessage();
-      } else if (
-        messages.length === 1 &&
-        messages[0].author === "system" &&
-        character
-      ) {
+      } else if (messages.length === 1 && messages[0].author === 'system' && character) {
         createFirstMessage();
       } else if (mostRecentMessage.author === 'assistant') {
         setIsAddingMessage(true);
@@ -150,12 +145,12 @@ const MessageList = ({
 
   useEffect(() => {
     if (!isAddingMessage && !editingId && !isGeneratingMessage && expanded) {
-      window.addEventListener("keydown", handleKeyPress);
+      window.addEventListener('keydown', handleKeyPress);
     } else {
-      window.removeEventListener("keydown", handleKeyPress);
+      window.removeEventListener('keydown', handleKeyPress);
     }
 
-    return () => window.removeEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
   }, [isAddingMessage, editingId, messages, isGeneratingMessage, expanded, rpMode]);
 
   // Fetch messages for the conversation
@@ -164,13 +159,13 @@ const MessageList = ({
     try {
       const response = await apiClient.get(`/conversations/${conversationId}/messages`);
       const sortedMessages = response.data.sort((a: any, b: any) => a.order - b.order);
-      const messagesWithSlopEnhancement = sortedMessages.map(message => {
+      const messagesWithSlopEnhancement = sortedMessages.map((message) => {
         const { highlightedText, count } = highlightSlop(message.content || '');
 
         return {
           ...message,
           highlightedText: highlightedText,
-          slopCount: count
+          slopCount: count,
         };
       });
 
@@ -184,7 +179,7 @@ const MessageList = ({
       // Check for warnings
       const newWarnings = checkForWarnings(sortedMessages);
       setWarnings(newWarnings);
-    } catch (error) {
+    } catch (_error) {
       toast.error('Error fetching messages.');
     } finally {
       setIsLoading(false);
@@ -200,7 +195,7 @@ const MessageList = ({
     for (let i = 0; i < messages.length; i++) {
       if (i !== 0 && messages[i].author === 'system') {
         warnings.push('There is a system message which is not the first message.');
-        warningIds.push(messages[i].id)
+        warningIds.push(messages[i].id);
       }
     }
 
@@ -208,7 +203,7 @@ const MessageList = ({
     for (let i = 0; i < messages.length; i++) {
       if (messages[i].author === 'user' && messages[i - 1]?.author === 'user') {
         warnings.push('There are two consecutive user messages.');
-        warningIds.push(messages[i].id)
+        warningIds.push(messages[i].id);
       }
     }
 
@@ -233,11 +228,11 @@ const MessageList = ({
     let newC = c;
 
     if (newC && character && character.name) {
-      newC = newC.replaceAll(character.name, "{{char}}");
+      newC = newC.replaceAll(character.name, '{{char}}');
     }
 
     if (newC && persona && persona.name) {
-      newC = newC.replaceAll(persona.name, "{{user}}");
+      newC = newC.replaceAll(persona.name, '{{user}}');
     }
 
     return newC;
@@ -247,10 +242,13 @@ const MessageList = ({
     try {
       const localMessage = {
         ...newMessage,
-        content: await replaceCharAndUser(newMessage.content.trim()) || '',
+        content: (await replaceCharAndUser(newMessage.content.trim())) || '',
         rejected: await replaceCharAndUser(newMessage.rejected?.trim()),
       };
-      const response = await apiClient.post(`/conversations/${conversationId}/messages`, localMessage);
+      const response = await apiClient.post(
+        `/conversations/${conversationId}/messages`,
+        localMessage
+      );
       if (response.status === 200) {
         const savedMessage = response.data; // Assuming the API returns the saved message with its ID and other properties
 
@@ -272,7 +270,7 @@ const MessageList = ({
       } else {
         toast.error('Failed to save message.');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to save message.');
     }
   };
@@ -293,9 +291,10 @@ const MessageList = ({
     if (selectedModel && samplers && samplerOrder && llmUrl && maxContext) {
       const invert = localMostRecent?.author === 'assistant' ? 'invert' : 'no';
       const authorsNoteQs = authorsNote ? `&authors_note=${encodeURIComponent(authorsNote)}` : '';
-      const authorsNoteLocQs = authorsNote && authorsNoteLoc ? `&authors_note_loc=${authorsNoteLoc}` : '';
+      const authorsNoteLocQs =
+        authorsNote && authorsNoteLoc ? `&authors_note_loc=${authorsNoteLoc}` : '';
       const response = await apiClient.get(
-        `/conversations/${conversationId}/with_chat_template?model_identifier=${selectedModel}&invert=${invert}&max_length=${samplers["max_tokens"]}&max_context=${maxContext}${authorsNoteQs}${authorsNoteLocQs}`
+        `/conversations/${conversationId}/with_chat_template?model_identifier=${selectedModel}&invert=${invert}&max_length=${samplers['max_tokens']}&max_context=${maxContext}${authorsNoteQs}${authorsNoteLocQs}`
       );
       const { history, eos_token } = response.data;
       const eosTokens = [eos_token];
@@ -322,7 +321,13 @@ const MessageList = ({
           onComplete: async ({ text, finishReason }) => {
             setAiInferencing(false);
 
-            if (rpMode && localMostRecent && !isAutoGenerating && autoSave && finishReason === 'stop') {
+            if (
+              rpMode &&
+              localMostRecent &&
+              !isAutoGenerating &&
+              autoSave &&
+              finishReason === 'stop'
+            ) {
               const newMessage = {
                 author: localMostRecent?.author === 'assistant' ? 'user' : 'assistant',
                 content: text,
@@ -397,9 +402,9 @@ const MessageList = ({
     if (savedMessage && rpMode) {
       createFirstMessage();
     }
-  }
+  };
 
-  const accordionTitle = `${warnings.length > 0 ? "⚠️ " : ""} Messages (${messages.length})`;
+  const accordionTitle = `${warnings.length > 0 ? '⚠️ ' : ''} Messages (${messages.length})`;
 
   return (
     <Accordion title={accordionTitle} isOpen={expanded} onToggle={setExpanded}>
@@ -420,19 +425,26 @@ const MessageList = ({
       ) : messages.length > 0 ? (
         messages.map((message, i, arr) => (
           <>
-            {(arr.length - 1 === i) && (<div ref={messagesEndRef} />)}
+            {arr.length - 1 === i && <div ref={messagesEndRef} />}
             <MessageItem
               conversationId={conversationId}
               key={message.id}
               isEditing={message.id === editingId}
-              setIsEditing={(t: boolean) => t ? setEditingId(message.id) : setEditingId(null)}
+              setIsEditing={(t: boolean) => (t ? setEditingId(message.id) : setEditingId(null))}
               message={message}
               modelIdentifier={modelIdentifier}
               fetchMessages={fetchMessages}
               warning={warningIds.includes(message.id)}
               character={character || null}
               persona={persona || null}
-              alternateGreetings={character && i === 1 && message.author === "assistant" && character.alternate_greetings ? character.alternate_greetings : null}
+              alternateGreetings={
+                character &&
+                i === 1 &&
+                message.author === 'assistant' &&
+                character.alternate_greetings
+                  ? character.alternate_greetings
+                  : null
+              }
             />
           </>
         ))

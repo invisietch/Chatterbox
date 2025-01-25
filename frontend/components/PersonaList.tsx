@@ -1,5 +1,5 @@
-import React from "react";
-import PersonaItem from "./PersonaItem";
+import React from 'react';
+import PersonaItem from './PersonaItem';
 
 interface Persona {
   id: number;
@@ -12,9 +12,9 @@ const PersonaList = ({
   error,
   fetchPersonas,
 }: {
-  personas: Persona[],
-  error: string,
-  fetchPersonas: () => void,
+  personas: Persona[];
+  error: string;
+  fetchPersonas: () => void;
 }) => {
   return (
     <>
