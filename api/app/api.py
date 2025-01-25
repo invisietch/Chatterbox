@@ -1,6 +1,6 @@
 import os
 from app.image_utils import get_image_path, save_image, validate_image
-from app.tokens import apply_template, apply_template_with_context_limit, count_tokens
+from app.tokens import apply_template_with_context_limit, count_tokens
 from fastapi import Body, APIRouter, HTTPException, Depends, UploadFile, File, Query
 from typing import Annotated, Optional, List
 from sqlalchemy.orm import Session

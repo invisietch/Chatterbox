@@ -3,6 +3,16 @@ from transformers import AutoTokenizer
 from fastapi import HTTPException
 from redis import asyncio as aioredis
 
+CHATML_TEMPLATE= """{% for message in messages %}
+        {{'<|im_start|>' + message['role'] + '\n' + message['content']}}
+        {% if (loop.last and add_generation_prompt) or not loop.last %}
+            {{ '<|im_end|>' + '\n'}}
+        {% endif %}
+    {% endfor %}
+    {% if add_generation_prompt and messages[-1]['role'] != 'assistant' %}
+        {{ '<|im_start|>assistant\n' }}
+    {% endif %}"""
+
 def count_tokens(messages: list, model_identifier: str, with_chat_template: bool = True) -> int:
     """
     Counts tokens for a list of messages using the model's tokenizer.
@@ -21,49 +31,32 @@ def count_tokens(messages: list, model_identifier: str, with_chat_template: bool
         raise HTTPException(status_code=400, detail=f"Error loading tokenizer: {str(e)}")
 
     try:
-        if (with_chat_template):
-            # Check if the tokenizer has an `apply_chat_template` method
-            if hasattr(tokenizer, "apply_chat_template"):
-                tokens = tokenizer.apply_chat_template(messages, tokenize=True)
-            else:
-                # Fallback: Manually concatenate messages into a single string
-                chat_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in messages])
-                tokens = tokenizer.encode(chat_history, truncation=False, add_special_tokens=False)
-        else:
-            tokens = tokenizer.encode("\n".join([f"{msg['content']}" for msg in messages]), truncation=False, add_special_tokens=False)
+        tokens = attempt_difficult_chat_template(tokenizer, messages)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
     return len(tokens)
-
-def apply_template(messages: list, model_identifier: str):
-    try:
-        tokenizer = AutoTokenizer.from_pretrained(model_identifier)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error loading tokenizer: {str(e)}")
-    
-    if hasattr(tokenizer, "apply_chat_template"):
-        chat_history = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    else:
-        # Fallback: Manually concatenate messages into a single string
-        chat_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in messages])
-    
-    return {
-        "history": chat_history,
-        "eos_token": tokenizer.eos_token
-    }
 
 async def cache_message(redis, message, result, model_identifier):
     message_cache_key = f"prompt:message:{message['id']}:{model_identifier}"
     await redis.set(message_cache_key, result)
 
 def attempt_difficult_chat_template(tokenizer: AutoTokenizer, messages, tokenize=True, add_generation_prompt=False):
+    # Fallback to chatml if no template found.
     try:
-        return_toks = tokenizer.apply_chat_template(
-            messages, 
-            tokenize=tokenize,
-            add_generation_prompt=add_generation_prompt
-        )
+        if tokenizer.chat_template: 
+            return_toks = tokenizer.apply_chat_template(
+                messages, 
+                tokenize=tokenize,
+                add_generation_prompt=add_generation_prompt
+            )
+        else:
+            return_toks = tokenizer.apply_chat_template(
+                messages, 
+                tokenize=tokenize,
+                add_generation_prompt=add_generation_prompt,
+                chat_template=CHATML_TEMPLATE
+            )
     except Exception as e:
         new_messages = []
         for msg in messages:
@@ -79,13 +72,21 @@ def attempt_difficult_chat_template(tokenizer: AutoTokenizer, messages, tokenize
             new_messages[0]["role"] = "user"
         
         try:
-            return_toks = tokenizer.apply_chat_template(
-                new_messages, 
-                tokenize=tokenize,
-                add_generation_prompt=add_generation_prompt
-            )
+            if tokenizer.chat_template:
+                return_toks = tokenizer.apply_chat_template(
+                    new_messages, 
+                    tokenize=tokenize,
+                    add_generation_prompt=add_generation_prompt
+                )
+            else:
+                return_toks = tokenizer.apply_chat_template(
+                    new_messages, 
+                    tokenize=tokenize,
+                    add_generation_prompt=add_generation_prompt,
+                    chat_template=CHATML_TEMPLATE
+                )
         except Exception as ei:
-            raise HTTPException(status_code=400, detail=f"Error tokenizing messages: {str(new_messages)}")
+            raise HTTPException(status_code=400, detail=f"Error tokenizing messages: {str(ei)} {tokenizer.chat_template}")
     
     return return_toks
 
@@ -174,8 +175,12 @@ async def apply_template_with_context_limit(
     chat_history = attempt_difficult_chat_template(tokenizer, included_messages, tokenize=False, add_generation_prompt=True)
     chat_history_with_postfix = f"{chat_history}{postfix}"
 
+    eos_token = '<|im_end|>'
+    if tokenizer.chat_template:
+        eos_token = tokenizer.eos_token
+
     return {
         "history": chat_history_with_postfix,
-        "eos_token": tokenizer.eos_token,
+        "eos_token": eos_token,
         "shifted_messages": shifted_messages
     }
