@@ -19,7 +19,12 @@ export default [
       tailwindcss: eslintPluginTailwindcss,
     },
     rules: {
-      'prettier/prettier': 'error',
+      'prettier/prettier': [
+        'error',
+        {
+          endOfLine: "auto"
+        },
+      ],
 
       'tailwindcss/no-custom-classname': 'off',
 
