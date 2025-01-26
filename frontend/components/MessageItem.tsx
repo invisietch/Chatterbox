@@ -408,11 +408,10 @@ const MessageItem = ({
 
   const avatarData =
     message.author === 'user' ? persona : message.author === 'assistant' ? character : null;
-  const wrapperClass = `${warning ? 'bg-warningHighlight' : ''} ${
-    (!isEditing && showRejected) || (isEditing && editRejected)
+  const wrapperClass = `${warning ? 'bg-warningHighlight' : ''} ${(!isEditing && showRejected) || (isEditing && editRejected)
       ? 'border-fadedRed'
       : 'border-fadedGreen'
-  } border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg ${isEditing && 'border-dashed'}`;
+    } border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg ${isEditing && 'border-dashed'}`;
   const typeLabelClass = showRejected ? 'text-brightRed' : 'text-brightGreen';
 
   return (
@@ -462,16 +461,16 @@ const MessageItem = ({
                         onChange={
                           isEditing
                             ? () => {
-                                if (editRejected) {
-                                  setRejected(newRejected);
-                                } else {
-                                  setContent(newContent);
-                                }
-                                setEditRejected(!editRejected);
+                              if (editRejected) {
+                                setRejected(newRejected);
+                              } else {
+                                setContent(newContent);
                               }
+                              setEditRejected(!editRejected);
+                            }
                             : () => {
-                                setShowRejected(!showRejected);
-                              }
+                              setShowRejected(!showRejected);
+                            }
                         }
                         className="toggle-checkbox absolute opacity-0 w-0 h-0"
                       />

@@ -39,6 +39,14 @@
 - [x] Support alternative greetings
 - [ ] Import lorebooks from character
 
+## Stats
+
+- [ ] Character/Persona/Prompt usage (messages &amp; conversations)
+- [ ] Conversation lengths (messages &amp; tokens)
+- [ ] Number of rejected messages per chosen message
+- [ ] Total number conversations/messages/tokens
+- [ ] Breakdowns by tags/tag categories
+
 ## Import/Export
 
 - [ ] Tag-sort for import/export
