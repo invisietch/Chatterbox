@@ -53,3 +53,9 @@
 - [ ] DPO Format
 - [ ] ORPO Format
 - [ ] Generate Axolotl Config
+
+## Performance
+
+- [ ] Batch get tokens
+- [ ] Batch get avatars
+- [ ] Move highlighting to webworker for generated responses

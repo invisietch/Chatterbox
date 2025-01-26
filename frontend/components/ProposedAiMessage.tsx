@@ -75,7 +75,7 @@ const ProposedAiMessage = ({
       }
     };
 
-    if (message?.author && message?.content && conversationId && !aiInferencing) {
+    if (message && !!message.author && !!conversationId && !aiInferencing && !!message.content) {
       fetchTokenCount();
     }
   }, [aiInferencing, message]);

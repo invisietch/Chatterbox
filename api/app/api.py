@@ -582,6 +582,11 @@ async def count_proposed_message_tokens(
     db: Session = Depends(get_db)
 ):
     conversation = db.query(Conversation).filter_by(id=proposed_message.conversation_id).first()
+
+    # Handle a weird case when it sends empty content.
+    # @TODO: Find out why.
+    if not proposed_message.content:
+        return {"token_count": 0, "rejected_token_count": 0}
         
     content = replace_placeholders(proposed_message.content, conversation)
 
