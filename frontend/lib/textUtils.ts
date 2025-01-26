@@ -18,14 +18,14 @@ export const extractAndHighlightCodeBlocks = (
       if (lang && hljs.getLanguage(lang)) {
         const highlighted = hljs.highlight(code, { language: lang }).value;
         codeBlocks[placeholder] =
-          `<pre><code class="hljs ${lang}">\`\`\`{lang}\n${highlighted}\n\`\`\`</code></pre>`;
+          `<pre><code class="hljs ${lang}">\`\`\`{lang}\n${highlighted.trim()}\n\`\`\`</code></pre>`;
       } else {
         const highlighted = hljs.highlightAuto(code).value;
         codeBlocks[placeholder] =
-          `<pre><code class="hljs">\`\`\`\n${highlighted}\n\`\`\`</code></pre>`;
+          `<pre><code class="hljs">\`\`\`\n${highlighted.trim()}\n\`\`\`</code></pre>`;
       }
     } catch (_error) {
-      codeBlocks[placeholder] = `<pre><code>\`\`\`\n${code}\n\`\`\`</code></pre>`;
+      codeBlocks[placeholder] = `<pre><code>\`\`\`\n${code.trim()}\n\`\`\`</code></pre>`;
     }
 
     return placeholder;
@@ -77,7 +77,7 @@ export const highlightPlaceholders = (
 };
 
 export const highlightText = (text: string): string => {
-  const quoteRegex = /(?:^|[\s.,!?])(["“”])((?:[^\n"“”]+|'[^\s']+)+?)\1(?=[\s.,!?]|$)/g;
+  const quoteRegex = /(?:^|[\s.,!?])(["“”])((?:[^\n"“”]+|'[^\s']+)+?)(["“”])(?=[\s.,!?]|$)/g;
   const apostropheRegex =
     /(?:^|[\s.,!?])['‘]((?:[^\n'‘’]*?(?:\b['‘’]\b|[^\n'‘’])+?))['’](?=[\s.,!?]|$)/g;
   const doubleAsteriskRegex = /\*\*([^\n]+?)\*\*/g;

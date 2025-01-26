@@ -102,6 +102,9 @@ def replace_placeholders(content: str, conversation: Conversation):
     # TODO: Replace original in post history instructions properly.
     content = content.replace("{{original}}", "")
 
+    # Fuck Windows.
+    content = content.replace('\r\n', '\n')
+
     return content
 
 def parse_example_messages(example_messages_raw: str, conversation) -> list:

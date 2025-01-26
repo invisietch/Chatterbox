@@ -145,7 +145,7 @@ const MessageItem = ({
 
   useEffect(() => {
     const { processedText, codeBlocks } = extractAndHighlightCodeBlocks(
-      message.full_content.replaceAll('\r', '')
+      (message.full_content || '').replaceAll('\r', '')
     );
 
     const { highlightedText, count } = highlightSlop(
