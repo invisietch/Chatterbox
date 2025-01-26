@@ -77,9 +77,10 @@ export const highlightPlaceholders = (
 };
 
 export const highlightText = (text: string): string => {
-  const quoteRegex = /(?:^|[\s.,!?])(["“”])((?:[^\n"“”]+|'[^\s']+)+?)(["“”])(?=[\s.,!?]|$)/g;
+  const quoteRegex =
+    /(?:^|[\s.,!?])(["“”«»「」『』＂＂])((?:'[^\s']+'|[^\n"“”«»「」『』＂＂]|\n(?!\n))+?)(["“”«»「」『』＂＂])(?=[\s.,!?]|$)/g;
   const apostropheRegex =
-    /(?:^|[\s.,!?])['‘]((?:[^\n'‘’]*?(?:\b['‘’]\b|[^\n'‘’])+?))['’](?=[\s.,!?]|$)/g;
+    /(?:^|[\s.,!?])['‘’]((?:[^\n'‘’]*?(?:\b['‘’]\b|[^\n'‘’])+?))['‘’](?=[\s.,!?]|$)/g;
   const doubleAsteriskRegex = /\*\*([^\n]+?)\*\*/g;
   const doubleUnderscoreRegex = /\_\_([^\n]+?)\_\_/g;
   const doubleTildeRegex = /\~\~([^\n]+?)\~\~/g;
