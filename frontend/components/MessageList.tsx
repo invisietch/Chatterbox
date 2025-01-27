@@ -261,7 +261,7 @@ const MessageList = ({
       const localMessage = {
         ...newMessage,
         content: newContent,
-        rejected: newMessage.author ? newRejected : null,
+        rejected: newMessage.author === 'assistant' ? newRejected : null,
         content_variant_index: newContent ? 0 : null,
         rejected_variant_index: !newMessage.author || !newRejected ? null : newContent ? 1 : 0,
         variants,
