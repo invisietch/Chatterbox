@@ -10,6 +10,7 @@ from app.models import Character, CharacterTag, Conversation, Message, Persona, 
 from fastapi.responses import StreamingResponse, FileResponse
 from io import StringIO
 import json
+import logging
 from redis import asyncio as aioredis
 
 REDIS_HOST = os.getenv("REDIS_HOSTNAME", "chatterboxredis")
@@ -173,8 +174,11 @@ def add_conversation(
 async def add_message(
     conversation_id: int, 
     author: Annotated[str, Body()], 
-    content: Annotated[str, Body()], 
-    rejected: Annotated[str, Body()] = None, 
+    content: Annotated[str, Body()] = None, 
+    rejected: Annotated[str, Body()] = None,
+    content_variant_index: Annotated[int, Body()] = None,
+    rejected_variant_index: Annotated[int, Body()] = None,
+    variants: Annotated[List[str], Body()] = None,
     db: Session = Depends(get_db)
 ):
     conversation = db.query(Conversation).filter_by(id=conversation_id).first()
@@ -185,13 +189,45 @@ async def add_message(
     order = (highest_order[0] + 1) if highest_order else 1
 
     if author == 'assistant':
-        message = Message(conversation_id=conversation_id, author=author, content=content, order=order, rejected=rejected)
+        message = Message(
+            conversation_id=conversation_id, 
+            author=author, 
+            content=content, 
+            order=order, 
+            rejected=rejected, 
+            variants=variants,
+            content_variant_index=content_variant_index,
+            rejected_variant_index=rejected_variant_index
+        )
+    elif not content:
+        message = Message(
+            conversation_id=conversation_id, 
+            author=author, 
+            content='', 
+            order=order,
+            variants=variants,
+            content_variant_index=content_variant_index
+        )
     else:
-        message = Message(conversation_id=conversation_id, author=author, content=content, order=order)
+        message = Message(
+            conversation_id=conversation_id, 
+            author=author, 
+            content=content, 
+            order=order,
+            variants=variants,
+            content_variant_index=content_variant_index
+        )
 
     db.add(message)
     db.commit()
     db.refresh(message)
+
+    content = message.content
+    rejected = message.rejected
+    if message.content_variant_index:
+        content = message.variants[message.content_variant_index]
+    if message.rejected_variant_index:
+        rejected = message.variants[message.rejected_variant_index]
 
     full_message = {
           "id": message.id,
@@ -199,8 +235,11 @@ async def add_message(
           "order": message.order,
           "content": message.content,
           "rejected": message.rejected,
-          "full_content": replace_placeholders(message.content, conversation),
-          "full_rejected": replace_placeholders(message.rejected, conversation)
+          "content_variant_index": message.content_variant_index,
+          "rejected_variant_index": message.rejected_variant_index,
+          "full_content": replace_placeholders(content, conversation),
+          "full_rejected": replace_placeholders(rejected, conversation),
+          "variants": message.variants
       }
 
     await invalidate_caches(conversation_id=conversation_id)
@@ -280,16 +319,22 @@ async def edit_message(
     message_id: int,
     content: Annotated[str, Body(embed=True)] = None,
     rejected: Annotated[str, Body(embed=True)] = None,
+    content_variant_index: Annotated[int, Body(embed=True)] = None,
+    rejected_variant_index: Annotated[int, Body(embed=True)] = None,
+    variants: Annotated[List[str], Body(embed=True)] = None,
     db: Session = Depends(get_db),
 ):
     message = db.query(Message).filter_by(id=message_id).first()
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
 
-    if content:
-        message.content = content
-    if rejected and message.author == "assistant":
+    message.content = content
+    message.content_variant_index = content_variant_index
+    message.variants = variants
+
+    if message.author == "assistant":
         message.rejected = rejected
+        message.rejected_variant_index = rejected_variant_index
 
     db.commit()
 
@@ -390,14 +435,27 @@ def get_messages(conversation_id: int, db: Session = Depends(get_db)):
     full_messages = []
 
     for message in messages:
+        if message.content_variant_index and message.variants and 0 <= message.content_variant_index < len(message.variants):
+            content = message.variants[message.content_variant_index]
+        else:
+            content = message.content
+        
+        if message.rejected_variant_index and message.variants and 0 <= message.rejected_variant_index < len(message.variants):
+            rejected = message.variants[message.rejected_variant_index]
+        else:
+            rejected = message.rejected
+
         full_message = {
             "id": message.id,
             "author": message.author,
             "order": message.order,
-            "content": message.content,
-            "rejected": message.rejected,
-            "full_content": replace_placeholders(message.content, conversation),
-            "full_rejected": replace_placeholders(message.rejected, conversation)
+            "content": content,
+            "rejected": rejected,
+            "variants": message.variants,
+            "content_variant_index": message.content_variant_index,
+            "rejected_variant_index": message.rejected_variant_index,
+            "full_content": replace_placeholders(content, conversation),
+            "full_rejected": replace_placeholders(rejected, conversation)
         }
 
         full_messages.append(full_message)
@@ -439,11 +497,16 @@ async def get_conversation_with_chat_template(
             prepend = "{{user}}: "
         if (msg.author.lower()) == 'assistant':
             prepend = "{{char}}: "
+        
+        if msg.variants and 0 <= msg.content_variant_index < len(msg.variants):
+            content = msg.variants[msg.content_variant_index]
+        else:
+            content = msg.content
 
         chat_messages.append({
             "id": msg.id,
             "role": author,
-            "content": replace_placeholders(f"{prepend}{msg.content}", conversation)
+            "content": replace_placeholders(f"{prepend}{content}", conversation)
         })
         last_author = msg.author.lower()
     
@@ -524,7 +587,15 @@ async def get_token_count(conversation_id: int, model_identifier: str, db: Sessi
     formatted_messages = []
 
     for msg in messages:
-        content = replace_placeholders(msg.content, conversation)
+        if msg.variants and msg.content_variant_index and 0 <= msg.content_variant_index < len(msg.variants):
+            content = msg.variants[msg.content_variant_index]
+        else:
+            content = msg.content
+        
+        content = replace_placeholders(content, conversation)
+
+        if not content:
+            continue
         
         formatted_messages.append({
             "role": "user" if msg.author.lower() == "user" else "assistant" if msg.author.lower() == "assistant" else "system",
@@ -548,20 +619,34 @@ async def get_message_token_count(message_id: int, model_identifier: str, db: Se
         raise HTTPException(status_code=404, detail="Message not found")
     
     conversation = db.query(Conversation).filter_by(id=message.conversation_id).first()
-    content = replace_placeholders(message.content, conversation)
 
-    formatted_message = [
-        {
-            "role": "user" if message.author.lower() == "user" else "assistant" if message.author.lower() == "assistant" else "system",
-            "content": content,
-        }
-    ]
+    if message.variants and message.content_variant_index and 0 <= message.content_variant_index < len(message.variants):
+        content = message.variants[message.content_variant_index]
+    else:
+        content = message.content
+    
+    content = replace_placeholders(content, conversation)
 
-    token_count = count_tokens(formatted_message, model_identifier, False)
+    if not content:
+        token_count = 0
+    else:
+        formatted_message = [
+            {
+                "role": "user" if message.author.lower() == "user" else "assistant" if message.author.lower() == "assistant" else "system",
+                "content": content,
+            }
+        ]
+
+        token_count = count_tokens(formatted_message, model_identifier, False)
 
     rejected_count = 0
-    if message.rejected:
-        rejected = replace_placeholders(message.rejected, conversation)
+    if message.rejected or message.rejected_variant_index:
+        if message.variants and message.rejected_variant_index and 0 <= message.rejected_variant_index < len(message.variants):
+            rejected = message.variants[message.rejected_variant_index]
+        else:
+            rejected = message.rejected
+
+        rejected = replace_placeholders(rejected, conversation)
 
         formatted_rejected = [
             {

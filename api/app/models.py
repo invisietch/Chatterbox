@@ -79,8 +79,11 @@ class Message(Base, TimestampMixin):
     conversation_id = Column(Integer, ForeignKey('conversation.id'), nullable=False)
     author = Column(String, nullable=False)
     content = Column(Text, nullable=False)
+    content_variant_index = Column(Integer, nullable=True)
     rejected = Column(Text, nullable=True)
-    order = Column(Integer, nullable=False)
+    rejected_variant_index = Column(Integer, nullable=True)
+    order = Column(Integer, nullable=True)
+    variants = Column(MutableList.as_mutable(ARRAY(Text)), nullable=True)
 
     conversation = relationship("Conversation", back_populates="messages")
 

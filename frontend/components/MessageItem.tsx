@@ -58,10 +58,8 @@ const MessageItem = ({
   const [slopCount, setSlopCount] = useState(0);
   const [rejectedSlopCount, setRejectedSlopCount] = useState(0);
   const [editRejected, setEditRejected] = useState(false);
-  const [newContent, setNewContent] = useState(message.content);
-  const [newRejected, setNewRejected] = useState(message.rejected);
   const [greetings, setGreetings] = useState([]);
-  const [variants, setVariants] = useState<string[]>([]);
+  const [variants, setVariants] = useState<string[]>(['', '']);
   const [currentContentVariantIndex, setCurrentContentVariantIndex] = useState<number>(0);
   const [currentRejectedVariantIndex, setCurrentRejectedVariantIndex] = useState<number>(1);
   const [prevGreeting, setPrevGreeting] = useState({ exists: false, index: 0 });
@@ -72,6 +70,8 @@ const MessageItem = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const { generateWithWorker } = useAiWorker();
+
+  const OUT_OF_BOUNDS = Number.MAX_SAFE_INTEGER;
 
   const { selectedModel, samplers, samplerOrder, llmUrl, maxContext } = useSelector(
     (state: RootState) => state.model
@@ -88,15 +88,41 @@ const MessageItem = ({
   });
 
   useEffect(() => {
-    const localVariants = [];
-    if (message.content) {
-      localVariants.push(message.content);
-    }
-    if (message.rejected) {
-      localVariants.push(message.rejected);
-    }
+    if (message.variants) {
+      let localVariants = message.variants;
 
-    setVariants(localVariants);
+      if (message.content_variant_index !== null && message.content_variant_index !== undefined) {
+        setCurrentContentVariantIndex(message.content_variant_index);
+      } else {
+        setCurrentContentVariantIndex(OUT_OF_BOUNDS);
+      }
+
+      if (message.rejected_variant_index !== null && message.rejected_variant_index !== undefined) {
+        setCurrentRejectedVariantIndex(message.rejected_variant_index);
+      } else {
+        setCurrentRejectedVariantIndex(OUT_OF_BOUNDS);
+      }
+
+      setVariants(localVariants);
+    } else {
+      const localVariants = [];
+
+      if (message.content) {
+        localVariants.push(message.content);
+        setCurrentContentVariantIndex(localVariants.length - 1);
+      } else {
+        setCurrentContentVariantIndex(OUT_OF_BOUNDS);
+      }
+
+      if (message.rejected) {
+        localVariants.push(message.rejected);
+        setCurrentRejectedVariantIndex(localVariants.length - 1);
+      } else {
+        setCurrentRejectedVariantIndex(OUT_OF_BOUNDS);
+      }
+
+      setVariants(localVariants);
+    }
   }, [message]);
 
   useEffect(() => {
@@ -187,15 +213,13 @@ const MessageItem = ({
   }, [character?.name, persona?.name, message.content, message.rejected]);
 
   useEffect(() => {
-    const variant = variants[currentContentVariantIndex];
+    const variant = variants[currentContentVariantIndex] ?? '';
     setGenContent(variant);
-    setNewContent(variant);
   }, [currentContentVariantIndex, variants]);
 
   useEffect(() => {
     const variant = variants[currentRejectedVariantIndex];
     setGenRejected(variant);
-    setNewRejected(variant);
   }, [currentRejectedVariantIndex, variants]);
 
   const handleGenerateVariant = async () => {
@@ -264,18 +288,13 @@ const MessageItem = ({
 
             if (finishReason !== 'stop') {
               toast.error('Generation did not complete successfully.');
-              if (editRejected) {
-                setCurrentRejectedVariantIndex(currentRejectedVariantIndex);
-              } else {
-                setCurrentContentVariantIndex(currentContentVariantIndex);
-              }
               throw new Error('Invalid finish reason');
             }
 
             const localVariants = [...variants, text];
             setVariants(localVariants);
 
-            if (editRejected) {
+            if (isEditing && editRejected) {
               setCurrentRejectedVariantIndex(localVariants.length - 1);
             } else {
               setCurrentContentVariantIndex(localVariants.length - 1);
@@ -294,17 +313,33 @@ const MessageItem = ({
 
   const handleScrollLeft = () => {
     if (editRejected) {
-      setCurrentRejectedVariantIndex((prev) => (prev > -1 ? prev - 1 : prev));
+      if (currentRejectedVariantIndex === OUT_OF_BOUNDS) {
+        setCurrentRejectedVariantIndex(variants.length - 1);
+      } else {
+        setCurrentRejectedVariantIndex((prev) => (prev > 0 ? prev - 1 : prev));
+      }
     } else {
-      setCurrentContentVariantIndex((prev) => (prev > -1 ? prev - 1 : prev));
+      if (currentContentVariantIndex === OUT_OF_BOUNDS) {
+        setCurrentContentVariantIndex(variants.length - 1);
+      } else {
+        setCurrentContentVariantIndex((prev) => (prev > 0 ? prev - 1 : prev));
+      }
     }
   };
 
   const handleScrollRight = () => {
     if (editRejected) {
-      setCurrentRejectedVariantIndex((prev) => (prev < variants.length - 1 ? prev + 1 : prev));
+      if (currentRejectedVariantIndex === OUT_OF_BOUNDS) {
+        setCurrentRejectedVariantIndex(0);
+      } else {
+        setCurrentRejectedVariantIndex((prev) => (prev < variants.length - 1 ? prev + 1 : prev));
+      }
     } else {
-      setCurrentContentVariantIndex((prev) => (prev < variants.length - 1 ? prev + 1 : prev));
+      if (currentContentVariantIndex === OUT_OF_BOUNDS) {
+        setCurrentContentVariantIndex(0);
+      } else {
+        setCurrentContentVariantIndex((prev) => (prev < variants.length - 1 ? prev + 1 : prev));
+      }
     }
   };
 
@@ -318,8 +353,16 @@ const MessageItem = ({
   const handleCancel = () => {
     setIsEditing(false);
     setAiGenerating(false);
-    setCurrentContentVariantIndex(-1);
-    setCurrentRejectedVariantIndex(-1);
+    setCurrentContentVariantIndex(
+      message.content_variant_index
+        ? message.content_variant_index
+        : (variants.findIndex((v) => v === message.content) ?? OUT_OF_BOUNDS)
+    );
+    setCurrentRejectedVariantIndex(
+      message.rejected_variant_index
+        ? message.rejected_variant_index
+        : (variants.findIndex((v) => v === message.rejected) ?? OUT_OF_BOUNDS)
+    );
     setContent(message.content);
     setRejected(message.rejected);
   };
@@ -343,12 +386,19 @@ const MessageItem = ({
 
   const handleSave = async () => {
     try {
-      const contentToSave = await replaceCharAndUser(newContent);
-      const rejectedToSave = await replaceCharAndUser(newRejected);
+      const contentToSave = (await replaceCharAndUser(variants[currentContentVariantIndex])) || '';
+      const rejectedToSave =
+        (await replaceCharAndUser(variants[currentRejectedVariantIndex])) || '';
 
       await apiClient.put(`/messages/${message.id}`, {
         content: contentToSave,
-        rejected: rejectedToSave,
+        rejected: rejectedToSave ?? null,
+        content_variant_index: currentContentVariantIndex,
+        rejected_variant_index: variants[currentRejectedVariantIndex]
+          ? currentRejectedVariantIndex
+          : null,
+        // Filter out empty variants.
+        variants: variants.filter((v) => !!v),
       });
 
       const response = await apiClient.get(`/messages/${message.id}/token_count`, {
@@ -365,9 +415,10 @@ const MessageItem = ({
     }
   };
 
-  const handleSaveNewContent = async (newContent: string) => {
+  // Only used for greetings.
+  const handleSaveGreetingContent = async (greetingText: string) => {
     try {
-      const contentToSave = await replaceCharAndUser(newContent);
+      const contentToSave = await replaceCharAndUser(greetingText);
 
       await apiClient.put(`/messages/${message.id}`, { content: contentToSave });
 
@@ -397,7 +448,7 @@ const MessageItem = ({
 
   const handleSetGreeting = async (idx: number) => {
     if (greetings[idx]) {
-      await handleSaveNewContent(greetings[idx]);
+      await handleSaveGreetingContent(greetings[idx]);
     }
   };
 
@@ -449,6 +500,7 @@ const MessageItem = ({
         <div className="flex justify-between items-center">
           <div className="flex space-x-2 absolute top-2 right-2">
             {message.author === 'assistant' &&
+              !alternateGreetings &&
               !aiGenerating &&
               (isEditing || !!messageRejected) && (
                 <label className="flex items-center space-x-2">
@@ -459,34 +511,30 @@ const MessageItem = ({
                       <input
                         type="checkbox"
                         checked={isEditing ? editRejected : showRejected}
-                        onChange={
-                          isEditing
-                            ? () => {
-                                if (editRejected) {
-                                  setRejected(newRejected);
-                                } else {
-                                  setContent(newContent);
-                                }
-                                setEditRejected(!editRejected);
-                              }
-                            : () => {
-                                setShowRejected(!showRejected);
-                              }
-                        }
+                        onChange={() => {
+                          // Keeping these in sync makes the UI more usable.
+                          if (isEditing) {
+                            setEditRejected(!editRejected);
+                            setShowRejected(!editRejected);
+                          } else {
+                            setEditRejected(!showRejected);
+                            setShowRejected(!showRejected);
+                          }
+                        }}
                         className="toggle-checkbox absolute opacity-0 w-0 h-0"
                       />
                       <span
-                        className={`toggle-label block w-full h-full rounded-full cursor-pointer transition-colors duration-300 ${(isEditing && editRejected) || showRejected ? 'bg-fadedRed' : 'bg-fadedGreen'}`}
+                        className={`toggle-label block w-full h-full rounded-full cursor-pointer transition-colors duration-300 ${(isEditing && editRejected) || (!isEditing && showRejected) ? 'bg-fadedRed' : 'bg-fadedGreen'}`}
                       ></span>
                       <span
-                        className={`toggle-indicator absolute top-0 left-0 w-5 h-5 rounded-full bg-white border-4 transform transition-transform duration-300 ${(isEditing && editRejected) || showRejected ? 'translate-x-8' : 'translate-x-0'}`}
+                        className={`toggle-indicator absolute top-0 left-0 w-5 h-5 rounded-full bg-white border-4 transform transition-transform duration-300 ${(isEditing && editRejected) || (!isEditing && showRejected) ? 'translate-x-8' : 'translate-x-0'}`}
                       ></span>
                     </div>
                   </div>
                 </label>
               )}
 
-            {!aiGenerating && (
+            {!aiGenerating && !alternateGreetings && (
               <button
                 onClick={handleGenerateVariant}
                 className="text-grey-300 hover:text-brightOrange"
@@ -495,7 +543,7 @@ const MessageItem = ({
               </button>
             )}
 
-            {isEditing && aiGenerating && (
+            {isEditing && !alternateGreetings && aiGenerating && (
               <button
                 onClick={handleAbort}
                 className="text-fadedRed hover:text-brightRed"
@@ -507,39 +555,53 @@ const MessageItem = ({
 
             {isEditing && (
               <>
-                <button
-                  disabled={
-                    variants.length <= 1 ||
-                    aiGenerating ||
-                    (editRejected && currentRejectedVariantIndex <= 0) ||
-                    (!editRejected && currentContentVariantIndex <= 0)
-                  }
-                  onClick={handleScrollLeft}
-                  className={`text-grey-300 ${!aiGenerating && variants.length > 1 && !(editRejected && currentRejectedVariantIndex <= 0) && !(!editRejected && currentContentVariantIndex <= 0) && 'hover:text-brightOrange'}`}
-                >
-                  <ArrowLeftIcon className="h-5 w-5" />
-                </button>
+                {!alternateGreetings && !aiGenerating && (
+                  <>
+                    <button
+                      disabled={
+                        variants.length === 0 ||
+                        aiGenerating ||
+                        (editRejected &&
+                          currentRejectedVariantIndex <= 0 &&
+                          currentRejectedVariantIndex !== OUT_OF_BOUNDS) ||
+                        (!editRejected &&
+                          currentContentVariantIndex <= 0 &&
+                          currentContentVariantIndex !== OUT_OF_BOUNDS)
+                      }
+                      onClick={handleScrollLeft}
+                      className={`text-grey-300 ${!aiGenerating && variants.length > 1 && !(editRejected && currentRejectedVariantIndex <= 0) && !(!editRejected && currentContentVariantIndex <= 0) && 'hover:text-brightOrange'}`}
+                    >
+                      <ArrowLeftIcon className="h-5 w-5" />
+                    </button>
 
-                <button
-                  disabled={variants.length <= 1 || aiGenerating}
-                  className={variants.length > 1 && !aiGenerating ? 'hover:text-brightOrange' : ''}
-                  onClick={() => setIsModalOpen(true)}
-                >
-                  <AdjustmentsIcon className="h-5 w-5" />
-                </button>
+                    <button
+                      disabled={variants.length <= 1 || aiGenerating}
+                      className={
+                        variants.length > 1 && !aiGenerating ? 'hover:text-brightOrange' : ''
+                      }
+                      onClick={() => setIsModalOpen(true)}
+                    >
+                      <AdjustmentsIcon className="h-5 w-5" />
+                    </button>
 
-                <button
-                  disabled={
-                    variants.length <= 1 ||
-                    aiGenerating ||
-                    (editRejected && currentRejectedVariantIndex >= variants.length - 1) ||
-                    (!editRejected && currentContentVariantIndex >= variants.length - 1)
-                  }
-                  onClick={handleScrollRight}
-                  className={`text-grey-300 ${!aiGenerating && variants.length > 1 && !(editRejected && currentRejectedVariantIndex >= variants.length - 1) && !(!editRejected && currentContentVariantIndex >= variants.length - 1) && 'hover:text-brightOrange'}`}
-                >
-                  <ArrowRightIcon className="h-5 w-5" />
-                </button>
+                    <button
+                      disabled={
+                        variants.length === 0 ||
+                        aiGenerating ||
+                        (editRejected &&
+                          currentRejectedVariantIndex >= variants.length - 1 &&
+                          currentRejectedVariantIndex !== OUT_OF_BOUNDS) ||
+                        (!editRejected &&
+                          currentContentVariantIndex >= variants.length - 1 &&
+                          currentContentVariantIndex !== OUT_OF_BOUNDS)
+                      }
+                      onClick={handleScrollRight}
+                      className={`text-grey-300 ${!aiGenerating && variants.length > 1 && !(editRejected && currentRejectedVariantIndex >= variants.length - 1) && !(!editRejected && currentContentVariantIndex >= variants.length - 1) && 'hover:text-brightOrange'}`}
+                    >
+                      <ArrowRightIcon className="h-5 w-5" />
+                    </button>
+                  </>
+                )}
                 {isModalOpen && (
                   <VariantModal
                     vs={variants}
@@ -571,10 +633,7 @@ const MessageItem = ({
                       }
                       if (ri === -2) {
                         setRejected('');
-                        setNewRejected('');
-                        setGenRejected('');
-
-                        await setTimeout(() => setCurrentRejectedVariantIndex(-1), 400);
+                        setCurrentRejectedVariantIndex(OUT_OF_BOUNDS);
                       } else if (ri !== null) {
                         setCurrentRejectedVariantIndex(ri);
                       }
@@ -641,13 +700,37 @@ const MessageItem = ({
             suppressContentEditableWarning={true}
             className="text-gray-300 mt-2 w-10/12 h-full outline-none flex-grow"
             style={{ whiteSpace: 'pre-wrap' }}
-            onInput={(e) => {
+            onBlur={(e) => {
               const updatedText = e.currentTarget.innerText.trim();
 
-              if (!editRejected && updatedText !== newContent) {
-                setNewContent(updatedText);
-              } else if (editRejected && updatedText !== newRejected) {
-                setNewRejected(updatedText);
+              if (editRejected) {
+                if (!variants[currentRejectedVariantIndex] && updatedText) {
+                  const localVariants = [...variants, updatedText];
+                  setCurrentRejectedVariantIndex(localVariants.length - 1);
+                  setVariants(localVariants);
+                } else if (updatedText === '') {
+                  setCurrentRejectedVariantIndex(OUT_OF_BOUNDS);
+                } else {
+                  const newVariants = variants.map((v, idx) =>
+                    idx === currentRejectedVariantIndex ? updatedText : v
+                  );
+
+                  setVariants(newVariants);
+                }
+              } else {
+                if (!variants[currentContentVariantIndex] && updatedText) {
+                  const localVariants = [...variants, updatedText];
+                  setCurrentContentVariantIndex(localVariants.length - 1);
+                  setVariants(localVariants);
+                } else if (updatedText === '') {
+                  setCurrentContentVariantIndex(OUT_OF_BOUNDS);
+                } else {
+                  const newVariants = variants.map((v, idx) =>
+                    idx === currentContentVariantIndex ? updatedText : v
+                  );
+
+                  setVariants(newVariants);
+                }
               }
             }}
           >

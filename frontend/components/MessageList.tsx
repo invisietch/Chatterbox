@@ -215,6 +215,13 @@ const MessageList = ({
       }
     }
 
+    for (let i = 0; i < messages.length; i++) {
+      if (messages[i].content === '') {
+        warnings.push('There are messages without content.');
+        warningIds.push(messages[i].id);
+      }
+    }
+
     setWarningIds(warningIds);
     return warnings;
   };
@@ -240,10 +247,24 @@ const MessageList = ({
 
   const handleSaveMessage = async (newMessage: any) => {
     try {
+      const newContent = (await replaceCharAndUser(newMessage.content.trim())) || '';
+      const newRejected = (await replaceCharAndUser(newMessage.rejected?.trim())) || null;
+      const variants = [];
+
+      if (newContent) {
+        variants.push(newContent);
+      }
+      if (newRejected) {
+        variants.push(newRejected);
+      }
+
       const localMessage = {
         ...newMessage,
-        content: (await replaceCharAndUser(newMessage.content.trim())) || '',
-        rejected: await replaceCharAndUser(newMessage.rejected?.trim()),
+        content: newContent,
+        rejected: newMessage.author ? newRejected : null,
+        content_variant_index: newContent ? 0 : null,
+        rejected_variant_index: !newMessage.author || !newRejected ? null : newContent ? 1 : 0,
+        variants,
       };
       const response = await apiClient.post(
         `/conversations/${conversationId}/messages`,
