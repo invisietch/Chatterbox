@@ -1,7 +1,6 @@
 let abortController;
 
 self.onmessage = async (e) => {
-  console.log(e.data);
   const { type, prompt, eosTokens, samplers, samplerOrder, llmUrl, maxContext, apiKey } = e.data;
 
   if (type === 'generate') {
