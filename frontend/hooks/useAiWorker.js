@@ -39,17 +39,6 @@ const useAiWorker = () => {
     engine,
     apiKey,
   }) => {
-    console.log({
-      history,
-      eosTokens,
-      samplers,
-      samplerOrder,
-      llmUrl,
-      maxContext,
-      engine,
-      apiKey
-    });
-
     initializeWorker(engine);
 
     workerRef.current.onmessage = (e) => {

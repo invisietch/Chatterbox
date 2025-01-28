@@ -43,7 +43,7 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
     updatedLlmUrl: string,
     updatedMaxContext: number,
     updatedEngine: string,
-    updatedApiKey: string | null,
+    updatedApiKey: string | null
   ) => {
     try {
       const response = await apiClient.put(`/presets/${preset.id}`, {
@@ -117,7 +117,7 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
         updatedLlmUrl,
         updatedMaxContext,
         updatedEngine,
-        updatedApiKey,
+        updatedApiKey
       ) => {
         handleSave(
           updatedName,
@@ -127,7 +127,7 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
           updatedLlmUrl,
           updatedMaxContext,
           updatedEngine,
-          updatedApiKey,
+          updatedApiKey
         );
       }}
       onCancel={handleCancel}

@@ -5,7 +5,6 @@ self.onmessage = async (e) => {
   const { type, prompt, eosTokens, samplers, samplerOrder, llmUrl, maxContext, apiKey } = e.data;
 
   if (type === 'generate') {
-    console.log(apiKey);
     if (!apiKey) {
       self.postMessage({ type: 'error', message: 'API Key Required for Tabby' });
     } else {
@@ -66,6 +65,9 @@ self.onmessage = async (e) => {
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               const jsonString = line.replace('data: ', '').trim();
+              if (jsonString === '[DONE]') {
+                break;
+              }
               const parsed = JSON.parse(jsonString);
               const text = parsed.choices[0].text;
               localResponse += text;

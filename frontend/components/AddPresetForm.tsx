@@ -30,7 +30,7 @@ const AddPresetForm = ({
     llmUrl: string,
     maxContext: number,
     engine: string,
-    apiKey: string,
+    apiKey: string
   ) => void;
   onCancel: () => void;
   initialValues?: Record<string, any>;
@@ -76,7 +76,7 @@ const AddPresetForm = ({
     6: 'Repetition Penalty',
   };
 
-  const engines: { name: string, id: string }[] = [
+  const engines: { name: string; id: string }[] = [
     { name: 'Kobold', id: 'kobold' },
     { name: 'TabbyAPI', id: 'tabby' },
   ];
@@ -163,9 +163,7 @@ const AddPresetForm = ({
       </div>
 
       <div className="space-y-6">
-        <label className="text-gray-300 text-lg">
-          Engine
-        </label>
+        <label className="text-gray-300 text-lg">Engine</label>
         <select
           value={engine}
           onChange={(e) => setEngine(e.target.value)}
@@ -192,9 +190,7 @@ const AddPresetForm = ({
       </div>
 
       <div className="space-y-6">
-        <label className="text-gray-300 text-lg">
-          API Key
-        </label>
+        <label className="text-gray-300 text-lg">API Key</label>
         <input
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
@@ -234,14 +230,14 @@ const AddPresetForm = ({
                 type="range"
                 min={
                   key === 'max_tokens' ||
-                    key === 'top_k' ||
-                    key === 'top_p' ||
-                    key === 'min_p' ||
-                    key === 'temperature' ||
-                    key === 'typical_p' ||
-                    key === 'tfs' ||
-                    key === 'xtc_probability' ||
-                    key === 'xtc_threshold'
+                  key === 'top_k' ||
+                  key === 'top_p' ||
+                  key === 'min_p' ||
+                  key === 'temperature' ||
+                  key === 'typical_p' ||
+                  key === 'tfs' ||
+                  key === 'xtc_probability' ||
+                  key === 'xtc_threshold'
                     ? 0
                     : 1
                 }
@@ -255,11 +251,11 @@ const AddPresetForm = ({
                         : key === 'temperature'
                           ? 5
                           : key === 'top_p' ||
-                            key === 'min_p' ||
-                            key === 'typical_p' ||
-                            key === 'tfs' ||
-                            key === 'xtc_threshold' ||
-                            key === 'xtc_probability'
+                              key === 'min_p' ||
+                              key === 'typical_p' ||
+                              key === 'tfs' ||
+                              key === 'xtc_threshold' ||
+                              key === 'xtc_probability'
                             ? 1
                             : 2
                 }

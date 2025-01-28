@@ -47,7 +47,6 @@ const ProposedAiMessage = ({
   const [slopCount, setSlopCount] = useState(0);
 
   const { realTimeProcessText } = useSelector((state: RootState) => state.quickSettings);
-  const { llmUrl } = useSelector((state: RootState) => state.model);
 
   useEffect(() => {
     if (content == '' && aiInferencing) {

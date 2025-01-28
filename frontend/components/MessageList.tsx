@@ -328,17 +328,6 @@ const MessageList = ({
         eosTokens.push(`\n${persona.name}:`);
       }
 
-      console.log({
-        prompt: history,
-        eosTokens,
-        samplers,
-        samplerOrder,
-        llmUrl,
-        maxContext,
-        engine,
-        apiKey
-      });
-
       return new Promise((resolve, reject) => {
         generateWithWorker({
           prompt: history,
@@ -474,9 +463,9 @@ const MessageList = ({
               persona={persona || null}
               alternateGreetings={
                 character &&
-                  i === 1 &&
-                  message.author === 'assistant' &&
-                  character.alternate_greetings
+                i === 1 &&
+                message.author === 'assistant' &&
+                character.alternate_greetings
                   ? character.alternate_greetings
                   : null
               }

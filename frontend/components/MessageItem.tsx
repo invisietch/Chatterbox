@@ -462,10 +462,11 @@ const MessageItem = ({
 
   const avatarData =
     message.author === 'user' ? persona : message.author === 'assistant' ? character : null;
-  const wrapperClass = `${warning ? 'bg-warningHighlight' : ''} ${(!isEditing && showRejected) || (isEditing && editRejected)
-    ? 'border-fadedRed'
-    : 'border-fadedGreen'
-    } border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg ${isEditing && 'border-dashed'}`;
+  const wrapperClass = `${warning ? 'bg-warningHighlight' : ''} ${
+    (!isEditing && showRejected) || (isEditing && editRejected)
+      ? 'border-fadedRed'
+      : 'border-fadedGreen'
+  } border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg ${isEditing && 'border-dashed'}`;
   const typeLabelClass = showRejected ? 'text-brightRed' : 'text-brightGreen';
 
   return (
