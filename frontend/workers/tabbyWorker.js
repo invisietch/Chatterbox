@@ -30,7 +30,7 @@ self.onmessage = async (e) => {
           max_context_length: maxContext,
           rep_pen: samplers['repetition_penalty'],
           rep_pen_range: samplers['repetition_penalty_range'],
-          stopping_strings: eosTokens,
+          stop: eosTokens,
           sampler_order: samplerOrder,
           skip_special_tokens: true,
           ignore_eos: false,

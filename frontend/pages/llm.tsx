@@ -41,7 +41,7 @@ export default function PresetsPage() {
     llmUrl: string,
     maxContext: number,
     engine: string,
-    apiKey: string,
+    apiKey: string
   ) => {
     try {
       const response = await apiClient.post('/presets', {

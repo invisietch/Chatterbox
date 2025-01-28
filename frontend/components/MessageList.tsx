@@ -466,9 +466,9 @@ const MessageList = ({
               persona={persona || null}
               alternateGreetings={
                 character &&
-                  i === 1 &&
-                  message.author === 'assistant' &&
-                  character.alternate_greetings
+                i === 1 &&
+                message.author === 'assistant' &&
+                character.alternate_greetings
                   ? character.alternate_greetings
                   : null
               }
@@ -486,7 +486,10 @@ const MessageList = ({
           character={character}
           persona={persona}
           cancelAuto={stopAutoGeneration}
-          cancelGeneration={abortGenerationWithWorker}
+          cancelGeneration={() => {
+            setAiInferencing(false);
+            abortGenerationWithWorker();
+          }}
           aiInferencing={aiInferencing}
           content={generatedResponse}
           errors={generationErrors}

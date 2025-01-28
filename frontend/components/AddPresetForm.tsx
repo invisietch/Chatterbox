@@ -133,6 +133,7 @@ const AddPresetForm = ({
       setLlmUrl(initialValues.llmUrl);
       setMaxContext(initialValues.maxContext);
       setEngine(initialValues.engine || 'kobold');
+      setApiKey(initialValues.apiKey);
     }
   }, [initialValues]);
 
