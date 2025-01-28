@@ -7,6 +7,8 @@ interface ModelState {
   llmUrl: string; // LLM URL
   selectedPresetId: string | null; // Selected preset ID
   maxContext: number | null;
+  engine: string;
+  apiKey: string | null;
 }
 
 const initialState: ModelState = {
@@ -16,6 +18,8 @@ const initialState: ModelState = {
   llmUrl: '',
   selectedPresetId: null,
   maxContext: null,
+  engine: 'kobold',
+  apiKey: null,
 };
 
 const modelSlice = createSlice({

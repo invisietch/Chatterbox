@@ -133,3 +133,5 @@ class Preset(Base, TimestampMixin):
     model_name = Column(String, nullable=False)
     llm_url = Column(String, nullable=False)
     max_context = Column(Integer, nullable=False, server_default='16384')
+    engine = Column(String, nullable=False, server_default='kobold')
+    api_key = Column(String, nullable=True)

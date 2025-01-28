@@ -1094,9 +1094,11 @@ def create_preset(
     model_name: Annotated[str, Body()],
     llm_url: Annotated[str, Body()],
     max_context: Annotated[int, Body()],
+    engine: Annotated[str, Body()],
+    api_key: Annotated[str, Body()],
     db: Session = Depends(get_db),
 ):
-    if not name or not samplers or not sampler_order or not model_name or not llm_url or not max_context:
+    if not name or not samplers or not sampler_order or not model_name or not llm_url or not max_context or not engine:
         raise HTTPException(status_code=400, detail="Must provide all fields.")
     existing = db.query(Preset).filter(Preset.name == name).first()
     if existing:
@@ -1109,7 +1111,12 @@ def create_preset(
         model_name=model_name,
         llm_url=llm_url,
         max_context=max_context,
+        engine=engine,
     )
+
+    if api_key:
+        new_preset.api_key
+
     db.add(new_preset)
     db.commit()
     db.refresh(new_preset)
@@ -1126,10 +1133,12 @@ def update_preset(
     model_name: Annotated[str, Body()],
     llm_url: Annotated[str, Body()],
     max_context: Annotated[int, Body()],
+    engine: Annotated[str, Body()],
+    api_key: Annotated[str, Body()] = None,
     db: Session = Depends(get_db),
 ):
     preset = db.query(Preset).filter(Preset.id == preset_id).first()
-    if not name or not samplers or not sampler_order or not model_name or not llm_url or not max_context:
+    if not name or not samplers or not sampler_order or not model_name or not llm_url or not max_context or not engine:
         raise HTTPException(status_code=400, detail="Must provide all fields.")
     if not preset:
         raise HTTPException(status_code=404, detail="Preset not found.")
@@ -1140,6 +1149,10 @@ def update_preset(
     preset.model_name = model_name
     preset.llm_url = llm_url
     preset.max_context = max_context
+    preset.engine = engine
+    
+    if api_key:
+        preset.api_key = api_key
 
     db.commit()
     db.refresh(preset)
@@ -1171,6 +1184,8 @@ def list_presets(db: Session = Depends(get_db)):
             "model_name": preset.model_name,
             "llm_url": preset.llm_url,
             "max_context": preset.max_context,
+            "engine": preset.engine,
+            "api_key": preset.api_key,
         }
         for preset in presets
     ]

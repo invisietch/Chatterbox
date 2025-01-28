@@ -21,7 +21,6 @@ import {
 import { useSelector } from 'react-redux';
 import { RootState } from '../context/store';
 import useAiWorker from '../hooks/useAiWorker';
-import { cancelGeneration } from '../lib/aiUtils';
 import VariantModal from './VariantModal';
 
 const MessageItem = ({
@@ -33,6 +32,7 @@ const MessageItem = ({
   persona,
   isEditing,
   setIsEditing,
+  cancelGeneration,
   alternateGreetings,
   conversationId,
 }: {
@@ -43,6 +43,7 @@ const MessageItem = ({
   character: any | null;
   persona: any | null;
   isEditing: boolean;
+  cancelGeneration: () => void;
   setIsEditing: (t: boolean) => void;
   alternateGreetings: string[] | null;
   conversationId: number;
@@ -73,7 +74,7 @@ const MessageItem = ({
 
   const OUT_OF_BOUNDS = Number.MAX_SAFE_INTEGER;
 
-  const { selectedModel, samplers, samplerOrder, llmUrl, maxContext } = useSelector(
+  const { selectedModel, samplers, samplerOrder, llmUrl, maxContext, engine, apiKey } = useSelector(
     (state: RootState) => state.model
   );
 
@@ -276,6 +277,8 @@ const MessageItem = ({
           samplerOrder,
           llmUrl,
           maxContext,
+          engine,
+          apiKey,
           onPartial: (partial) => {
             if (!editRejected) {
               setGenContent(partial);
@@ -453,17 +456,16 @@ const MessageItem = ({
   };
 
   const handleAbort = async () => {
-    await cancelGeneration(llmUrl);
+    await cancelGeneration();
     setAiGenerating(false);
   };
 
   const avatarData =
     message.author === 'user' ? persona : message.author === 'assistant' ? character : null;
-  const wrapperClass = `${warning ? 'bg-warningHighlight' : ''} ${
-    (!isEditing && showRejected) || (isEditing && editRejected)
-      ? 'border-fadedRed'
-      : 'border-fadedGreen'
-  } border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg ${isEditing && 'border-dashed'}`;
+  const wrapperClass = `${warning ? 'bg-warningHighlight' : ''} ${(!isEditing && showRejected) || (isEditing && editRejected)
+    ? 'border-fadedRed'
+    : 'border-fadedGreen'
+    } border-2 bg-dark pb-4 mb-4 pt-2 relative flex rounded-lg ${isEditing && 'border-dashed'}`;
   const typeLabelClass = showRejected ? 'text-brightRed' : 'text-brightGreen';
 
   return (

@@ -45,13 +45,13 @@ const MessageList = ({
   const isAutoGeneratingRef = useRef(isAutoGenerating);
   const [generationLock, setGenerationLock] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const { generateWithWorker, terminateWorker } = useAiWorker();
+  const { generateWithWorker, abortGenerationWithWorker, terminateWorker } = useAiWorker();
 
   useEffect(() => {
     isAutoGeneratingRef.current = isAutoGenerating;
   }, [isAutoGenerating]);
 
-  const { selectedModel, samplers, samplerOrder, llmUrl, maxContext } = useSelector(
+  const { selectedModel, samplers, samplerOrder, llmUrl, maxContext, engine, apiKey } = useSelector(
     (state: RootState) => state.model
   );
 
@@ -328,6 +328,17 @@ const MessageList = ({
         eosTokens.push(`\n${persona.name}:`);
       }
 
+      console.log({
+        prompt: history,
+        eosTokens,
+        samplers,
+        samplerOrder,
+        llmUrl,
+        maxContext,
+        engine,
+        apiKey
+      });
+
       return new Promise((resolve, reject) => {
         generateWithWorker({
           prompt: history,
@@ -336,6 +347,8 @@ const MessageList = ({
           samplerOrder,
           llmUrl,
           maxContext,
+          engine,
+          apiKey,
           onPartial: (partial) => {
             setGeneratedResponse(partial); // Update UI with partial results
           },
@@ -449,6 +462,7 @@ const MessageList = ({
             {arr.length - 1 === i && <div ref={messagesEndRef} />}
             <MessageItem
               conversationId={conversationId}
+              cancelGeneration={abortGenerationWithWorker}
               key={message.id}
               isEditing={message.id === editingId}
               setIsEditing={(t: boolean) => (t ? setEditingId(message.id) : setEditingId(null))}
@@ -460,9 +474,9 @@ const MessageList = ({
               persona={persona || null}
               alternateGreetings={
                 character &&
-                i === 1 &&
-                message.author === 'assistant' &&
-                character.alternate_greetings
+                  i === 1 &&
+                  message.author === 'assistant' &&
+                  character.alternate_greetings
                   ? character.alternate_greetings
                   : null
               }
@@ -480,6 +494,7 @@ const MessageList = ({
           character={character}
           persona={persona}
           cancelAuto={stopAutoGeneration}
+          cancelGeneration={abortGenerationWithWorker}
           aiInferencing={aiInferencing}
           content={generatedResponse}
           errors={generationErrors}

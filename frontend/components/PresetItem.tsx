@@ -17,6 +17,8 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
   const [modelName, setModelName] = useState('');
   const [llmUrl, setLlmUrl] = useState('');
   const [maxContext, setMaxContext] = useState(0);
+  const [engine, setEngine] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const selectedPresetId = useSelector((state: any) => state.model.selectedPresetId);
   const dispatch = useDispatch();
 
@@ -29,6 +31,8 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
     setModelName(preset.model_name);
     setLlmUrl(preset.llm_url);
     setMaxContext(preset.max_context);
+    setEngine(preset.engine);
+    setApiKey(preset.api_key);
   }, [preset]);
 
   const handleSave = async (
@@ -37,7 +41,9 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
     updatedSamplerOrder: number[],
     updatedModelName: string,
     updatedLlmUrl: string,
-    updatedMaxContext: number
+    updatedMaxContext: number,
+    updatedEngine: string,
+    updatedApiKey: string | null,
   ) => {
     try {
       const response = await apiClient.put(`/presets/${preset.id}`, {
@@ -47,6 +53,8 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
         model_name: updatedModelName,
         llm_url: updatedLlmUrl,
         max_context: updatedMaxContext,
+        engine: updatedEngine,
+        api_key: updatedApiKey || null,
       });
 
       if (selectedPresetId == response.data.preset) {
@@ -58,6 +66,8 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
             llmUrl: updatedLlmUrl,
             maxContext: updatedMaxContext,
             selectedPresetId: response.data.preset,
+            engine: updatedEngine,
+            apiKey: updatedApiKey,
           })
         );
       }
@@ -83,6 +93,8 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
             llmUrl: '',
             selectedPresetId: null,
             maxContext: null,
+            engine: 'kobold',
+            apiKey: null,
           })
         );
       }
@@ -103,7 +115,9 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
         updatedOrder,
         updatedModel,
         updatedLlmUrl,
-        updatedMaxContext
+        updatedMaxContext,
+        updatedEngine,
+        updatedApiKey,
       ) => {
         handleSave(
           updatedName,
@@ -111,7 +125,9 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
           updatedOrder,
           updatedModel,
           updatedLlmUrl,
-          updatedMaxContext
+          updatedMaxContext,
+          updatedEngine,
+          updatedApiKey,
         );
       }}
       onCancel={handleCancel}
@@ -122,6 +138,8 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
         modelName,
         llmUrl,
         maxContext,
+        engine,
+        apiKey,
       }}
     />
   ) : (
@@ -144,6 +162,12 @@ const PresetItem = ({ preset, onSave }: { preset: any; onSave: () => void }) => 
             </button>
           </div>
           <div className="text-sm text-gray-300 w-11/12">
+            <p>
+              <strong>Engine:</strong> {engine}
+            </p>
+            <p>
+              <strong>API Key:</strong> {apiKey}
+            </p>
             <p>
               <strong>Samplers:</strong>{' '}
               {Object.entries(samplers)

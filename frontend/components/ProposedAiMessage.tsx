@@ -9,7 +9,6 @@ import {
 import Avatar from './Avatar';
 import { highlightSlop } from '../lib/slop';
 import { CheckIcon, RefreshIcon, StopIcon, TrashIcon } from '@heroicons/react/outline';
-import { cancelGeneration } from '../lib/aiUtils';
 import { useSelector } from 'react-redux';
 import { RootState } from '../context/store';
 
@@ -23,6 +22,7 @@ const ProposedAiMessage = ({
   character,
   persona,
   cancelAuto,
+  cancelGeneration,
   regenerate,
   onSave,
   onCancel,
@@ -36,6 +36,7 @@ const ProposedAiMessage = ({
   character: any | null;
   persona: any | null;
   cancelAuto: () => void;
+  cancelGeneration: () => void;
   regenerate: () => void;
   onSave: (msg: any) => void;
   onCancel: () => void;
@@ -129,7 +130,7 @@ const ProposedAiMessage = ({
   };
 
   const handleAbort = async () => {
-    await cancelGeneration(llmUrl);
+    await cancelGeneration();
     await cancelAuto();
   };
 

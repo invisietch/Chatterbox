@@ -43,6 +43,8 @@ const PresetDropdown = () => {
         llmUrl: preset.llm_url,
         selectedPresetId: presetId,
         maxContext: parseInt(preset.max_context),
+        engine: preset.engine,
+        apiKey: preset.api_key,
       })
     );
 

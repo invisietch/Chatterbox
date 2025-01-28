@@ -28,7 +28,9 @@ const AddPresetForm = ({
     samplerOrder: number[],
     model: string,
     llmUrl: string,
-    maxContext: number
+    maxContext: number,
+    engine: string,
+    apiKey: string,
   ) => void;
   onCancel: () => void;
   initialValues?: Record<string, any>;
@@ -51,6 +53,8 @@ const AddPresetForm = ({
   const [llmUrl, setLlmUrl] = useState('');
   const [maxContext, setMaxContext] = useState(32768);
   const [error, setError] = useState('');
+  const [engine, setEngine] = useState('');
+  const [apiKey, setApiKey] = useState('');
 
   const [samplerOrder, setSamplerOrder] = useState([
     { id: '6', label: 'Repetition Penalty', value: 6 },
@@ -71,6 +75,11 @@ const AddPresetForm = ({
     5: 'Temperature',
     6: 'Repetition Penalty',
   };
+
+  const engines: { name: string, id: string }[] = [
+    { name: 'Kobold', id: 'kobold' },
+    { name: 'TabbyAPI', id: 'tabby' },
+  ];
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -94,7 +103,7 @@ const AddPresetForm = ({
   const handleSubmit = () => {
     if (presetName) {
       const orderValues = samplerOrder.map((item) => item.value);
-      onSave(presetName, samplers, orderValues, model, llmUrl, maxContext);
+      onSave(presetName, samplers, orderValues, model, llmUrl, maxContext, engine, apiKey);
     } else {
       toast.error('Please fill in the entire form.');
     }
@@ -123,6 +132,7 @@ const AddPresetForm = ({
       setModel(initialValues.modelName);
       setLlmUrl(initialValues.llmUrl);
       setMaxContext(initialValues.maxContext);
+      setEngine(initialValues.engine || 'kobold');
     }
   }, [initialValues]);
 
@@ -154,13 +164,42 @@ const AddPresetForm = ({
 
       <div className="space-y-6">
         <label className="text-gray-300 text-lg">
-          Koboldcpp URL (do not add the trailing slash)
+          Engine
+        </label>
+        <select
+          value={engine}
+          onChange={(e) => setEngine(e.target.value)}
+          className="w-full p-2 border rounded bg-dark text-gray-200 overflow-y-auto"
+        >
+          {engines.map((engine) => (
+            <option key={engine.id} value={engine.id}>
+              {engine.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-6">
+        <label className="text-gray-300 text-lg">
+          Connection URL (do not add the trailing slash)
         </label>
         <input
           value={llmUrl}
           onChange={(e) => setLlmUrl(e.target.value)}
           className="w-full p-2 border rounded bg-dark text-gray-200 mb-2 pl-4"
           placeholder="http://127.0.0.1:5001"
+        />
+      </div>
+
+      <div className="space-y-6">
+        <label className="text-gray-300 text-lg">
+          API Key
+        </label>
+        <input
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          className="w-full p-2 border rounded bg-dark text-gray-200 mb-2 pl-4"
+          placeholder=""
         />
       </div>
 
@@ -195,14 +234,14 @@ const AddPresetForm = ({
                 type="range"
                 min={
                   key === 'max_tokens' ||
-                  key === 'top_k' ||
-                  key === 'top_p' ||
-                  key === 'min_p' ||
-                  key === 'temperature' ||
-                  key === 'typical_p' ||
-                  key === 'tfs' ||
-                  key === 'xtc_probability' ||
-                  key === 'xtc_threshold'
+                    key === 'top_k' ||
+                    key === 'top_p' ||
+                    key === 'min_p' ||
+                    key === 'temperature' ||
+                    key === 'typical_p' ||
+                    key === 'tfs' ||
+                    key === 'xtc_probability' ||
+                    key === 'xtc_threshold'
                     ? 0
                     : 1
                 }
@@ -216,11 +255,11 @@ const AddPresetForm = ({
                         : key === 'temperature'
                           ? 5
                           : key === 'top_p' ||
-                              key === 'min_p' ||
-                              key === 'typical_p' ||
-                              key === 'tfs' ||
-                              key === 'xtc_threshold' ||
-                              key === 'xtc_probability'
+                            key === 'min_p' ||
+                            key === 'typical_p' ||
+                            key === 'tfs' ||
+                            key === 'xtc_threshold' ||
+                            key === 'xtc_probability'
                             ? 1
                             : 2
                 }

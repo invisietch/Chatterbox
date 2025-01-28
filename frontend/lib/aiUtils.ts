@@ -1,16 +1,3 @@
-export const cancelGeneration = async (llmUrl) => {
-  try {
-    await fetch(`${llmUrl}/api/extra/abort`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-  } catch (_error) {
-    throw new Error('Failed to abort generation.');
-  }
-};
-
 export const fetchResponse = async (
   prompt: string,
   eosTokens: string[],

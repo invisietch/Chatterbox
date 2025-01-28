@@ -3,9 +3,19 @@ import { useRef } from 'react';
 const useAiWorker = () => {
   const workerRef = useRef(null);
 
-  const initializeWorker = () => {
+  const getWorker = (engine) => {
+    switch (engine) {
+      case 'tabby':
+        return new Worker(new URL('../workers/tabbyWorker.js', import.meta.url));
+      case 'kobold':
+      default:
+        return new Worker(new URL('../workers/koboldWorker.js', import.meta.url));
+    }
+  };
+
+  const initializeWorker = (engine) => {
     if (!workerRef.current) {
-      workerRef.current = new Worker(new URL('../workers/aiWorker.js', import.meta.url));
+      workerRef.current = getWorker(engine || 'kobold');
     }
   };
 
@@ -26,8 +36,21 @@ const useAiWorker = () => {
     onPartial,
     onComplete,
     onError,
+    engine,
+    apiKey,
   }) => {
-    initializeWorker();
+    console.log({
+      history,
+      eosTokens,
+      samplers,
+      samplerOrder,
+      llmUrl,
+      maxContext,
+      engine,
+      apiKey
+    });
+
+    initializeWorker(engine);
 
     workerRef.current.onmessage = (e) => {
       const { type, text, finishReason, message } = e.data;
@@ -42,16 +65,26 @@ const useAiWorker = () => {
     };
 
     workerRef.current.postMessage({
+      type: 'generate',
       prompt,
       eosTokens,
       samplers,
       samplerOrder,
       llmUrl,
       maxContext,
+      apiKey,
     });
   };
 
-  return { generateWithWorker, terminateWorker };
+  const abortGenerationWithWorker = () => {
+    if (workerRef) {
+      workerRef.current.postMessage({
+        type: 'abort'
+      });
+    }
+  };
+
+  return { generateWithWorker, terminateWorker, abortGenerationWithWorker };
 };
 
 export default useAiWorker;

@@ -4,7 +4,7 @@
 
 - [x] Koboldcpp
 - [ ] Oobabooga
-- [ ] Tabby
+- [x] Tabby
 - [ ] OpenRouter
 - [ ] OpenAI
 
@@ -56,6 +56,7 @@
 
 ## Performance
 
+- [ ] Batch generate (where supported)
 - [ ] Batch get tokens
 - [ ] Batch get avatars
 - [ ] Move highlighting to webworker for generated responses
