@@ -37,6 +37,8 @@ base0F  #E4A382  Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php 
 pre code.hljs {
   display: block;
   overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
   padding: 1em;
 }
 
@@ -58,8 +60,7 @@ code.hljs {
 /* purposely do not highlight these things */
 .hljs-formula,
 .hljs-params,
-.hljs-property {
-}
+.hljs-property {}
 
 /* base03 - #6F6F70 -  Comments, Invisibles, Line Highlighting */
 .hljs-comment {
