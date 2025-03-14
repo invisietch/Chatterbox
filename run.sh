@@ -16,6 +16,13 @@ then
     exit 1
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [ ! -f "$SCRIPT_DIR/.env" ]; then
+    echo "No .env file found. Please copy .env.example to .env and add your HF token if desired."
+    exit 1
+fi
+
 # Stop the running containers and remove them
 docker compose down
 

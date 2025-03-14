@@ -38,6 +38,10 @@ You will need Docker and Compose installed, the easiest way to get both is to in
 
 *Note: If this doesn't work, especially on Windows, check the **Troubleshooting** section at the bottom of this doc before opening an issue.*
 
+#### Set up `.env`
+
+Copy `.env.example` to `.env`. If you want to use a Huggingface access token, add it to `.env`, otherwise you're ready.
+
 Then just open a terminal and run the following commands (note: the 'run' file automatically updates the files):
 
 #### Linux / Mac

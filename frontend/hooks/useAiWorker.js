@@ -7,6 +7,10 @@ const useAiWorker = () => {
     switch (engine) {
       case 'tabby':
         return new Worker(new URL('../workers/tabbyWorker.js', import.meta.url));
+      case 'aphrodite':
+        return new Worker(new URL('../workers/aphroditeWorker.js', import.meta.url));
+      case 'llamacpp':
+        return new Worker(new URL('../workers/llamacppWorker.js', import.meta.url));
       case 'kobold':
       default:
         return new Worker(new URL('../workers/koboldWorker.js', import.meta.url));

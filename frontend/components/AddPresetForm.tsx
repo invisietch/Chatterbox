@@ -77,7 +77,9 @@ const AddPresetForm = ({
   };
 
   const engines: { name: string; id: string }[] = [
+    { name: 'Aphrodite', id: 'aphrodite' },
     { name: 'Kobold', id: 'kobold' },
+    { name: 'LlamaCpp', id: 'llamacpp' },
     { name: 'TabbyAPI', id: 'tabby' },
   ];
 
@@ -231,14 +233,14 @@ const AddPresetForm = ({
                 type="range"
                 min={
                   key === 'max_tokens' ||
-                  key === 'top_k' ||
-                  key === 'top_p' ||
-                  key === 'min_p' ||
-                  key === 'temperature' ||
-                  key === 'typical_p' ||
-                  key === 'tfs' ||
-                  key === 'xtc_probability' ||
-                  key === 'xtc_threshold'
+                    key === 'top_k' ||
+                    key === 'top_p' ||
+                    key === 'min_p' ||
+                    key === 'temperature' ||
+                    key === 'typical_p' ||
+                    key === 'tfs' ||
+                    key === 'xtc_probability' ||
+                    key === 'xtc_threshold'
                     ? 0
                     : 1
                 }
@@ -252,11 +254,11 @@ const AddPresetForm = ({
                         : key === 'temperature'
                           ? 5
                           : key === 'top_p' ||
-                              key === 'min_p' ||
-                              key === 'typical_p' ||
-                              key === 'tfs' ||
-                              key === 'xtc_threshold' ||
-                              key === 'xtc_probability'
+                            key === 'min_p' ||
+                            key === 'typical_p' ||
+                            key === 'tfs' ||
+                            key === 'xtc_threshold' ||
+                            key === 'xtc_probability'
                             ? 1
                             : 2
                 }
