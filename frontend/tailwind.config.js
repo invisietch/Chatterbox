@@ -24,6 +24,7 @@ module.exports = {
         thoughtsHighlight: '#689d6a',
         actionsHighlight: '#d65d0e',
         warningHighlight: '#D16C00',
+        thinkBlockHighlight: '#8c7c7c',
       },
     },
   },

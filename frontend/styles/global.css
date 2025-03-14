@@ -36,6 +36,10 @@ body {
   @apply italic text-thoughtsHighlight;
 }
 
+.thinkblock {
+  @apply italic text-thinkBlockHighlight;
+}
+
 .bolded {
   @apply font-bold;
 }

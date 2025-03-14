@@ -89,6 +89,7 @@ export const highlightText = (text: string): string => {
   const urlRegex = /\[([^\]]+)\]\(([^\)]+)\)/g;
   const imageRegex = /!\[([^\]]*)\]\(([^\)]+)\)/g;
   const tableRegex = /\|(.+?)\|\n\|([-:]+\|)+\n((?:\|.+?\|\n)+)/g;
+  const thinkRegex = /(<think>(.*?)<\/think>)/g;
 
   const highlightSpan = (type: string, match: string): string =>
     `<span class="${type}">${match}</span>`;
@@ -221,7 +222,7 @@ export const highlightText = (text: string): string => {
     inputText: string,
     regex: RegExp,
     type: string,
-    transformFn?: (match: RegExpExecArray) => string
+    transformFn?: (match: RegExpExecArray) => string,
   ): { highlighted: string; matches: { type: string; match: string }[] } => {
     let resultText = inputText;
     const matches: { type: string; match: string }[] = [];
@@ -358,6 +359,11 @@ export const highlightText = (text: string): string => {
 
   const asteriskResult = applyHighlighting(highlightedText, asteriskRegex, 'actions');
   highlightedText = asteriskResult.highlighted;
+
+  const thinkResult = applyHighlighting(highlightedText, thinkRegex, 'thinkblock', (match) => {
+    return `<span class="thinkblock">&lt;think&gt;${match[2]}&lt;/think&gt;</span>`;
+  });
+  highlightedText = thinkResult.highlighted;
 
   return highlightedText;
 };
