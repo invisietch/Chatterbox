@@ -7,6 +7,9 @@
 - [x] Tabby
 - [ ] OpenRouter
 - [ ] OpenAI
+- [x] Aphrodite
+- [x] Llamacpp
+- [ ] Model Selection
 
 ## Conversations
 
