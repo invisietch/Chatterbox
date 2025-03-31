@@ -89,7 +89,7 @@ export const highlightText = (text: string): string => {
   const urlRegex = /\[([^\]]+)\]\(([^\)]+)\)/g;
   const imageRegex = /!\[([^\]]*)\]\(([^\)]+)\)/g;
   const tableRegex = /\|(.+?)\|\n\|([-:]+\|)+\n((?:\|.+?\|\n)+)/g;
-  const thinkRegex = /(<think>(.*?)<\/think>)/g;
+  const thinkRegex = /(<think>([\s\S]*?)<\/think>)/g;
 
   const highlightSpan = (type: string, match: string): string =>
     `<span class="${type}">${match}</span>`;

@@ -37,7 +37,7 @@ body {
 }
 
 .thinkblock {
-  @apply italic text-thinkBlockHighlight;
+  @apply font-bold text-thinkBlockHighlight;
 }
 
 .bolded {
